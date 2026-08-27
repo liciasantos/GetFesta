@@ -1,0 +1,47 @@
+import { redirect } from "next/navigation";
+import Link from "next/link";
+import { getSession } from "@/lib/auth";
+import { getEmpresaById } from "@/lib/data/empresas";
+import AvatarUpload from "@/components/AvatarUpload";
+import GaleriaManager from "@/components/GaleriaManager";
+import { atualizarLogoEmpresa, adicionarFotoGaleria, removerFotoGaleria } from "@/lib/actions/perfil";
+import PerfilEmpresaForm from "./PerfilEmpresaForm";
+
+export const dynamic = "force-dynamic";
+
+export default async function PainelPerfilPage() {
+  const session = await getSession();
+  if (!session || session.tipo !== "empresa") redirect("/entrar");
+
+  const empresa = await getEmpresaById(session.usuarioId);
+  if (!empresa) redirect("/entrar");
+
+  return (
+    <div className="mx-auto max-w-2xl px-6 py-10">
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="text-xl font-extrabold">Editar perfil da empresa</h1>
+        <Link href="/painel" className="text-[12.5px] font-bold text-accent-dark underline">
+          ← Voltar ao painel
+        </Link>
+      </div>
+      <p className="text-sm text-muted">
+        Essas informações aparecem na sua página pública ({empresa.nome_fantasia}) e ajudam o cliente a decidir.
+      </p>
+
+      <div className="mt-6 rounded-xl border border-border bg-surface p-5">
+        <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Logo</h2>
+        <AvatarUpload initialUrl={empresa.logo_url} name={empresa.nome_fantasia} action={atualizarLogoEmpresa} />
+      </div>
+
+      <div className="mt-5 rounded-xl border border-border bg-surface p-5">
+        <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Galeria de fotos</h2>
+        <GaleriaManager fotos={empresa.galeria} onAdd={adicionarFotoGaleria} onRemove={removerFotoGaleria} />
+      </div>
+
+      <div className="mt-5 rounded-xl border border-border bg-surface p-5">
+        <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Dados do perfil</h2>
+        <PerfilEmpresaForm empresa={empresa} />
+      </div>
+    </div>
+  );
+}

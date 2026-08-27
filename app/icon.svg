@@ -1,0 +1,24 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Icone GetFesta">
+  <title>GetFesta — icone</title>
+  <defs>
+    <clipPath id="balloonClip2">
+      <path d="M50,4 C76,4 96,26 96,54 C96,80 78,100 58,108 C55,109.5 45,109.5 42,108 C22,100 4,80 4,54 C4,26 24,4 50,4 Z"/>
+    </clipPath>
+  </defs>
+
+  <!-- fundo -->
+  <rect x="0" y="0" width="256" height="256" rx="56" fill="#1F2933"/>
+
+  <g transform="translate(38,30) scale(1.55)">
+    <g transform="rotate(-9 50 90)">
+      <path d="M50,120 C34,142 66,152 50,176" fill="none" stroke="#8A95A1" stroke-width="3.2" stroke-linecap="round"/>
+      <path d="M45,106 L55,106 L50,120 Z" fill="#E14F30"/>
+      <path d="M50,4 C76,4 96,26 96,54 C96,80 78,100 58,108 C55,109.5 45,109.5 42,108 C22,100 4,80 4,54 C4,26 24,4 50,4 Z" fill="#FF6B4A"/>
+      <g clip-path="url(#balloonClip2)">
+        <ellipse cx="66" cy="72" rx="30" ry="34" fill="#E14F30" opacity="0.30"/>
+        <ellipse cx="30" cy="30" rx="13" ry="20" fill="#FFFFFF" opacity="0.40" transform="rotate(-18 30 30)"/>
+      </g>
+    </g>
+    <path d="M100,2 C102,10 104,12 112,14 C104,16 102,18 100,26 C98,18 96,16 88,14 C96,12 98,10 100,2 Z" fill="#FFB800"/>
+  </g>
+</svg>

@@ -1,0 +1,106 @@
+import { query, queryOne } from "@/lib/db";
+
+export type VagaFeedItem = {
+  id: string;
+  categoria_nome: string;
+  cidade_nome: string;
+  bairro_nome: string | null;
+  data_evento: string;
+  hora_inicio: string;
+  duracao_horas: string;
+  valor: string | null;
+  descricao: string;
+  criado_em: string;
+  empresa_nome_fantasia: string;
+};
+
+/** Vagas em aberto que combinam com as funções e a cidade do profissional -
+ * mesmo padrão de "lead compatível" já usado pra pedidos no painel da empresa
+ * (lib/data/pedidos.ts:listPedidosCompativeis), só que na direção inversa. */
+export async function listVagasCompativeis(profissionalId: string): Promise<(VagaFeedItem & { ja_candidatado: boolean })[]> {
+  return query<VagaFeedItem & { ja_candidatado: boolean }>(
+    `SELECT
+       v.id, cp.nome AS categoria_nome, ci.nome AS cidade_nome, b.nome AS bairro_nome,
+       v.data_evento, v.hora_inicio, v.duracao_horas, v.valor, v.descricao, v.criado_em,
+       e.nome_fantasia AS empresa_nome_fantasia,
+       EXISTS (SELECT 1 FROM vaga_candidaturas vc WHERE vc.vaga_id = v.id AND vc.profissional_id = $1) AS ja_candidatado
+     FROM vagas_profissionais v
+     JOIN categorias_profissionais cp ON cp.id = v.categoria_profissional_id
+     JOIN cidades ci ON ci.id = v.cidade_id
+     LEFT JOIN bairros b ON b.id = v.bairro_id
+     JOIN empresas e ON e.usuario_id = v.empresa_id
+     JOIN profissionais p ON p.usuario_id = $1
+     LEFT JOIN bairros pb ON pb.id = p.bairro_id
+     WHERE v.status = 'aberta'
+       AND pb.cidade_id = v.cidade_id
+       AND EXISTS (
+         SELECT 1 FROM profissional_categorias pc WHERE pc.profissional_id = $1 AND pc.categoria_id = v.categoria_profissional_id
+       )
+     ORDER BY v.criado_em DESC`,
+    [profissionalId]
+  );
+}
+
+export type MinhaVaga = {
+  id: string;
+  categoria_nome: string;
+  cidade_nome: string;
+  bairro_nome: string | null;
+  data_evento: string;
+  hora_inicio: string;
+  duracao_horas: string;
+  valor: string | null;
+  descricao: string;
+  criado_em: string;
+  status: string;
+  total_candidatos: number;
+  realizada: boolean;
+  profissional_selecionado_id: string | null;
+  profissional_selecionado_nome: string | null;
+};
+
+const MINHA_VAGA_SELECT = `
+  SELECT
+    v.id, cp.nome AS categoria_nome, ci.nome AS cidade_nome, b.nome AS bairro_nome,
+    v.data_evento, v.hora_inicio, v.duracao_horas, v.valor, v.descricao, v.criado_em, v.status,
+    (v.data_evento < CURRENT_DATE) AS realizada,
+    v.profissional_selecionado_id, sel.nome AS profissional_selecionado_nome,
+    (SELECT count(*)::int FROM vaga_candidaturas vc WHERE vc.vaga_id = v.id) AS total_candidatos
+  FROM vagas_profissionais v
+  JOIN categorias_profissionais cp ON cp.id = v.categoria_profissional_id
+  JOIN cidades ci ON ci.id = v.cidade_id
+  LEFT JOIN bairros b ON b.id = v.bairro_id
+  LEFT JOIN profissionais sel ON sel.usuario_id = v.profissional_selecionado_id
+`;
+
+export async function listMinhasVagas(empresaId: string): Promise<MinhaVaga[]> {
+  return query<MinhaVaga>(`${MINHA_VAGA_SELECT} WHERE v.empresa_id = $1 ORDER BY v.criado_em DESC`, [empresaId]);
+}
+
+export async function getVagaDaEmpresa(vagaId: string, empresaId: string): Promise<MinhaVaga | null> {
+  return queryOne<MinhaVaga>(`${MINHA_VAGA_SELECT} WHERE v.id = $1 AND v.empresa_id = $2`, [vagaId, empresaId]);
+}
+
+export type CandidatoVaga = {
+  profissional_id: string;
+  nome: string;
+  foto_perfil_url: string | null;
+  telefone: string | null;
+  candidatado_em: string;
+};
+
+/** Contato do profissional só é retornado pra empresa dona da vaga (join com
+ * vagas_profissionais.empresa_id = $2) - segue a mesma regra do resto do
+ * schema: profissional é visível pra empresa autenticada, nunca pra terceiros. */
+export async function listCandidatosDaVaga(vagaId: string, empresaId: string): Promise<CandidatoVaga[]> {
+  return query<CandidatoVaga>(
+    `SELECT p.usuario_id AS profissional_id, p.nome, p.foto_perfil_url, u.telefone, vc.criado_em AS candidatado_em
+     FROM vaga_candidaturas vc
+     JOIN vagas_profissionais v ON v.id = vc.vaga_id AND v.empresa_id = $2
+     JOIN profissionais p ON p.usuario_id = vc.profissional_id
+     JOIN usuarios u ON u.id = p.usuario_id
+     WHERE vc.vaga_id = $1
+     ORDER BY vc.criado_em ASC`,
+    [vagaId, empresaId]
+  );
+}
