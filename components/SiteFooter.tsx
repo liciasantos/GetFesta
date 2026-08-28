@@ -1,5 +1,6 @@
 import Link from "next/link";
 import SocialIcons from "@/components/SocialIcons";
+import { getConfiguracoesSite, CONFIG_SOCIAL_INSTAGRAM, CONFIG_SOCIAL_TIKTOK, CONFIG_SOCIAL_YOUTUBE } from "@/lib/data/config";
 
 const COLUNAS = [
   {
@@ -35,7 +36,8 @@ const COLUNAS = [
   },
 ];
 
-export default function SiteFooter() {
+export default async function SiteFooter() {
+  const config = await getConfiguracoesSite();
   return (
     <footer className="mt-auto border-t border-border bg-surface-alt">
       <div className="mx-auto grid max-w-6xl grid-cols-2 gap-x-8 gap-y-10 px-6 py-12 sm:grid-cols-[1.2fr_repeat(2,1fr)] lg:grid-cols-[1.2fr_repeat(4,1fr)]">
@@ -45,7 +47,12 @@ export default function SiteFooter() {
           <p className="mt-4 max-w-xs text-[12.5px] leading-relaxed text-muted">
             O marketplace que conecta clientes a fornecedores de festas e eventos — sem custo para quem contrata.
           </p>
-          <SocialIcons className="mt-4" />
+          <SocialIcons
+            className="mt-4"
+            instagram={config[CONFIG_SOCIAL_INSTAGRAM]}
+            tiktok={config[CONFIG_SOCIAL_TIKTOK]}
+            youtube={config[CONFIG_SOCIAL_YOUTUBE]}
+          />
         </div>
 
         {COLUNAS.map((col) => (

@@ -31,7 +31,14 @@ const TIPOS = [
 export default async function EntrarPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tipo?: string; googleErro?: string; emailConfirmado?: string; emailErro?: string }>;
+  searchParams: Promise<{
+    tipo?: string;
+    googleErro?: string;
+    emailConfirmado?: string;
+    emailErro?: string;
+    plano?: string;
+    meses?: string;
+  }>;
 }) {
   const sp = await searchParams;
   const tipoAtual = TIPOS.find((t) => t.value === sp.tipo) ?? TIPOS[0];
@@ -74,7 +81,7 @@ export default async function EntrarPage({
       <p className="mt-3 text-center text-[12px] leading-relaxed text-muted">{tipoAtual.resumo}</p>
 
       <div className="mt-5 rounded-xl border border-border bg-surface p-5">
-        <LoginForm />
+        <LoginForm planoIntencao={sp.plano} mesesIntencao={sp.meses} />
 
         {(tipoAtual.value === "cliente" || tipoAtual.value === "profissional") && (
           <GoogleAuthButton tipo={tipoAtual.value} label="Continuar com Google" />

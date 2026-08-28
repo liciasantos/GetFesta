@@ -7,6 +7,7 @@ import { loginSchema, registrarClienteSchema, registrarEmpresaSchema, registrarP
 import { buildEmailVerificationToken } from "@/lib/email-verification";
 import { buildConfirmacaoCadastroEmail, sendEmail } from "@/lib/email";
 import { getAppUrl } from "@/lib/google-oauth";
+import { gerarSlugUnicoEmpresa, gerarSlugUnicoProfissional } from "@/lib/slug";
 
 async function enviarEmailConfirmacaoCadastro(usuarioId: string, email: string, nome: string) {
   const token = buildEmailVerificationToken(usuarioId);
@@ -36,7 +37,15 @@ export async function login(_prevState: ActionState, formData: FormData): Promis
 
   await createSession({ usuarioId: usuario.id, tipo: usuario.tipo as "cliente" | "empresa" | "profissional" | "admin" });
 
-  if (usuario.tipo === "empresa") redirect("/painel");
+  if (usuario.tipo === "empresa") {
+    // veio da tela de resumo de contratação (ja escolheu plano+periodo antes
+    // de logar) - continua direto pro seletor de plano do painel.
+    const planoIntencao = formData.get("planoIntencao");
+    const mesesIntencao = formData.get("mesesIntencao");
+    redirect(
+      planoIntencao ? `/painel?plano=${planoIntencao}${mesesIntencao ? `&meses=${mesesIntencao}` : ""}` : "/painel"
+    );
+  }
   if (usuario.tipo === "cliente") redirect("/meus-pedidos");
   if (usuario.tipo === "profissional") redirect("/perfil-profissional");
   if (usuario.tipo === "admin") redirect("/admin");
@@ -126,10 +135,19 @@ export async function registrarEmpresa(_prevState: ActionState, formData: FormDa
   );
   if (!usuario) return { error: "Não foi possível criar a conta, tente novamente" };
 
+  const slug = await gerarSlugUnicoEmpresa(parsed.data.nomeFantasia);
   await query(
-    `INSERT INTO empresas (usuario_id, razao_social, nome_fantasia, cnpj, instagram, telefone_contato, perfil_reivindicado)
-     VALUES ($1,$2,$3,$4,$5,$6, true)`,
-    [usuario.id, parsed.data.razaoSocial, parsed.data.nomeFantasia, parsed.data.cnpj, parsed.data.instagram ?? null, parsed.data.telefoneContato]
+    `INSERT INTO empresas (usuario_id, slug, razao_social, nome_fantasia, cnpj, instagram, telefone_contato, perfil_reivindicado)
+     VALUES ($1,$2,$3,$4,$5,$6,$7, true)`,
+    [
+      usuario.id,
+      slug,
+      parsed.data.razaoSocial,
+      parsed.data.nomeFantasia,
+      parsed.data.cnpj,
+      parsed.data.instagram ?? null,
+      parsed.data.telefoneContato,
+    ]
   );
 
   for (const categoriaId of parsed.data.categoriaIds) {
@@ -152,7 +170,15 @@ export async function registrarEmpresa(_prevState: ActionState, formData: FormDa
 
   await enviarEmailConfirmacaoCadastro(usuario.id, parsed.data.email, parsed.data.nomeFantasia);
   await createSession({ usuarioId: usuario.id, tipo: "empresa" });
-  redirect("/painel");
+
+  // se veio de "Contratar {plano pago}" na home/tela de resumo, manda direto
+  // pro seletor de plano do painel ja aberto nesse plano+periodo (o cadastro
+  // em si sempre comeca no Gratis, sem cobranca - ver INSERT acima).
+  const planoIntencao = formData.get("planoIntencao");
+  const mesesIntencao = formData.get("mesesIntencao");
+  redirect(
+    planoIntencao ? `/painel?plano=${planoIntencao}${mesesIntencao ? `&meses=${mesesIntencao}` : ""}` : "/painel"
+  );
 }
 
 export async function registrarProfissional(_prevState: ActionState, formData: FormData): Promise<ActionState> {
@@ -181,9 +207,10 @@ export async function registrarProfissional(_prevState: ActionState, formData: F
   );
   if (!usuario) return { error: "Não foi possível criar a conta, tente novamente" };
 
+  const slug = await gerarSlugUnicoProfissional(parsed.data.nome);
   await query(
-    `INSERT INTO profissionais (usuario_id, nome, bairro_id, consentimento_dados_em) VALUES ($1,$2,$3, now())`,
-    [usuario.id, parsed.data.nome, parsed.data.bairroId]
+    `INSERT INTO profissionais (usuario_id, slug, nome, bairro_id, consentimento_dados_em) VALUES ($1,$2,$3,$4, now())`,
+    [usuario.id, slug, parsed.data.nome, parsed.data.bairroId]
   );
 
   for (const categoriaId of parsed.data.categoriaIds) {

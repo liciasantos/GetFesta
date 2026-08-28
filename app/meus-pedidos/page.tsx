@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import DestaquesGrid, { DestaquesKicker } from "@/components/DestaquesGrid";
+import MarcarContratadoButton from "@/components/MarcarContratadoButton";
 import { budgetRangeLabel } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -115,7 +116,7 @@ export default async function MeusPedidosPage() {
                   <div className="flex flex-col gap-2">
                     {p.empresasInteressadas.map((e) => (
                       <div key={e.empresa_id} className="flex items-center justify-between rounded-lg bg-surface-alt p-2.5">
-                        <Link href={`/empresa/${e.empresa_id}`} className="text-[12.5px] font-bold hover:underline">
+                        <Link href={`/empresa/${e.empresa_slug}`} className="text-[12.5px] font-bold hover:underline">
                           {e.nome_fantasia}
                         </Link>
                         {e.telefone_contato && (
@@ -126,6 +127,19 @@ export default async function MeusPedidosPage() {
                   </div>
                 )}
               </div>
+
+              {(p.status === "aberto" || p.status === "em_andamento") && (
+                <div className="mt-3 border-t border-border pt-3">
+                  <MarcarContratadoButton pedidoId={p.id} />
+                </div>
+              )}
+              {p.status === "concluido" && (
+                <div className="mt-3 border-t border-border pt-3">
+                  <Badge tone="ok">
+                    {p.encontrado_pelo_site ? "✓ Contratado pela GetFesta" : "✓ Contratado por outro meio"}
+                  </Badge>
+                </div>
+              )}
             </div>
           ))}
           {pedidos.length === 0 && (

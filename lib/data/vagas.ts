@@ -83,6 +83,7 @@ export async function getVagaDaEmpresa(vagaId: string, empresaId: string): Promi
 
 export type CandidatoVaga = {
   profissional_id: string;
+  profissional_slug: string;
   nome: string;
   foto_perfil_url: string | null;
   telefone: string | null;
@@ -94,13 +95,22 @@ export type CandidatoVaga = {
  * schema: profissional é visível pra empresa autenticada, nunca pra terceiros. */
 export async function listCandidatosDaVaga(vagaId: string, empresaId: string): Promise<CandidatoVaga[]> {
   return query<CandidatoVaga>(
-    `SELECT p.usuario_id AS profissional_id, p.nome, p.foto_perfil_url, u.telefone, vc.criado_em AS candidatado_em
+    `SELECT p.usuario_id AS profissional_id, p.slug AS profissional_slug, p.nome, p.foto_perfil_url, u.telefone, vc.criado_em AS candidatado_em
      FROM vaga_candidaturas vc
      JOIN vagas_profissionais v ON v.id = vc.vaga_id AND v.empresa_id = $2
      JOIN profissionais p ON p.usuario_id = vc.profissional_id
      JOIN usuarios u ON u.id = p.usuario_id
      WHERE vc.vaga_id = $1
      ORDER BY vc.criado_em ASC`,
+    [vagaId, empresaId]
+  );
+}
+
+export type AvaliacaoVaga = { nota: number; comentario: string | null };
+
+export async function getAvaliacaoDaVaga(vagaId: string, empresaId: string): Promise<AvaliacaoVaga | null> {
+  return queryOne<AvaliacaoVaga>(
+    `SELECT nota, comentario FROM avaliacoes_profissional WHERE vaga_id = $1 AND empresa_id = $2`,
     [vagaId, empresaId]
   );
 }

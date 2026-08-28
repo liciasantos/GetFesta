@@ -2,8 +2,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { listMinhasVagas, type MinhaVaga } from "@/lib/data/vagas";
+import { listProfissionaisCompativeis } from "@/lib/data/profissionais";
 import { Badge, buttonClass } from "@/components/ui";
 import { formatCurrencyBRL, formatDateBR } from "@/lib/format";
+import ProfissionalCard from "@/components/ProfissionalCard";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +19,11 @@ export default async function MinhasVagasPage() {
   const session = await getSession();
   if (!session || session.tipo !== "empresa") redirect("/entrar?tipo=empresa");
 
-  const vagas = await listMinhasVagas(session.usuarioId);
+  const [vagas, profissionaisDestaque, profissionaisBusca] = await Promise.all([
+    listMinhasVagas(session.usuarioId),
+    listProfissionaisCompativeis(session.usuarioId, true),
+    listProfissionaisCompativeis(session.usuarioId, false),
+  ]);
   const emAberto = vagas.filter((v) => !v.realizada && v.status === "aberta");
   const realizadas = vagas.filter((v) => v.realizada || v.status !== "aberta");
 
@@ -61,6 +67,33 @@ export default async function MinhasVagasPage() {
           </div>
         </>
       )}
+
+      <h2 className="mb-1 mt-10 text-lg font-extrabold">Buscar profissionais</h2>
+      <p className="mb-3 text-[12.5px] text-muted">
+        Profissionais compatíveis com as categorias da sua empresa, ordenados pela avaliação recebida de outras
+        empresas.
+      </p>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+        {profissionaisBusca.map((p) => (
+          <ProfissionalCard key={p.usuario_id} p={p} />
+        ))}
+        {profissionaisBusca.length === 0 && (
+          <p className="col-span-full text-sm text-muted">
+            Nenhum profissional compatível com as categorias da sua empresa ainda.
+          </p>
+        )}
+      </div>
+
+      <h2 className="mb-1 mt-10 text-lg font-extrabold">Profissionais em destaque</h2>
+      <p className="mb-3 text-[12.5px] text-muted">Posição de anúncio — aparecem aqui por curadoria do time GetFesta.</p>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+        {profissionaisDestaque.map((p) => (
+          <ProfissionalCard key={p.usuario_id} p={p} />
+        ))}
+        {profissionaisDestaque.length === 0 && (
+          <p className="col-span-full text-sm text-muted">Nenhum profissional em destaque no momento.</p>
+        )}
+      </div>
     </div>
   );
 }

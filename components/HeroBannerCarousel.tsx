@@ -29,8 +29,17 @@ export default function Hero({ banners }: { banners: HeroBanner[] }) {
               i === index ? "opacity-100" : "pointer-events-none opacity-0"
             }`}
           >
+            {/* imagem propria pro mobile (evita corte/alinhamento ruim da
+                versao larga do desktop em telas estreitas) - cai pra mesma
+                imagem se o admin nao cadastrou uma versao mobile. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={b.imagem_fundo} alt="" className="h-full w-full object-cover" />
+            <img
+              src={b.imagem_fundo_mobile || b.imagem_fundo}
+              alt=""
+              className="h-full w-full object-cover sm:hidden"
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={b.imagem_fundo} alt="" className="hidden h-full w-full object-cover sm:block" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10" />
             <div className="absolute inset-0 bg-gradient-to-r from-black/45 via-black/5 to-transparent" />
           </div>

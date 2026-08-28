@@ -167,7 +167,7 @@ async function main() {
   for (const [tipo, nome, valor, descontoAnual, limite, mesesDestaque] of [
     ["empresa_gratis", "Grátis", 0.0, 0, 6, 0],
     ["empresa_leads", "Light", 25.9, 5, 30, 0],
-    ["empresa_completo", "Completo", 55.0, 5, null, 2],
+    ["empresa_completo", "Completo", 60.0, 5, null, 3],
     ["profissional", "Profissional", 2.5, 0, null, 0],
   ] as const) {
     const { rows } = await pool.query<{ id: number }>(
@@ -176,6 +176,22 @@ async function main() {
       [tipo, nome, valor, descontoAnual, limite, mesesDestaque]
     );
     planoIds[tipo] = rows[0].id;
+  }
+
+  console.log("Seed: periodicidade com desconto (Light e Completo)...");
+  for (const tipo of ["empresa_leads", "empresa_completo"] as const) {
+    for (const [meses, descontoPct] of [
+      [1, 0],
+      [3, 10],
+      [12, 20],
+      [24, 30],
+    ] as const) {
+      await pool.query(`INSERT INTO plano_periodos (plano_id, meses, desconto_pct) VALUES ($1,$2,$3)`, [
+        planoIds[tipo],
+        meses,
+        descontoPct,
+      ]);
+    }
   }
 
   console.log("Seed: senha padrão de demonstração...");

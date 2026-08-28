@@ -29,15 +29,16 @@ const SEXO_LABEL: Record<string, string> = {
  */
 export default async function PerfilProfissionalParaEmpresaPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
-  if (!session || session.tipo !== "empresa") redirect("/entrar?tipo=empresa");
+  if (!session || (session.tipo !== "empresa" && session.tipo !== "admin")) redirect("/entrar?tipo=empresa");
 
   const { id } = await params;
-  const [perfil, telefone, diasIndisponiveis] = await Promise.all([
-    getMeuPerfilProfissional(id),
-    getTelefoneProfissional(id),
-    listDiasIndisponiveis(id),
-  ]);
+  const perfil = await getMeuPerfilProfissional(id);
   if (!perfil) notFound();
+
+  const [telefone, diasIndisponiveis] = await Promise.all([
+    getTelefoneProfissional(perfil.usuario_id),
+    listDiasIndisponiveis(perfil.usuario_id),
+  ]);
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-8">
@@ -84,6 +85,11 @@ export default async function PerfilProfissionalParaEmpresaPage({ params }: { pa
           {DISPONIBILIDADE_LABEL[perfil.disponibilidade_status]}
         </Badge>
         {perfil.sexo && <Badge tone="muted">{SEXO_LABEL[perfil.sexo] ?? perfil.sexo}</Badge>}
+        {perfil.nota_media !== null && (
+          <Badge tone="ad">
+            ⭐ {Number(perfil.nota_media).toFixed(1)} ({perfil.total_avaliacoes})
+          </Badge>
+        )}
       </div>
 
       {perfil.galeria.length > 0 && (

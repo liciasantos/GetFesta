@@ -123,3 +123,26 @@ export async function manifestarInteresse(pedidoId: string): Promise<ManifestarI
 export async function registrarCliqueWhatsapp(empresaId: string): Promise<void> {
   await query(`INSERT INTO empresa_eventos (empresa_id, tipo) VALUES ($1, 'clique_whatsapp')`, [empresaId]);
 }
+
+export type MarcarPedidoConcluidoResult = { error?: string; ok?: boolean };
+
+/** Cliente informa que fechou com um fornecedor - pede pra dizer se foi
+ * atraves da GetFesta (metrica real de conversao do funil). */
+export async function marcarPedidoConcluido(pedidoId: string, encontradoPeloSite: boolean): Promise<MarcarPedidoConcluidoResult> {
+  const session = await getSession();
+  if (!session || session.tipo !== "cliente") return { error: "Sessão inválida." };
+
+  const pedido = await queryOne<{ id: string }>(`SELECT id FROM pedidos WHERE id = $1 AND cliente_id = $2`, [
+    pedidoId,
+    session.usuarioId,
+  ]);
+  if (!pedido) return { error: "Pedido não encontrado." };
+
+  await query(`UPDATE pedidos SET status = 'concluido', encontrado_pelo_site = $1 WHERE id = $2`, [
+    encontradoPeloSite,
+    pedidoId,
+  ]);
+
+  revalidatePath("/meus-pedidos");
+  return { ok: true };
+}

@@ -39,7 +39,7 @@ export default function DestaquesGrid({
             data-card
             className={`card-hover flex shrink-0 flex-col overflow-hidden rounded-lg border border-accent-soft-2 bg-white ${cardWidthClass}`}
           >
-            <Link href={`/empresa/${b.empresa_id}`} className="flex flex-1 flex-col">
+            <Link href={`/empresa/${b.empresa_slug}`} className="flex flex-1 flex-col">
               {b.foto_capa ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={b.foto_capa} alt={b.nome_fantasia} className="aspect-square w-full object-cover" />

@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
-import { getVagaDaEmpresa, listCandidatosDaVaga } from "@/lib/data/vagas";
+import { getAvaliacaoDaVaga, getVagaDaEmpresa, listCandidatosDaVaga } from "@/lib/data/vagas";
 import { formatCurrencyBRL, formatDateBR } from "@/lib/format";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 import { Badge } from "@/components/ui";
 import { FecharComCandidatoButton, NaoFechouButton } from "@/components/FecharVagaButton";
+import AvaliarProfissionalForm from "@/components/AvaliarProfissionalForm";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,10 @@ export default async function VagaCandidatosPage({ params }: { params: Promise<{
   const vaga = await getVagaDaEmpresa(id, session.usuarioId);
   if (!vaga) notFound();
 
-  const candidatos = await listCandidatosDaVaga(id, session.usuarioId);
+  const [candidatos, avaliacao] = await Promise.all([
+    listCandidatosDaVaga(id, session.usuarioId),
+    vaga.status === "preenchida" ? getAvaliacaoDaVaga(id, session.usuarioId) : Promise.resolve(null),
+  ]);
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-8">
@@ -45,10 +49,18 @@ export default async function VagaCandidatosPage({ params }: { params: Promise<{
         </p>
         <p className="mt-2 text-[13px] leading-relaxed">{vaga.descricao}</p>
 
-        {vaga.status === "preenchida" && vaga.profissional_selecionado_nome && (
-          <p className="mt-3 rounded-lg bg-ok-soft p-2.5 text-[12.5px] font-bold text-ok">
-            ✓ Fechado com {vaga.profissional_selecionado_nome}
-          </p>
+        {vaga.status === "preenchida" && vaga.profissional_selecionado_nome && vaga.profissional_selecionado_id && (
+          <>
+            <p className="mt-3 rounded-lg bg-ok-soft p-2.5 text-[12.5px] font-bold text-ok">
+              ✓ Fechado com {vaga.profissional_selecionado_nome}
+            </p>
+            <AvaliarProfissionalForm
+              vagaId={vaga.id}
+              profissionalId={vaga.profissional_selecionado_id}
+              profissionalNome={vaga.profissional_selecionado_nome}
+              avaliacaoAtual={avaliacao}
+            />
+          </>
         )}
         {vaga.status === "cancelada" && (
           <p className="mt-3 rounded-lg bg-surface-alt p-2.5 text-[12.5px] font-semibold text-muted">
@@ -68,7 +80,7 @@ export default async function VagaCandidatosPage({ params }: { params: Promise<{
       <div className="flex flex-col gap-2.5">
         {candidatos.map((c) => (
           <div key={c.profissional_id} className="flex items-center justify-between gap-3 rounded-lg border border-border p-3">
-            <Link href={`/profissional/${c.profissional_id}`} className="flex items-center gap-3 hover:underline">
+            <Link href={`/profissional/${c.profissional_slug}`} className="flex items-center gap-3 hover:underline">
               {c.foto_perfil_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={c.foto_perfil_url} alt={c.nome} className="h-11 w-11 rounded-full object-cover" />

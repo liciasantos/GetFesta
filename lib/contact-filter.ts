@@ -37,6 +37,11 @@ function emailRegex(): RegExp {
   return /[a-z0-9._%+-]+\s*(?:@|\(?\s*arroba\s*\)?)\s*[a-z0-9-]+\s*(?:\.|\(?\s*ponto\s*\)?)\s*(?:com(?:\.br)?|net|org|br|io)\b/gi;
 }
 
+// link/url: http(s)://, www., ou dominio.tld solto (instagram.com, wa.me, bit.ly...).
+function urlRegex(): RegExp {
+  return /(?:https?:\/\/|www\.)\S+|\b[a-z0-9-]+\.(?:com(?:\.br)?|net(?:\.br)?|org|io|me|link|shop|site|app|whatsapp)\b\S*/gi;
+}
+
 export type ContactLeakResult = {
   blocked: boolean;
   motivos: string[];
@@ -47,10 +52,14 @@ export function detectContactLeak(texto: string): ContactLeakResult {
   const motivos: string[] = [];
   if (phoneRegex().test(texto)) motivos.push("possivel_telefone");
   if (emailRegex().test(texto)) motivos.push("possivel_email");
+  if (urlRegex().test(texto)) motivos.push("possivel_link");
   return { blocked: motivos.length > 0, motivos };
 }
 
 /** Layer 4: usado na exibicao publica, como rede de seguranca redundante. */
 export function maskContactLeak(texto: string): string {
-  return texto.replace(phoneRegex(), "[contato oculto]").replace(emailRegex(), "[contato oculto]");
+  return texto
+    .replace(phoneRegex(), "[contato oculto]")
+    .replace(emailRegex(), "[contato oculto]")
+    .replace(urlRegex(), "[link oculto]");
 }

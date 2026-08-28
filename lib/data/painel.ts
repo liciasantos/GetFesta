@@ -61,6 +61,20 @@ export async function listPlanosEmpresa(): Promise<PlanoEmpresa[]> {
   );
 }
 
+export type PlanoPeriodoEmpresa = { id: number; plano_id: number; meses: number; desconto_pct: string };
+
+/** Periodicidades ativas (1/3/12/24 meses etc.) pra planos pagos de empresa -
+ * usado no seletor de plano do painel pra mostrar o desconto por período. */
+export async function listPeriodosEmpresa(): Promise<PlanoPeriodoEmpresa[]> {
+  return query<PlanoPeriodoEmpresa>(
+    `SELECT pp.id, pp.plano_id, pp.meses, pp.desconto_pct
+     FROM plano_periodos pp
+     JOIN planos p ON p.id = pp.plano_id
+     WHERE pp.ativo = true AND p.tipo::text LIKE 'empresa_%'
+     ORDER BY pp.meses ASC`
+  );
+}
+
 export type VinculoProfissional = {
   profissional_id: string;
   nome: string;

@@ -1,10 +1,12 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
-import { getAssinaturaAtiva, getPainelKpis, listPlanosEmpresa, listVinculos } from "@/lib/data/painel";
+import { getAssinaturaAtiva, getPainelKpis, listPeriodosEmpresa, listPlanosEmpresa, listVinculos } from "@/lib/data/painel";
 import { listPedidosCompativeis } from "@/lib/data/pedidos";
-import { getNomeFantasia } from "@/lib/data/empresas";
-import { Badge } from "@/components/ui";
+import { getNomeFantasia, getSlugEmpresa } from "@/lib/data/empresas";
+import { getConfiguracoesSite, CONFIG_CONTATO_WHATSAPP } from "@/lib/data/config";
+import { Badge, buttonClass } from "@/components/ui";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 import { buildAnunciarBannerMailto } from "@/lib/mailto";
 import WhatsAppButton from "@/components/WhatsAppButton";
@@ -18,13 +20,16 @@ export default async function PainelPage() {
   const session = await getSession();
   if (!session || session.tipo !== "empresa") redirect("/entrar");
 
-  const [kpis, assinatura, leads, vinculos, nomeFantasia, planos] = await Promise.all([
+  const [kpis, assinatura, leads, vinculos, nomeFantasia, slug, planos, periodos, config] = await Promise.all([
     getPainelKpis(session.usuarioId),
     getAssinaturaAtiva(session.usuarioId),
     listPedidosCompativeis(session.usuarioId),
     listVinculos(session.usuarioId),
     getNomeFantasia(session.usuarioId),
+    getSlugEmpresa(session.usuarioId),
     listPlanosEmpresa(),
+    listPeriodosEmpresa(),
+    getConfiguracoesSite(),
   ]);
 
   return (
@@ -38,7 +43,7 @@ export default async function PainelPage() {
           <Link href="/painel/vagas" className="text-[12.5px] font-bold text-accent-dark underline">
             Vagas para profissionais
           </Link>
-          <Link href={`/empresa/${session.usuarioId}`} className="text-[12.5px] font-bold text-accent-dark underline">
+          <Link href={`/empresa/${slug ?? session.usuarioId}`} className="text-[12.5px] font-bold text-accent-dark underline">
             Ver meu perfil público
           </Link>
         </div>
@@ -57,7 +62,15 @@ export default async function PainelPage() {
             >
               📣 Anunciar no banner principal
             </a>
-            <PlanoSelector planos={planos} planoAtualId={assinatura.plano_id} />
+            <Suspense fallback={<button className={buttonClass("secondary", "sm")}>Alterar plano</button>}>
+              <PlanoSelector
+                planos={planos}
+                planoAtualId={assinatura.plano_id}
+                periodos={periodos}
+                whatsapp={config[CONFIG_CONTATO_WHATSAPP]}
+                nomeFantasia={nomeFantasia ?? "minha empresa"}
+              />
+            </Suspense>
           </div>
         </div>
       )}

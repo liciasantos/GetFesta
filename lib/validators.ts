@@ -115,6 +115,7 @@ export const criarBairroCustomSchema = z.object({
 
 export const alterarPlanoEmpresaSchema = z.object({
   planoId: z.coerce.number(),
+  meses: z.coerce.number().int().min(1).max(60).optional(),
 });
 
 export const criarBannerSchema = z
@@ -132,7 +133,41 @@ export const criarBannerHeroSchema = z.object({
   texto: z.string().max(300).optional(),
   botaoLabel: z.string().max(60).optional(),
   botaoUrl: z.string().max(500).optional(),
-  imagemFundo: z.string().min(50, "Escolha uma imagem de fundo"),
+  imagemFundo: z.string().min(4, "Escolha uma imagem de fundo (desktop)"),
+  imagemFundoMobile: z.string().optional(),
+});
+
+export const atualizarBannerHeroSchema = z.object({
+  id: z.string().uuid(),
+  titulo: z.string().min(2, "Informe um título").max(160),
+  texto: z.string().max(300).optional(),
+  botaoLabel: z.string().max(60).optional(),
+  botaoUrl: z.string().max(500).optional(),
+  imagemFundo: z.string().min(4, "Escolha uma imagem de fundo (desktop)"),
+  imagemFundoMobile: z.string().optional(),
+});
+
+export const criarPlanoPeriodoSchema = z.object({
+  planoId: z.coerce.number({ message: "Selecione o plano" }),
+  meses: z.coerce.number().int().min(1, "Informe quantos meses").max(60, "Máximo 60 meses"),
+  descontoPct: z.coerce.number().min(0, "Não pode ser negativo").max(100, "Máximo 100%"),
+});
+
+export const marcarAssinaturaPagaSchema = z.object({
+  empresaId: z.string().uuid(),
+  meses: z.coerce.number().int().min(1).max(60),
+});
+
+export const trocarPlanoManualSchema = z.object({
+  empresaId: z.string().uuid(),
+  planoId: z.coerce.number(),
+});
+
+export const avaliarProfissionalSchema = z.object({
+  vagaId: z.string().uuid(),
+  profissionalId: z.string().uuid(),
+  nota: z.coerce.number().int().min(1, "Escolha uma nota").max(5),
+  comentario: z.string().max(500).optional(),
 });
 
 export const criarVagaSchema = z.object({

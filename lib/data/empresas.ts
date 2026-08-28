@@ -23,6 +23,7 @@ const NOTA_FONTE_SQL = `
 
 export type EmpresaCard = {
   usuario_id: string;
+  slug: string;
   nome_fantasia: string;
   logo_url: string | null;
   preco_a_partir_de: string | null;
@@ -43,6 +44,7 @@ export type EmpresaCard = {
 const EMPRESA_CARD_SELECT = `
   SELECT
     e.usuario_id,
+    e.slug,
     e.nome_fantasia,
     e.logo_url,
     e.razao_social,
@@ -131,15 +133,18 @@ export type EmpresaPerfil = EmpresaCard & {
   avaliacoes: { nota: number; comentario: string | null; criado_em: string }[];
 };
 
-export async function getEmpresaById(id: string): Promise<EmpresaPerfil | null> {
+/** Aceita tanto o slug (URL bonita, /empresa/nome-da-empresa) quanto o uuid
+ * antigo - links já existentes continuam funcionando. */
+export async function getEmpresaById(idOuSlug: string): Promise<EmpresaPerfil | null> {
   const base = await queryOne<
     EmpresaCard & { razao_social: string; descricao: string | null; instagram: string | null; telefone_contato: string | null }
   >(
     `${EMPRESA_CARD_SELECT}
-     WHERE e.usuario_id = $1`,
-    [id]
+     WHERE e.usuario_id::text = $1 OR e.slug = $1`,
+    [idOuSlug]
   );
   if (!base) return null;
+  const id = base.usuario_id;
 
   const [estruturaRows, galeria, pacotes, avaliacoes] = await Promise.all([
     query<{ item: string }>(`SELECT item FROM empresa_estrutura WHERE empresa_id = $1`, [id]),
@@ -216,6 +221,11 @@ export async function getNomeFantasia(empresaId: string): Promise<string | null>
     empresaId,
   ]);
   return row?.nome_fantasia ?? null;
+}
+
+export async function getSlugEmpresa(empresaId: string): Promise<string | null> {
+  const row = await queryOne<{ slug: string }>(`SELECT slug FROM empresas WHERE usuario_id = $1`, [empresaId]);
+  return row?.slug ?? null;
 }
 
 export async function registrarVisualizacaoPerfil(empresaId: string) {

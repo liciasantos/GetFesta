@@ -49,11 +49,34 @@ export default async function AdminHeroPage() {
                 </p>
               </div>
             </div>
-            <HeroBannerRowActions bannerId={b.id} ativo={b.ativo} isPrimeiro={i === 0} isUltimo={i === banners.length - 1} />
+            <div className="flex items-center gap-1.5">
+              <Link
+                href={`/admin/hero/${b.id}/editar`}
+                aria-label="Editar banner"
+                className="flex h-7 w-7 items-center justify-center rounded-md border border-border-strong text-muted hover:bg-surface-alt"
+              >
+                <PencilIcon />
+              </Link>
+              <HeroBannerRowActions bannerId={b.id} ativo={b.ativo} isPrimeiro={i === 0} isUltimo={i === banners.length - 1} />
+            </div>
           </div>
         ))}
         {banners.length === 0 && <p className="text-sm text-muted">Nenhum banner cadastrado ainda.</p>}
       </div>
     </div>
+  );
+}
+
+function PencilIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" className="h-3.5 w-3.5" aria-hidden="true">
+      <path
+        d="M13.5 3.5l3 3L6 17H3v-3L13.5 3.5Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }

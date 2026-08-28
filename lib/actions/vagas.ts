@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { query, queryOne } from "@/lib/db";
 import { getSession } from "@/lib/auth";
-import { criarVagaSchema } from "@/lib/validators";
+import { avaliarProfissionalSchema, criarVagaSchema } from "@/lib/validators";
 
 export type VagaActionState = { error?: string; success?: boolean } | undefined;
 
@@ -114,4 +114,43 @@ export async function marcarVagaNaoPreenchida(vagaId: string): Promise<FecharVag
   revalidatePath("/painel/vagas");
   revalidatePath(`/painel/vagas/${vagaId}`);
   return { ok: true };
+}
+
+export type AvaliarProfissionalState = { error?: string; success?: boolean } | undefined;
+
+/** Empresa avalia o profissional depois de fechar a vaga com ele - alimenta a
+ * pontuação usada em "buscar profissionais" (ver lib/data/profissionais.ts:
+ * listProfissionaisCompativeis). Só pode avaliar quem de fato foi selecionado
+ * pra essa vaga, e só uma vez por vaga (reenviar atualiza a nota/comentário). */
+export async function avaliarProfissional(
+  _prevState: AvaliarProfissionalState,
+  formData: FormData
+): Promise<AvaliarProfissionalState> {
+  const session = await getSession();
+  if (!session || session.tipo !== "empresa") return { error: "Sessão inválida." };
+
+  const parsed = avaliarProfissionalSchema.safeParse({
+    vagaId: formData.get("vagaId"),
+    profissionalId: formData.get("profissionalId"),
+    nota: formData.get("nota"),
+    comentario: formData.get("comentario") || undefined,
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
+
+  const vaga = await queryOne<{ id: string }>(
+    `SELECT id FROM vagas_profissionais
+     WHERE id = $1 AND empresa_id = $2 AND status = 'preenchida' AND profissional_selecionado_id = $3`,
+    [parsed.data.vagaId, session.usuarioId, parsed.data.profissionalId]
+  );
+  if (!vaga) return { error: "Essa vaga não pode ser avaliada." };
+
+  await query(
+    `INSERT INTO avaliacoes_profissional (profissional_id, empresa_id, vaga_id, nota, comentario)
+     VALUES ($1,$2,$3,$4,$5)
+     ON CONFLICT (vaga_id, empresa_id) DO UPDATE SET nota = $4, comentario = $5`,
+    [parsed.data.profissionalId, session.usuarioId, parsed.data.vagaId, parsed.data.nota, parsed.data.comentario ?? null]
+  );
+
+  revalidatePath(`/painel/vagas/${parsed.data.vagaId}`);
+  return { success: true };
 }

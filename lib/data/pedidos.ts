@@ -34,7 +34,7 @@ export type PedidosFeedFiltros = {
 };
 
 export async function listPedidosFeed(filtros: PedidosFeedFiltros = {}): Promise<PedidoFeedItem[]> {
-  const conditions: string[] = ["p.status = 'aberto'"];
+  const conditions: string[] = ["p.status = 'aberto'", "p.oculto_admin = false"];
   const params: unknown[] = [];
 
   if (filtros.categoriaSlug) {
@@ -86,6 +86,7 @@ export async function listPedidosCompativeis(empresaId: string): Promise<PedidoL
      LEFT JOIN bairros b ON b.id = p.bairro_id
      LEFT JOIN pedido_interesses pi ON pi.pedido_id = p.id AND pi.empresa_id = $1
      WHERE p.status = 'aberto'
+       AND p.oculto_admin = false
        AND EXISTS (
          SELECT 1 FROM pedido_categorias pc
          JOIN empresa_categorias ec ON ec.categoria_id = pc.categoria_id AND ec.empresa_id = $1
@@ -101,14 +102,15 @@ export async function listPedidosCompativeis(empresaId: string): Promise<PedidoL
 
 export type MeuPedido = PedidoFeedItem & {
   status: string;
-  empresasInteressadas: { empresa_id: string; nome_fantasia: string; telefone_contato: string | null }[];
+  encontrado_pelo_site: boolean | null;
+  empresasInteressadas: { empresa_id: string; empresa_slug: string; nome_fantasia: string; telefone_contato: string | null }[];
 };
 
 export async function listMeusPedidos(clienteUsuarioId: string): Promise<MeuPedido[]> {
-  const pedidos = await query<PedidoFeedItem & { status: string }>(
+  const pedidos = await query<PedidoFeedItem & { status: string; encontrado_pelo_site: boolean | null }>(
     `SELECT
        p.id, p.tipo_evento, p.data_evento, ci.nome AS cidade_nome, b.nome AS bairro_nome,
-       p.descricao, p.orcamento_min, p.orcamento_max, p.criado_em, p.status,
+       p.descricao, p.orcamento_min, p.orcamento_max, p.criado_em, p.status, p.encontrado_pelo_site,
        COALESCE(
          (SELECT array_agg(c.nome ORDER BY c.nome) FROM pedido_categorias pc JOIN categorias c ON c.id = pc.categoria_id WHERE pc.pedido_id = p.id),
          ARRAY[]::text[]
@@ -123,8 +125,13 @@ export async function listMeusPedidos(clienteUsuarioId: string): Promise<MeuPedi
 
   const result: MeuPedido[] = [];
   for (const pedido of pedidos) {
-    const interessadas = await query<{ empresa_id: string; nome_fantasia: string; telefone_contato: string | null }>(
-      `SELECT e.usuario_id AS empresa_id, e.nome_fantasia, e.telefone_contato
+    const interessadas = await query<{
+      empresa_id: string;
+      empresa_slug: string;
+      nome_fantasia: string;
+      telefone_contato: string | null;
+    }>(
+      `SELECT e.usuario_id AS empresa_id, e.slug AS empresa_slug, e.nome_fantasia, e.telefone_contato
        FROM pedido_interesses pi
        JOIN empresas e ON e.usuario_id = pi.empresa_id
        WHERE pi.pedido_id = $1 AND pi.status = 'contato_liberado'

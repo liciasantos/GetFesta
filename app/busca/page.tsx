@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { listCategorias, listCidades } from "@/lib/data/geo";
 import { searchEmpresas } from "@/lib/data/empresas";
+import { getConfiguracoesSite, CONFIG_BUSCA_BANNER_BG } from "@/lib/data/config";
 import { Badge, PlaceholderImg } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +20,7 @@ export default async function BuscaPage({
   searchParams: Promise<{ categoria?: string; cidadeId?: string; faixa?: string }>;
 }) {
   const sp = await searchParams;
-  const [categorias, cidades, empresas] = await Promise.all([
+  const [categorias, cidades, empresas, config] = await Promise.all([
     listCategorias(),
     listCidades(),
     searchEmpresas({
@@ -27,6 +28,7 @@ export default async function BuscaPage({
       cidadeId: sp.cidadeId ? Number(sp.cidadeId) : undefined,
       faixa: (sp.faixa as "ate_700" | "700_3000" | "3000_8000" | "acima_8000") || undefined,
     }),
+    getConfiguracoesSite(),
   ]);
 
   return (
@@ -37,7 +39,7 @@ export default async function BuscaPage({
         <img src="/busca-banner-bg.svg" alt="" className="absolute inset-0 h-full w-full object-cover" />
         {/* foto sutil por cima da cor de fundo, opacidade baixa pra não brigar com o texto */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/baloes-lilas.jpg" alt="" className="absolute inset-0 h-full w-full object-cover opacity-20" />
+        <img src={config[CONFIG_BUSCA_BANNER_BG]} alt="" className="absolute inset-0 h-full w-full object-cover opacity-20" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/5 to-transparent" />
 
         <div className="relative mx-auto w-full max-w-6xl px-6 py-10">
@@ -80,7 +82,7 @@ export default async function BuscaPage({
             {empresas.map((e) => (
               <Link
                 key={e.usuario_id}
-                href={`/empresa/${e.usuario_id}`}
+                href={`/empresa/${e.slug}`}
                 className="card-hover overflow-hidden rounded-xl border border-border bg-surface hover:border-accent-soft-2"
               >
                 {e.foto_capa ? (

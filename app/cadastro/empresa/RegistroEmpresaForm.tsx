@@ -5,11 +5,23 @@ import { registrarEmpresa, type ActionState } from "@/lib/actions/auth";
 import { buttonClass } from "@/components/ui";
 import type { Cidade, Categoria } from "@/lib/data/geo";
 
-export default function RegistroEmpresaForm({ cidades, categorias }: { cidades: Cidade[]; categorias: Categoria[] }) {
+export default function RegistroEmpresaForm({
+  cidades,
+  categorias,
+  planoIntencao,
+  mesesIntencao,
+}: {
+  cidades: Cidade[];
+  categorias: Categoria[];
+  planoIntencao?: number;
+  mesesIntencao?: number;
+}) {
   const [state, formAction, pending] = useActionState<ActionState, FormData>(registrarEmpresa, undefined);
 
   return (
     <form action={formAction} className="flex flex-col gap-3">
+      {planoIntencao && <input type="hidden" name="planoIntencao" value={planoIntencao} />}
+      {mesesIntencao && <input type="hidden" name="mesesIntencao" value={mesesIntencao} />}
       <Field label="Nome fantasia">
         <input name="nomeFantasia" required className="rounded-md border border-border px-3 py-2.5 text-sm" />
       </Field>

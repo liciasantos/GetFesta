@@ -165,7 +165,17 @@ export default async function EmpresaPerfilPage({ params }: { params: Promise<{ 
           <section>
             <h4 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Avaliações de clientes</h4>
             {empresa.avaliacoes.length === 0 ? (
-              <p className="text-[12.5px] text-muted">Essa empresa ainda não tem avaliações na GetFesta.</p>
+              <p className="text-[12.5px] text-muted">
+                Essa empresa ainda não tem avaliações nativas na GetFesta.
+                {empresa.nota_fonte === "google" && (
+                  <>
+                    {" "}
+                    A nota mostrada no topo do perfil (⭐ {Number(empresa.nota_exibida).toFixed(1)}) vem do{" "}
+                    <b>Google Meu Negócio</b> — assim que a empresa acumular avaliações aqui na plataforma, essa lista
+                    passa a mostrá-las.
+                  </>
+                )}
+              </p>
             ) : (
               <div className="flex flex-col gap-2">
                 {empresa.avaliacoes.map((a, i) => (
@@ -214,7 +224,7 @@ export default async function EmpresaPerfilPage({ params }: { params: Promise<{ 
                 </div>
               </div>
             )}
-            <p className="mt-3 text-[10.5px] leading-relaxed text-muted-2">
+            <p className="mt-3 text-[11.5px] leading-relaxed text-muted-2">
               Este perfil é de um prestador independente. GetFesta apenas facilita o contato e não participa da
               contratação.
             </p>

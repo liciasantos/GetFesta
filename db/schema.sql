@@ -54,6 +54,21 @@ CREATE TABLE usuarios (
 CREATE INDEX idx_usuarios_tipo ON usuarios(tipo);
 
 -- ---------------------------------------------------------------------
+-- 1-B. CONFIGURACOES DO SITE (chave/valor, editavel pelo admin)
+-- ---------------------------------------------------------------------
+-- Conteudo do site editavel sem deploy. Chaves usadas hoje (ver lib/data/config.ts):
+--   'como_funciona_bg' / 'busca_banner_bg' - imagens de fundo (ver /admin/aparencia),
+--     valor e um data URI (mesmo padrao de logo/galeria) ou path de /public como fallback.
+--   'social_instagram' / 'social_tiktok' / 'social_youtube' - links do rodape/contato
+--     (ver /admin/site); valor vazio = icone fica desabilitado.
+--   'contato_email' / 'contato_telefone' / 'contato_whatsapp' - pagina /contato.
+CREATE TABLE configuracoes_site (
+    chave         VARCHAR(60) PRIMARY KEY,
+    valor         TEXT NOT NULL,
+    atualizado_em TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ---------------------------------------------------------------------
 -- 2. LOCALIDADES (usado por empresas, profissionais, pedidos, clientes)
 -- ---------------------------------------------------------------------
 CREATE TABLE cidades (
@@ -103,6 +118,7 @@ CREATE TABLE clientes (
 -- ---------------------------------------------------------------------
 CREATE TABLE empresas (
     usuario_id            UUID PRIMARY KEY REFERENCES usuarios(id) ON DELETE CASCADE,
+    slug                    VARCHAR(80) UNIQUE NOT NULL,      -- URL bonita: /empresa/slug (gerado do nome_fantasia no cadastro)
     razao_social           VARCHAR(180) NOT NULL,
     nome_fantasia           VARCHAR(180) NOT NULL,
     cnpj                    VARCHAR(18) UNIQUE NOT NULL,
@@ -199,6 +215,7 @@ CREATE TABLE categorias_profissionais (
 
 CREATE TABLE profissionais (
     usuario_id               UUID PRIMARY KEY REFERENCES usuarios(id) ON DELETE CASCADE,
+    slug                      VARCHAR(80) UNIQUE NOT NULL,   -- URL bonita: /profissional/slug (gerado do nome no cadastro)
     nome                      VARCHAR(180) NOT NULL,
     foto_perfil_url            TEXT,
     sexo                        VARCHAR(20),           -- feminino / masculino / nao_binario / prefiro_nao_informar
@@ -216,6 +233,7 @@ CREATE TABLE profissionais (
     cnpj                        VARCHAR(18),           -- se atua como PJ
     disponibilidade_status       status_disponibilidade NOT NULL DEFAULT 'nao_informado',
     consentimento_dados_em       TIMESTAMPTZ,           -- aceite do termo especifico LGPD
+    aprovada_para_destaque       BOOLEAN NOT NULL DEFAULT FALSE, -- curadoria manual do admin (anuncio pago), mesmo padrao de empresas.aprovada_para_destaque
     criado_em                    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -225,6 +243,30 @@ CREATE TABLE profissional_categorias (
     categoria_id    INTEGER REFERENCES categorias_profissionais(id),
     PRIMARY KEY (profissional_id, categoria_id)
 );
+
+-- define quais funcoes de profissional fazem sentido pra quais categorias de
+-- empresa (ex.: Cozinheiro -> Buffet/Estacoes/Saloes/Sitios, nao Animacao) -
+-- controla quem aparece em "buscar profissionais" no painel de cada empresa
+-- (ver lib/data/profissionais.ts:listProfissionaisCompativeis)
+CREATE TABLE categoria_profissional_compatibilidade (
+    categoria_profissional_id INTEGER NOT NULL REFERENCES categorias_profissionais(id) ON DELETE CASCADE,
+    categoria_id              INTEGER NOT NULL REFERENCES categorias(id) ON DELETE CASCADE,
+    PRIMARY KEY (categoria_profissional_id, categoria_id)
+);
+
+-- avaliacao que a empresa deixa pro profissional apos fechar uma vaga -
+-- alimenta a pontuacao usada pra ordenar "buscar profissionais"
+CREATE TABLE avaliacoes_profissional (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    profissional_id UUID NOT NULL REFERENCES profissionais(usuario_id) ON DELETE CASCADE,
+    empresa_id      UUID NOT NULL REFERENCES empresas(usuario_id) ON DELETE CASCADE,
+    vaga_id         UUID REFERENCES vagas_profissionais(id) ON DELETE SET NULL,
+    nota            SMALLINT NOT NULL CHECK (nota BETWEEN 1 AND 5),
+    comentario      VARCHAR(500),
+    criado_em       TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (vaga_id, empresa_id)
+);
+CREATE INDEX idx_avaliacoes_profissional_profissional ON avaliacoes_profissional(profissional_id);
 
 CREATE TABLE profissional_galeria (
     id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -343,6 +385,12 @@ CREATE TABLE pedidos (
     orcamento_min     NUMERIC(10,2),
     orcamento_max     NUMERIC(10,2),
     status            status_pedido NOT NULL DEFAULT 'aberto',
+    -- preenchido pelo cliente ao marcar o pedido como concluido: contratou
+    -- o fornecedor atraves da GetFesta (true) ou por outro meio (false)?
+    encontrado_pelo_site BOOLEAN,
+    -- moderacao do admin: oculta da vitrine publica/leads de empresa sem
+    -- apagar o registro (ver /admin/pedidos).
+    oculto_admin      BOOLEAN NOT NULL DEFAULT FALSE,
     criado_em         TIMESTAMPTZ NOT NULL DEFAULT now(),
     expira_em         TIMESTAMPTZ
 );
@@ -438,15 +486,27 @@ CREATE TABLE planos (
     -- quantos meses de elegibilidade para "Destaques da semana" o plano da
     -- de brinde ao assinar (0 = nenhum). Regra de negocio (nao automatizada
     -- no banco): pra manter o destaque no ciclo seguinte, a empresa precisa
-    -- contratar o plano bimestral - a aprovacao em si continua manual
+    -- contratar o plano trimestral - a aprovacao em si continua manual
     -- (empresas.aprovada_para_destaque), como o resto do destaque pago.
     meses_destaque_incluidos SMALLINT NOT NULL DEFAULT 0,
     -- seed:
-    -- ('empresa_gratis',   'Grátis',   0.00,  0, limite 4,    0 meses destaque)
-    -- ('empresa_leads',    'Light',   20.00,  5, limite 25,   0 meses destaque)
-    -- ('empresa_completo', 'Completo',55.00,  5, sem limite,  2 meses destaque)
+    -- ('empresa_gratis',   'Grátis',   0.00,  0, limite 6,    0 meses destaque)
+    -- ('empresa_leads',    'Light',   25.90,  5, limite 30,   0 meses destaque)
+    -- ('empresa_completo', 'Completo',60.00,  5, sem limite,  3 meses destaque)
     -- ('profissional',     'Profissional', 2.50, 0, sem limite, 0)
     ativo             BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+-- Periodicidade com desconto por plano (3/12/24 meses etc, estilo hospedagem) -
+-- admin cria/edita em /admin/planos-periodos. Preco efetivo = planos.valor_mensal
+-- * (1 - desconto_pct/100); a renovacao volta pro valor_mensal cheio.
+CREATE TABLE plano_periodos (
+    id           SERIAL PRIMARY KEY,
+    plano_id     INTEGER NOT NULL REFERENCES planos(id) ON DELETE CASCADE,
+    meses        SMALLINT NOT NULL CHECK (meses > 0),
+    desconto_pct NUMERIC(5,2) NOT NULL DEFAULT 0 CHECK (desconto_pct BETWEEN 0 AND 100),
+    ativo        BOOLEAN NOT NULL DEFAULT TRUE,
+    UNIQUE (plano_id, meses)
 );
 
 CREATE TABLE assinaturas (
@@ -461,6 +521,12 @@ CREATE TABLE assinaturas (
     criado_em            TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX idx_assinaturas_usuario ON assinaturas(usuario_id, status);
+-- fim_em funciona como "vencimento": renovar (marcar pago) empurra fim_em pra
+-- frente; um cron diario (ver app/api/cron/downgrade-inadimplentes) rebaixa
+-- pro plano Gratis quem estiver com status IN ('ativa','atrasada') e
+-- fim_em < now() - 5 dias. Ate a integracao com Mercado Pago existir de fato,
+-- "marcar pago"/"marcar atrasado" e feito manualmente pelo admin (ver
+-- /admin/planos).
 
 CREATE TABLE pagamentos (
     id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -505,6 +571,7 @@ CREATE TABLE banners_hero (
     botao_label  VARCHAR(60),
     botao_url    VARCHAR(500),
     imagem_fundo TEXT NOT NULL,          -- data URI, mesmo padrao de logo/galeria (sem storage externo)
+    imagem_fundo_mobile TEXT,            -- opcional: NULL = reusa a imagem desktop
     ativo        BOOLEAN NOT NULL DEFAULT TRUE,
     ordem        INTEGER NOT NULL DEFAULT 0,
     criado_em    TIMESTAMPTZ NOT NULL DEFAULT now()

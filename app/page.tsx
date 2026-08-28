@@ -3,6 +3,16 @@ import { listCategorias, listCidades } from "@/lib/data/geo";
 import { getEmpresasDestaque } from "@/lib/data/empresas";
 import { listPedidosFeed } from "@/lib/data/pedidos";
 import { listBannersAtivos, listHeroBannersAtivos } from "@/lib/data/banners";
+import { listPlanosEmpresa } from "@/lib/data/painel";
+import {
+  getConfiguracoesSite,
+  CONFIG_COMO_FUNCIONA_BG,
+  CONFIG_CTA_FORNECEDOR_BG,
+  CONFIG_CTA_FORNECEDOR_COR,
+} from "@/lib/data/config";
+import { getSession } from "@/lib/auth";
+import { hexToRgba } from "@/lib/color";
+import { PLANOS_BENEFICIOS, formatPrecoPlano } from "@/lib/planos-beneficios";
 import { Badge, PlaceholderImg, buttonClass } from "@/components/ui";
 import Hero from "@/components/HeroBannerCarousel";
 import MiniPedidoForm from "@/components/MiniPedidoForm";
@@ -12,14 +22,20 @@ import DestaquesGrid, { DestaquesKicker } from "@/components/DestaquesGrid";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [categorias, cidades, empresasDestaque, pedidos, banners, heroBanners] = await Promise.all([
-    listCategorias(),
-    listCidades(),
-    getEmpresasDestaque(4),
-    listPedidosFeed({ limit: 15 }),
-    listBannersAtivos(),
-    listHeroBannersAtivos(),
-  ]);
+  const [categorias, cidades, empresasDestaque, pedidos, banners, heroBanners, config, session, planosEmpresa] =
+    await Promise.all([
+      listCategorias(),
+      listCidades(),
+      getEmpresasDestaque(4),
+      listPedidosFeed({ limit: 15 }),
+      listBannersAtivos(),
+      listHeroBannersAtivos(),
+      getConfiguracoesSite(),
+      getSession(),
+      listPlanosEmpresa(),
+    ]);
+
+  const empresaLogada = session?.tipo === "empresa";
 
   return (
     <div>
@@ -66,7 +82,7 @@ export default async function HomePage() {
           trouxe (fundo atmosferico + coluna de intro + steps com divisorias) */}
       <section id="como-funciona" className="relative min-h-[420px] w-full overflow-hidden bg-text sm:min-h-[465px]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/sitio-festa-infantil.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <img src={config[CONFIG_COMO_FUNCIONA_BG]} alt="" className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/5 to-black/15" />
 
         {/* faixa fixada na base da imagem via position absolute (nao margem
@@ -74,8 +90,12 @@ export default async function HomePage() {
             imagem em telas/alturas diferentes, como aconteceu no banner da
             empresa antes. */}
         <div className="absolute inset-x-0 bottom-0 border-t border-white/15 bg-text/75 backdrop-blur-[1px]">
-          <div className="mx-auto grid max-w-6xl grid-cols-1 sm:grid-cols-[1.1fr_repeat(3,1fr)]">
-            <div className="border-white/15 px-6 py-9 sm:border-r sm:py-11">
+          {/* mobile: linha unica com rolagem lateral (snap), pra nao empilhar
+              4 blocos na vertical e estourar a altura da secao (que e
+              min-height, fixa pelo bg absoluto — ver nota do bug corrigido).
+              desktop (sm+): volta a ser grid, sem scroll. */}
+          <div className="mx-auto flex max-w-6xl snap-x snap-mandatory overflow-x-auto sm:grid sm:grid-cols-[1.1fr_repeat(3,1fr)] sm:overflow-visible">
+            <div className="w-[240px] shrink-0 snap-start border-white/15 px-6 py-9 sm:w-auto sm:border-r sm:py-11">
               <span className="section-kicker">02 — Como funciona</span>
               <p className="mt-3 max-w-xs text-lg font-bold leading-snug text-white sm:text-xl">
                 Do pedido ao fornecedor certo, em três passos — sem custo pra quem contrata.
@@ -100,7 +120,9 @@ export default async function HomePage() {
             ].map((s, i) => (
               <div
                 key={s.n}
-                className={`border-white/15 px-6 py-9 sm:py-11 ${i > 0 ? "border-t sm:border-l sm:border-t-0" : ""}`}
+                className={`w-[210px] shrink-0 snap-start border-l border-white/15 px-6 py-9 sm:w-auto sm:py-11 ${
+                  i === 0 ? "sm:border-l-0" : ""
+                }`}
               >
                 <div className="font-display text-4xl font-extrabold text-white sm:text-[42px]">{s.n}</div>
                 <div className="mt-1 text-[10.5px] font-bold uppercase tracking-wide text-white/50">Passo</div>
@@ -171,7 +193,7 @@ export default async function HomePage() {
             {empresasDestaque.map((e) => (
               <Link
                 key={e.usuario_id}
-                href={`/empresa/${e.usuario_id}`}
+                href={`/empresa/${e.slug}`}
                 className="card-hover overflow-hidden rounded-2xl border border-border bg-surface"
               >
                 {e.foto_capa ? (
@@ -214,7 +236,22 @@ export default async function HomePage() {
           </p>
 
           <div className="mt-9 grid grid-cols-1 gap-4 sm:grid-cols-3">
-            {PLANOS_FORNECEDOR.map((p) => (
+            {PLANOS_BENEFICIOS.map((p) => {
+              const planoDb = planosEmpresa.find((pe) => pe.nome === p.nome);
+              const gratis = !planoDb || Number(planoDb.valor_mensal) === 0;
+              // logada como empresa: troca de plano acontece no painel, nao faz
+              // sentido mandar pro cadastro de novo. Deslogada/outro tipo de
+              // conta: plano gratis segue direto pro cadastro; plano pago passa
+              // primeiro por uma tela de resumo da contratação, já que quem
+              // clicou aqui tem certeza que quer contratar (ver /contratar/empresa).
+              const href = empresaLogada
+                ? planoDb
+                  ? `/painel?plano=${planoDb.id}`
+                  : "/painel"
+                : gratis || !planoDb
+                  ? "/cadastro/empresa"
+                  : `/contratar/empresa?plano=${planoDb.id}`;
+              return (
               <div
                 key={p.nome}
                 className={`relative rounded-2xl border p-6 ${
@@ -228,8 +265,10 @@ export default async function HomePage() {
                 )}
                 <h3 className="text-[15px] font-bold">{p.nome}</h3>
                 <div className="mt-2 flex items-baseline gap-1">
-                  <span className="font-display text-3xl font-extrabold">{p.preco}</span>
-                  {p.preco !== "R$ 0" && <span className="text-[12px] text-muted">/mês</span>}
+                  <span className="font-display text-3xl font-extrabold">
+                    {formatPrecoPlano(planoDb ? Number(planoDb.valor_mensal) : 0)}
+                  </span>
+                  {!gratis && <span className="text-[12px] text-muted">/mês</span>}
                 </div>
                 <ul className="mt-5 flex flex-col gap-2.5 text-[12.5px] leading-relaxed">
                   {p.beneficios.map((b) => (
@@ -240,7 +279,7 @@ export default async function HomePage() {
                   ))}
                 </ul>
                 <Link
-                  href="/cadastro/empresa"
+                  href={href}
                   className={`mt-6 block w-full rounded-lg py-2.5 text-center text-[13px] font-bold ${
                     p.destaque
                       ? "bg-accent text-white hover:bg-accent-dark"
@@ -250,22 +289,29 @@ export default async function HomePage() {
                   Contratar {p.nome}
                 </Link>
               </div>
-            ))}
+              );
+            })}
           </div>
+        </div>
+      </section>
 
-          <div className="relative mt-9 flex flex-col items-center justify-between gap-6 overflow-hidden rounded-2xl bg-text px-8 py-10 text-center sm:flex-row sm:text-left">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/festa-heroi.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#1f2933]/95 via-[#1f2933]/85 to-[#1f2933]/60" />
+      {/* CTA FORNECEDOR — full banner de fundo por trás do box (nao mais dentro
+          dele), afastado da seção de planos com uma margem extra pra respirar. */}
+      <section className="relative mt-11 overflow-hidden border-b border-border px-6 py-16 sm:py-20">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={config[CONFIG_CTA_FORNECEDOR_BG]} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0" style={{ backgroundColor: hexToRgba(config[CONFIG_CTA_FORNECEDOR_COR], 0.8) }} />
 
-            <div className="relative">
+        <div className="relative mx-auto max-w-6xl">
+          <div className="flex flex-col items-center justify-between gap-6 rounded-2xl bg-text px-8 py-10 text-center sm:flex-row sm:text-left">
+            <div>
               <h3 className="text-lg font-extrabold text-white">Você é fornecedor de festas?</h3>
               <p className="mt-1.5 max-w-md text-[13px] text-white/70">
                 Receba pedidos de clientes da sua região — cadastro gratuito, comece no plano Grátis agora mesmo.
               </p>
             </div>
-            <Link href="/cadastro/empresa" className={`${buttonClass("primary", "lg")} relative shrink-0`}>
-              Quero receber pedidos de festa →
+            <Link href={empresaLogada ? "/painel" : "/cadastro/empresa"} className={`${buttonClass("primary", "lg")} shrink-0`}>
+              {empresaLogada ? "Ir para o meu painel →" : "Quero receber pedidos de festa →"}
             </Link>
           </div>
         </div>
@@ -273,28 +319,3 @@ export default async function HomePage() {
     </div>
   );
 }
-
-const PLANOS_FORNECEDOR = [
-  {
-    nome: "Grátis",
-    preco: "R$ 0",
-    destaque: false,
-    beneficios: ["Até 6 orçamentos respondidos por mês", "Perfil completo com fotos e descrição", "Sem cartão, sem fidelidade"],
-  },
-  {
-    nome: "Light",
-    preco: "R$ 25,90",
-    destaque: false,
-    beneficios: ["Até 30 orçamentos respondidos por mês", "Perfil completo com fotos e descrição", "Suporte por WhatsApp"],
-  },
-  {
-    nome: "Completo",
-    preco: "R$ 55",
-    destaque: true,
-    beneficios: [
-      "Orçamentos ilimitados por mês",
-      "2 meses em Destaques da semana na home",
-      "Pra manter o destaque no ciclo seguinte, é só contratar o plano bimestral",
-    ],
-  },
-];

@@ -4,6 +4,7 @@ export type BannerCategoria = {
   id: string;
   categoria_nome: string;
   empresa_id: string;
+  empresa_slug: string;
   nome_fantasia: string;
   telefone_contato: string | null;
   foto_capa: string | null;
@@ -14,7 +15,7 @@ export type BannerCategoria = {
  * /admin/banners e banners_categoria.ordem), nao mais aleatoria. */
 export async function listBannersAtivos(): Promise<BannerCategoria[]> {
   return query<BannerCategoria>(
-    `SELECT b.id, c.nome AS categoria_nome, e.usuario_id AS empresa_id, e.nome_fantasia, e.telefone_contato,
+    `SELECT b.id, c.nome AS categoria_nome, e.usuario_id AS empresa_id, e.slug AS empresa_slug, e.nome_fantasia, e.telefone_contato,
        (SELECT url FROM empresa_galeria WHERE empresa_id = e.usuario_id ORDER BY ordem ASC LIMIT 1) AS foto_capa
      FROM banners_categoria b
      JOIN categorias c ON c.id = b.categoria_id
@@ -31,13 +32,14 @@ export type HeroBanner = {
   botao_label: string | null;
   botao_url: string | null;
   imagem_fundo: string;
+  imagem_fundo_mobile: string | null;
 };
 
 /** Banner principal (topo da home) - 100% administrado, independente de
  * empresa (ver /admin/hero e banners_hero). */
 export async function listHeroBannersAtivos(): Promise<HeroBanner[]> {
   return query<HeroBanner>(
-    `SELECT id, titulo, texto, botao_label, botao_url, imagem_fundo
+    `SELECT id, titulo, texto, botao_label, botao_url, imagem_fundo, imagem_fundo_mobile
      FROM banners_hero
      WHERE ativo = true
      ORDER BY ordem ASC, id ASC`

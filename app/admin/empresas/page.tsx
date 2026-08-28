@@ -30,7 +30,7 @@ export default async function AdminEmpresasPage() {
           <div key={e.usuario_id} className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <Link href={`/empresa/${e.usuario_id}`} className="font-bold hover:underline" target="_blank">
+                <Link href={`/empresa/${e.slug}`} className="font-bold hover:underline" target="_blank">
                   {e.nome_fantasia}
                 </Link>
                 {!e.ativo && <Badge tone="warn">Inativa</Badge>}

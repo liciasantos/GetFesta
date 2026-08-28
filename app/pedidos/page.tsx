@@ -75,8 +75,21 @@ export default async function PedidosPage({
       <div className="mt-7 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {pedidos.map((p, i) => {
           const color = categoryColor(p.categorias[0] ?? i);
+          const hoje = new Date();
+          const hojeUTC = new Date(Date.UTC(hoje.getFullYear(), hoje.getMonth(), hoje.getDate()));
+          const vencido = new Date(p.data_evento) < hojeUTC;
           return (
-          <div key={p.id} className="rounded-xl border border-border bg-surface p-4">
+          <div
+            key={p.id}
+            className={`rounded-xl border p-4 ${
+              vencido ? "border-border bg-surface-alt/60 grayscale opacity-60" : "border-border bg-surface"
+            }`}
+          >
+            {vencido && (
+              <span className="mb-1.5 inline-flex rounded-full bg-muted-2/20 px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-muted-2">
+                Data já passou
+              </span>
+            )}
             <span className={`inline-flex rounded-full px-2.5 py-1 text-[10.5px] font-bold ${color.bg} ${color.text}`}>
               {p.categorias[0] ?? p.tipo_evento}
             </span>

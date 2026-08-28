@@ -10,6 +10,7 @@ import {
   atualizarPerfilProfissionalSchema,
   avaliacaoGoogleSchema,
 } from "@/lib/validators";
+import { detectContactLeak } from "@/lib/contact-filter";
 
 // tamanho maximo aproximado de um avatar em base64 (~600KB) - protege o banco
 // de uploads gigantes, ja que a foto e guardada como data URI (sem storage
@@ -136,6 +137,16 @@ export async function atualizarPerfilEmpresa(_prevState: PerfilActionState, form
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
 
+  // A descricao e o texto livre pra "encantar o cliente" - nao pode virar um
+  // atalho pra vazar telefone/link e furar o funil de contato controlado
+  // (mesma logica ja usada na descricao do pedido, ver lib/contact-filter.ts).
+  if (parsed.data.descricao && detectContactLeak(parsed.data.descricao).blocked) {
+    return {
+      error:
+        "A descrição não pode conter números de telefone nem links. Corrija o texto e salve novamente — o telefone de contato já tem um campo próprio, logo abaixo.",
+    };
+  }
+
   await query(
     `UPDATE empresas
      SET descricao = $1, capacidade_convidados = $2, preco_a_partir_de = $3, instagram = $4, telefone_contato = $5
@@ -239,27 +250,37 @@ export async function removerFotoGaleriaProfissional(fotoId: string): Promise<Up
   return { ok: true };
 }
 
-export type AlterarPlanoResult = { error?: string; ok?: boolean };
+export type AlterarPlanoResult = { error?: string; ok?: boolean; pendente?: boolean };
 
-export async function alterarPlanoEmpresa(planoId: number): Promise<AlterarPlanoResult> {
+/** pendente=true quando o plano escolhido é pago: ainda não existe cobrança
+ * automática (sem integração real com o Mercado Pago - ver
+ * mercado_pago_assinatura_id em assinaturas), então NÃO ativamos sozinhos.
+ * A empresa fecha o pagamento pelo WhatsApp e o admin ativa manualmente em
+ * /admin/pagamentos (mesmo fluxo que já existe pra marcar pagamento e trocar
+ * plano manualmente). Plano grátis continua aplicando na hora, sem cobrança. */
+export async function alterarPlanoEmpresa(planoId: number, meses?: number): Promise<AlterarPlanoResult> {
   const session = await getSession();
   if (!session || session.tipo !== "empresa") return { error: "Sessão inválida." };
 
-  const parsed = alterarPlanoEmpresaSchema.safeParse({ planoId });
+  const parsed = alterarPlanoEmpresaSchema.safeParse({ planoId, meses });
   if (!parsed.success) return { error: "Plano inválido." };
 
-  const plano = await queryOne<{ id: number }>(`SELECT id FROM planos WHERE id = $1 AND tipo::text LIKE 'empresa_%'`, [
-    parsed.data.planoId,
-  ]);
+  const plano = await queryOne<{ id: number; valor_mensal: string }>(
+    `SELECT id, valor_mensal FROM planos WHERE id = $1 AND tipo::text LIKE 'empresa_%'`,
+    [parsed.data.planoId]
+  );
   if (!plano) return { error: "Esse plano não está disponível." };
 
-  await query(
-    `INSERT INTO assinaturas (usuario_id, plano_id, status) VALUES ($1, $2, 'ativa')`,
-    [session.usuarioId, plano.id]
-  );
+  if (Number(plano.valor_mensal) === 0) {
+    await query(`INSERT INTO assinaturas (usuario_id, plano_id, status) VALUES ($1, $2, 'ativa')`, [
+      session.usuarioId,
+      plano.id,
+    ]);
+    revalidatePath("/painel");
+    return { ok: true };
+  }
 
-  revalidatePath("/painel");
-  return { ok: true };
+  return { ok: true, pendente: true };
 }
 
 export async function salvarAvaliacaoGoogle(_prevState: PerfilActionState, formData: FormData): Promise<PerfilActionState> {
