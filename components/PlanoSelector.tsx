@@ -45,7 +45,9 @@ export default function PlanoSelector({ planos, planoAtualId }: { planos: PlanoE
               <span className="flex items-center justify-between">
                 <span>{p.nome}</span>
                 <span className="text-muted">
-                  {p.id === planoAtualId ? "atual" : `R$ ${Number(p.valor_mensal).toLocaleString("pt-BR")}/mês`}
+                  {p.id === planoAtualId
+                    ? "atual"
+                    : `R$ ${Number(p.valor_mensal).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/mês`}
                 </span>
               </span>
               <span className="text-[10.5px] font-normal text-muted-2">

@@ -22,7 +22,13 @@ export default function MobileNav({ children }: { children: React.ReactNode }) {
       {open && (
         <div
           className="absolute left-0 right-0 top-full flex flex-col gap-4 border-b border-border bg-surface px-6 py-5 shadow-[var(--shadow-card)]"
-          onClick={() => setOpen(false)}
+          onClick={() => {
+            // Fecha um instante depois do clique (nao no mesmo tick) - se
+            // fechar na hora, o React desmonta o menu (e o <form> do "Sair"
+            // dentro dele) antes do submit do form disparar, e o botao
+            // parece nao fazer nada no mobile (bug real reportado).
+            setTimeout(() => setOpen(false), 0);
+          }}
         >
           {children}
         </div>

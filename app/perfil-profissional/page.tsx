@@ -41,6 +41,17 @@ export default async function PerfilProfissionalPage() {
         Seu perfil não aparece para clientes finais — só empresas autenticadas na GetFesta podem ver e te contatar.
       </p>
 
+      {/* Cadastro via Google não pede bairro/funcoes - avisa que falta completar */}
+      {(!perfil.bairro_id || perfil.categorias.length === 0) && (
+        <div className="mt-4 rounded-lg border border-dashed border-border-strong bg-[#efece5] p-3 text-[12.5px] text-muted">
+          ⚠️ Falta completar seu catálogo pra empresas te encontrarem:{" "}
+          {!perfil.bairro_id && <b className="text-text">bairro</b>}
+          {!perfil.bairro_id && perfil.categorias.length === 0 && " e "}
+          {perfil.categorias.length === 0 && <b className="text-text">funções que você exerce</b>} — preencha no
+          formulário abaixo.
+        </div>
+      )}
+
       <div className="mt-6 flex items-center justify-between gap-4 rounded-xl border border-border bg-surface p-5">
         <AvatarUpload initialUrl={perfil.foto_perfil_url} name={perfil.nome} action={atualizarFotoProfissional} />
         <Badge tone={perfil.disponibilidade_status === "disponivel" ? "ok" : "muted"}>

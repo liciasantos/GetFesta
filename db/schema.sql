@@ -483,6 +483,7 @@ CREATE TABLE creditos_compensacao (
 );
 
 -- banners premium de categoria com link direto para WhatsApp (pula o funil de interesse)
+-- alimenta a secao "Destaques da semana" da home/area do cliente (ver DestaquesGrid).
 CREATE TABLE banners_categoria (
     id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     categoria_id INTEGER NOT NULL REFERENCES categorias(id),
@@ -491,9 +492,24 @@ CREATE TABLE banners_categoria (
     fim_em       TIMESTAMPTZ NOT NULL,
     valor_pago   NUMERIC(10,2) NOT NULL,
     ativo        BOOLEAN NOT NULL DEFAULT TRUE,
-    ordem        INTEGER NOT NULL DEFAULT 0,   -- controla a sequencia no carrossel do banner principal (admin)
+    ordem        INTEGER NOT NULL DEFAULT 0,   -- controla a sequencia em "Destaques da semana" (admin)
     UNIQUE (categoria_id, inicio_em, fim_em)  -- reforcado na aplicacao: 1 empresa ativa por categoria por periodo
 );
+
+-- banner principal (hero) do topo da home - 100% administrado pela GetFesta,
+-- independente de qualquer empresa (titulo/texto/botao/imagem livres).
+CREATE TABLE banners_hero (
+    id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    titulo       VARCHAR(160) NOT NULL,
+    texto        VARCHAR(300),
+    botao_label  VARCHAR(60),
+    botao_url    VARCHAR(500),
+    imagem_fundo TEXT NOT NULL,          -- data URI, mesmo padrao de logo/galeria (sem storage externo)
+    ativo        BOOLEAN NOT NULL DEFAULT TRUE,
+    ordem        INTEGER NOT NULL DEFAULT 0,
+    criado_em    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_banners_hero_ativo ON banners_hero(ativo);
 
 -- ---------------------------------------------------------------------
 -- 11. DESTAQUE PAGO (ranking) — exige nota minima + aprovacao manual
@@ -572,7 +588,7 @@ CREATE TABLE rsvp_convidados (
 -- se fosse uma avaliacao nativa da plataforma.
 CREATE TABLE empresa_avaliacoes_google (
     empresa_id              UUID PRIMARY KEY REFERENCES empresas(usuario_id) ON DELETE CASCADE,
-    google_place_id         VARCHAR(120) NOT NULL,
+    google_place_id         VARCHAR(120), -- opcional: a propria empresa pode importar manualmente sem saber o Place ID tecnico
     nota_media_google       NUMERIC(2,1) NOT NULL CHECK (nota_media_google BETWEEN 0 AND 5),
     total_avaliacoes_google INTEGER NOT NULL DEFAULT 0 CHECK (total_avaliacoes_google >= 0),
     url_perfil_google       TEXT NOT NULL,          -- link publico do Google Maps, exigido para atribuicao

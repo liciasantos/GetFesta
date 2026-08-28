@@ -4,6 +4,16 @@ import { redirect } from "next/navigation";
 import { query, queryOne } from "@/lib/db";
 import { createSession, destroySession, hashPassword, verifyPassword } from "@/lib/auth";
 import { loginSchema, registrarClienteSchema, registrarEmpresaSchema, registrarProfissionalSchema } from "@/lib/validators";
+import { buildEmailVerificationToken } from "@/lib/email-verification";
+import { buildConfirmacaoCadastroEmail, sendEmail } from "@/lib/email";
+import { getAppUrl } from "@/lib/google-oauth";
+
+async function enviarEmailConfirmacaoCadastro(usuarioId: string, email: string, nome: string) {
+  const token = buildEmailVerificationToken(usuarioId);
+  const link = `${getAppUrl()}/api/verificar-email?token=${token}`;
+  const { subject, html } = buildConfirmacaoCadastroEmail(nome, link);
+  await sendEmail({ to: email, subject, html });
+}
 
 export type ActionState = { error?: string; fieldErrors?: Record<string, string> } | undefined;
 
@@ -77,6 +87,7 @@ export async function registrarCliente(_prevState: ActionState, formData: FormDa
     ]);
   }
 
+  await enviarEmailConfirmacaoCadastro(usuario.id, parsed.data.email, parsed.data.nome);
   await createSession({ usuarioId: usuario.id, tipo: "cliente" });
   redirect("/meus-pedidos");
 }
@@ -139,6 +150,7 @@ export async function registrarEmpresa(_prevState: ActionState, formData: FormDa
     ]);
   }
 
+  await enviarEmailConfirmacaoCadastro(usuario.id, parsed.data.email, parsed.data.nomeFantasia);
   await createSession({ usuarioId: usuario.id, tipo: "empresa" });
   redirect("/painel");
 }
@@ -190,6 +202,7 @@ export async function registrarProfissional(_prevState: ActionState, formData: F
     ]);
   }
 
+  await enviarEmailConfirmacaoCadastro(usuario.id, parsed.data.email, parsed.data.nome);
   await createSession({ usuarioId: usuario.id, tipo: "profissional" });
   redirect("/perfil-profissional");
 }

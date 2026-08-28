@@ -2,7 +2,7 @@ import Link from "next/link";
 import { listCategorias, listCidades } from "@/lib/data/geo";
 import { getEmpresasDestaque } from "@/lib/data/empresas";
 import { listPedidosFeed } from "@/lib/data/pedidos";
-import { listBannersAtivos } from "@/lib/data/banners";
+import { listBannersAtivos, listHeroBannersAtivos } from "@/lib/data/banners";
 import { Badge, PlaceholderImg, buttonClass } from "@/components/ui";
 import Hero from "@/components/HeroBannerCarousel";
 import MiniPedidoForm from "@/components/MiniPedidoForm";
@@ -12,18 +12,19 @@ import DestaquesGrid, { DestaquesKicker } from "@/components/DestaquesGrid";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [categorias, cidades, empresasDestaque, pedidos, banners] = await Promise.all([
+  const [categorias, cidades, empresasDestaque, pedidos, banners, heroBanners] = await Promise.all([
     listCategorias(),
     listCidades(),
     getEmpresasDestaque(4),
     listPedidosFeed({ limit: 15 }),
     listBannersAtivos(),
+    listHeroBannersAtivos(),
   ]);
 
   return (
     <div>
-      {/* HERO — banner full-bleed de anúncios */}
-      <Hero banners={banners} />
+      {/* HERO — banner full-bleed principal, 100% administrado (ver /admin/hero) */}
+      <Hero banners={heroBanners} />
 
       {/* BOX "SEM CUSTO PRA QUEM CONTRATA" — sobrepõe a base do banner, como um
           card flutuante (negative margin puxa pra cima do hero) */}
@@ -129,13 +130,13 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* CATEGORIAS */}
-      <section className="border-b border-border px-6 py-16 sm:py-20">
+      {/* CATEGORIAS — fundo escuro (#1f2933), texto claro automaticamente */}
+      <section className="border-b border-border bg-[#1f2933] px-6 py-16 sm:py-20">
         <div className="mx-auto max-w-6xl">
           <span className="section-kicker">{banners.length > 0 ? "04" : "03"} — Categorias</span>
           <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
-            <h2 className="text-2xl font-extrabold sm:text-[26px]">O que você está procurando?</h2>
-            <Link href="/busca" className="text-[13px] font-bold text-accent-dark hover:underline">
+            <h2 className="text-2xl font-extrabold text-white sm:text-[26px]">O que você está procurando?</h2>
+            <Link href="/busca" className="text-[13px] font-bold text-white/80 hover:text-white hover:underline">
               Ver todas →
             </Link>
           </div>
@@ -144,7 +145,7 @@ export default async function HomePage() {
               <Link
                 key={cat.id}
                 href={`/busca?categoria=${cat.slug}`}
-                className="rounded-lg border-2 border-[#6B7684] px-4 py-2.5 text-[12.5px] font-bold text-[#6B7684] transition-colors hover:bg-[#6B7684] hover:text-white"
+                className="rounded-lg border-2 border-white/60 px-4 py-2.5 text-[12.5px] font-bold text-white transition-colors hover:bg-white hover:text-[#1f2933]"
               >
                 {cat.nome}
               </Link>
@@ -252,14 +253,18 @@ export default async function HomePage() {
             ))}
           </div>
 
-          <div className="mt-9 flex flex-col items-center justify-between gap-6 rounded-2xl bg-text px-8 py-10 text-center sm:flex-row sm:text-left">
-            <div>
+          <div className="relative mt-9 flex flex-col items-center justify-between gap-6 overflow-hidden rounded-2xl bg-text px-8 py-10 text-center sm:flex-row sm:text-left">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/festa-heroi.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#1f2933]/95 via-[#1f2933]/85 to-[#1f2933]/60" />
+
+            <div className="relative">
               <h3 className="text-lg font-extrabold text-white">Você é fornecedor de festas?</h3>
               <p className="mt-1.5 max-w-md text-[13px] text-white/70">
                 Receba pedidos de clientes da sua região — cadastro gratuito, comece no plano Grátis agora mesmo.
               </p>
             </div>
-            <Link href="/cadastro/empresa" className={`${buttonClass("primary", "lg")} shrink-0`}>
+            <Link href="/cadastro/empresa" className={`${buttonClass("primary", "lg")} relative shrink-0`}>
               Quero receber pedidos de festa →
             </Link>
           </div>
@@ -274,13 +279,13 @@ const PLANOS_FORNECEDOR = [
     nome: "Grátis",
     preco: "R$ 0",
     destaque: false,
-    beneficios: ["Até 4 orçamentos respondidos por mês", "Perfil completo com fotos e descrição", "Sem cartão, sem fidelidade"],
+    beneficios: ["Até 6 orçamentos respondidos por mês", "Perfil completo com fotos e descrição", "Sem cartão, sem fidelidade"],
   },
   {
     nome: "Light",
-    preco: "R$ 20",
+    preco: "R$ 25,90",
     destaque: false,
-    beneficios: ["Até 25 orçamentos respondidos por mês", "Perfil completo com fotos e descrição", "Suporte por WhatsApp"],
+    beneficios: ["Até 30 orçamentos respondidos por mês", "Perfil completo com fotos e descrição", "Suporte por WhatsApp"],
   },
   {
     nome: "Completo",

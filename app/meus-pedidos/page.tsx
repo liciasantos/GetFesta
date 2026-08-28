@@ -59,42 +59,25 @@ export default async function MeusPedidosPage() {
         </Link>
       </div>
 
+      {/* Cadastro via Google não pede cidade - avisa que falta completar */}
+      {perfil && !perfil.cidade_id && (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed border-border-strong bg-[#efece5] p-3 text-[12.5px] text-muted">
+          <span>⚠️ Falta informar sua cidade pra gente mostrar pedidos e fornecedores certos pra você.</span>
+          <Link href="/meu-perfil" className="font-bold text-accent-dark underline">
+            Completar perfil
+          </Link>
+        </div>
+      )}
+
       {/* DESTAQUES DA SEMANA */}
       {banners.length > 0 && (
         <div className="mt-6">
           <DestaquesKicker />
           <div className="mt-3">
-            <DestaquesGrid banners={banners} />
+            <DestaquesGrid banners={banners} thumbSize="lg" />
           </div>
         </div>
       )}
-
-      {/* DICAS PARA A FESTA */}
-      <div className="mt-6">
-        <h2 className="text-[13px] font-bold uppercase tracking-wide text-muted-2">Dicas para sua festa</h2>
-        <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
-          {DICAS.map((d) => (
-            <div key={d.titulo} className="rounded-lg border border-border bg-surface p-3.5">
-              <div className="flex items-start justify-between gap-2">
-                <span className="text-xl">{d.icone}</span>
-                <Badge tone="muted">Em breve</Badge>
-              </div>
-              <div className="mt-2 text-[12.5px] font-bold">{d.titulo}</div>
-              <p className="mt-1 text-[11.5px] leading-relaxed text-muted">{d.desc}</p>
-            </div>
-          ))}
-
-          <div className="flex flex-col justify-between rounded-lg bg-text p-3.5 text-white">
-            <div>
-              <span className="text-xl">🎁</span>
-              <div className="mt-2 text-[12.5px] font-bold">Tudo em um só lugar</div>
-              <p className="mt-1 text-[11.5px] leading-relaxed text-white/75">
-                Convite, RSVP, calculadora e fornecedores — em breve, benefícios exclusivos pra quem organiza pela GetFesta.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* MEUS PEDIDOS */}
       <div className="mt-8">
@@ -154,6 +137,33 @@ export default async function MeusPedidosPage() {
               .
             </p>
           )}
+        </div>
+      </div>
+
+      {/* DICAS PARA A FESTA */}
+      <div className="mt-8">
+        <h2 className="text-[13px] font-bold uppercase tracking-wide text-muted-2">Dicas para sua festa</h2>
+        <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+          {DICAS.map((d) => (
+            <div key={d.titulo} className="rounded-lg border border-border bg-surface p-3.5">
+              <div className="flex items-start justify-between gap-2">
+                <span className="text-xl">{d.icone}</span>
+                <Badge tone="muted">Em breve</Badge>
+              </div>
+              <div className="mt-2 text-[12.5px] font-bold">{d.titulo}</div>
+              <p className="mt-1 text-[11.5px] leading-relaxed text-muted">{d.desc}</p>
+            </div>
+          ))}
+
+          <div className="flex flex-col justify-between rounded-lg bg-text p-3.5 text-white">
+            <div>
+              <span className="text-xl">🎁</span>
+              <div className="mt-2 text-[12.5px] font-bold">Tudo em um só lugar</div>
+              <p className="mt-1 text-[11.5px] leading-relaxed text-white/75">
+                Convite, RSVP, calculadora e fornecedores — em breve, benefícios exclusivos pra quem organiza pela GetFesta.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

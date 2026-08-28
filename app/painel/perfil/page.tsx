@@ -1,11 +1,12 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
-import { getEmpresaById } from "@/lib/data/empresas";
+import { getEmpresaById, getAvaliacaoGoogle } from "@/lib/data/empresas";
 import AvatarUpload from "@/components/AvatarUpload";
 import GaleriaManager from "@/components/GaleriaManager";
 import { atualizarLogoEmpresa, adicionarFotoGaleria, removerFotoGaleria } from "@/lib/actions/perfil";
 import PerfilEmpresaForm from "./PerfilEmpresaForm";
+import AvaliacaoGoogleForm from "./AvaliacaoGoogleForm";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +14,10 @@ export default async function PainelPerfilPage() {
   const session = await getSession();
   if (!session || session.tipo !== "empresa") redirect("/entrar");
 
-  const empresa = await getEmpresaById(session.usuarioId);
+  const [empresa, avaliacaoGoogle] = await Promise.all([
+    getEmpresaById(session.usuarioId),
+    getAvaliacaoGoogle(session.usuarioId),
+  ]);
   if (!empresa) redirect("/entrar");
 
   return (
@@ -41,6 +45,11 @@ export default async function PainelPerfilPage() {
       <div className="mt-5 rounded-xl border border-border bg-surface p-5">
         <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Dados do perfil</h2>
         <PerfilEmpresaForm empresa={empresa} />
+      </div>
+
+      <div className="mt-5 rounded-xl border border-border bg-surface p-5">
+        <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Nota do Google Meu Negócio</h2>
+        <AvaliacaoGoogleForm avaliacao={avaliacaoGoogle} />
       </div>
     </div>
   );

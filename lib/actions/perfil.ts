@@ -8,6 +8,7 @@ import {
   atualizarPerfilClienteSchema,
   atualizarPerfilEmpresaSchema,
   atualizarPerfilProfissionalSchema,
+  avaliacaoGoogleSchema,
 } from "@/lib/validators";
 
 // tamanho maximo aproximado de um avatar em base64 (~600KB) - protege o banco
@@ -258,5 +259,47 @@ export async function alterarPlanoEmpresa(planoId: number): Promise<AlterarPlano
   );
 
   revalidatePath("/painel");
+  return { ok: true };
+}
+
+export async function salvarAvaliacaoGoogle(_prevState: PerfilActionState, formData: FormData): Promise<PerfilActionState> {
+  const session = await getSession();
+  if (!session || session.tipo !== "empresa") return { error: "Sessão inválida." };
+
+  const parsed = avaliacaoGoogleSchema.safeParse({
+    notaMediaGoogle: formData.get("notaMediaGoogle"),
+    totalAvaliacoesGoogle: formData.get("totalAvaliacoesGoogle"),
+    urlPerfilGoogle: formData.get("urlPerfilGoogle"),
+    googlePlaceId: formData.get("googlePlaceId") || undefined,
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
+
+  await query(
+    `INSERT INTO empresa_avaliacoes_google (empresa_id, google_place_id, nota_media_google, total_avaliacoes_google, url_perfil_google, ativo)
+     VALUES ($1, $2, $3, $4, $5, true)
+     ON CONFLICT (empresa_id) DO UPDATE SET
+       google_place_id = $2, nota_media_google = $3, total_avaliacoes_google = $4, url_perfil_google = $5, ativo = true`,
+    [
+      session.usuarioId,
+      parsed.data.googlePlaceId ?? null,
+      parsed.data.notaMediaGoogle,
+      parsed.data.totalAvaliacoesGoogle,
+      parsed.data.urlPerfilGoogle,
+    ]
+  );
+
+  revalidatePath("/painel/perfil");
+  revalidatePath(`/empresa/${session.usuarioId}`);
+  return { success: true };
+}
+
+export async function removerAvaliacaoGoogle(): Promise<UploadResult> {
+  const session = await getSession();
+  if (!session || session.tipo !== "empresa") return { error: "Sessão inválida." };
+
+  await query(`DELETE FROM empresa_avaliacoes_google WHERE empresa_id = $1`, [session.usuarioId]);
+
+  revalidatePath("/painel/perfil");
+  revalidatePath(`/empresa/${session.usuarioId}`);
   return { ok: true };
 }

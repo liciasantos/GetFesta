@@ -7,8 +7,18 @@ import { buildWhatsAppLink } from "@/lib/whatsapp";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import type { BannerCategoria } from "@/lib/data/banners";
 
-export default function DestaquesGrid({ banners }: { banners: BannerCategoria[] }) {
+export default function DestaquesGrid({
+  banners,
+  thumbSize = "default",
+}: {
+  banners: BannerCategoria[];
+  /** "lg" = +20% de altura na foto (usado na area do cliente logado) */
+  thumbSize?: "default" | "lg";
+}) {
   const scrollerRef = useRef<HTMLDivElement>(null);
+  // Thumb sempre 1:1 (aspect-square); no "lg" (area do cliente logado) o card
+  // fica ~20% mais largo, o que ja aumenta a foto proporcionalmente mantendo o quadrado.
+  const cardWidthClass = thumbSize === "lg" ? "w-[56%] sm:w-[37%] lg:w-[23%]" : "w-[47%] sm:w-[31%] lg:w-[19%]";
 
   function scrollByCards(direction: 1 | -1) {
     const el = scrollerRef.current;
@@ -27,14 +37,14 @@ export default function DestaquesGrid({ banners }: { banners: BannerCategoria[] 
           <div
             key={b.id}
             data-card
-            className="card-hover flex w-[47%] shrink-0 flex-col overflow-hidden rounded-lg border border-accent-soft-2 bg-white sm:w-[31%] lg:w-[19%]"
+            className={`card-hover flex shrink-0 flex-col overflow-hidden rounded-lg border border-accent-soft-2 bg-white ${cardWidthClass}`}
           >
             <Link href={`/empresa/${b.empresa_id}`} className="flex flex-1 flex-col">
               {b.foto_capa ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={b.foto_capa} alt={b.nome_fantasia} className="h-28 w-full object-cover" />
+                <img src={b.foto_capa} alt={b.nome_fantasia} className="aspect-square w-full object-cover" />
               ) : (
-                <PlaceholderImg className="h-28 w-full" />
+                <PlaceholderImg className="aspect-square w-full" />
               )}
               <div className="flex-1 bg-gradient-to-br from-accent-soft to-white p-3 pb-0">
                 <span className="text-[10px] font-bold uppercase tracking-wide text-accent-dark/70">{b.categoria_nome}</span>

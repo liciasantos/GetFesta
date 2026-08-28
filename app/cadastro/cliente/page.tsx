@@ -1,5 +1,6 @@
 import { listCidades } from "@/lib/data/geo";
 import RegistroClienteForm from "./RegistroClienteForm";
+import GoogleAuthButton from "@/components/GoogleAuthButton";
 
 export default async function CadastroClientePage() {
   const cidades = await listCidades();
@@ -9,6 +10,7 @@ export default async function CadastroClientePage() {
       <p className="mt-1 text-center text-sm text-muted">Pra acompanhar seus pedidos e falar com as empresas.</p>
       <div className="mt-6 rounded-xl border border-border bg-surface p-5">
         <RegistroClienteForm cidades={cidades} />
+        <GoogleAuthButton tipo="cliente" label="Cadastrar com Google" />
       </div>
     </div>
   );

@@ -23,3 +23,23 @@ export async function listBannersAtivos(): Promise<BannerCategoria[]> {
      ORDER BY b.ordem ASC, b.id ASC`
   );
 }
+
+export type HeroBanner = {
+  id: string;
+  titulo: string;
+  texto: string | null;
+  botao_label: string | null;
+  botao_url: string | null;
+  imagem_fundo: string;
+};
+
+/** Banner principal (topo da home) - 100% administrado, independente de
+ * empresa (ver /admin/hero e banners_hero). */
+export async function listHeroBannersAtivos(): Promise<HeroBanner[]> {
+  return query<HeroBanner>(
+    `SELECT id, titulo, texto, botao_label, botao_url, imagem_fundo
+     FROM banners_hero
+     WHERE ativo = true
+     ORDER BY ordem ASC, id ASC`
+  );
+}

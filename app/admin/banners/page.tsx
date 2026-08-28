@@ -22,13 +22,14 @@ export default async function AdminBannersPage() {
       </Link>
 
       <div className="mb-1 mt-3 flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-xl font-extrabold">Banner principal &amp; destaques</h1>
+        <h1 className="text-xl font-extrabold">Destaques da semana</h1>
         <Link href="/admin/banners/nova" className={buttonClass("primary", "sm")}>
           + Incluir anúncio
         </Link>
       </div>
       <p className="text-sm text-muted">
-        A ordem aqui controla a sequência do carrossel no banner principal da home e nos "Destaques da semana".
+        Empresas que pagaram pelo anúncio de categoria — a ordem aqui controla a sequência na seção "Destaques da
+        semana" da home e da área do cliente logado.
       </p>
 
       <div className="mt-6 flex flex-col gap-2.5">

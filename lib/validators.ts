@@ -51,6 +51,16 @@ export const atualizarPerfilEmpresaSchema = z.object({
   telefoneContato: z.string().min(10, "Telefone inválido"),
 });
 
+export const avaliacaoGoogleSchema = z.object({
+  notaMediaGoogle: z.coerce.number().min(0, "Nota mínima é 0").max(5, "Nota máxima é 5"),
+  totalAvaliacoesGoogle: z.coerce.number().int().min(0, "Não pode ser negativo"),
+  urlPerfilGoogle: z
+    .string()
+    .url("Cole o link completo do seu perfil no Google (Maps ou Google Meu Negócio)")
+    .max(500),
+  googlePlaceId: z.string().max(120).optional(),
+});
+
 export const atualizarPerfilProfissionalSchema = z.object({
   nome: z.string().min(2, "Informe seu nome"),
   bairroId: z.coerce.number().optional().nullable(),
@@ -116,6 +126,14 @@ export const criarBannerSchema = z
     valorPago: z.coerce.number().min(0, "Informe o valor pago"),
   })
   .refine((v) => v.fimEm >= v.inicioEm, { message: "Data de término precisa ser depois do início", path: ["fimEm"] });
+
+export const criarBannerHeroSchema = z.object({
+  titulo: z.string().min(2, "Informe um título").max(160),
+  texto: z.string().max(300).optional(),
+  botaoLabel: z.string().max(60).optional(),
+  botaoUrl: z.string().max(500).optional(),
+  imagemFundo: z.string().min(50, "Escolha uma imagem de fundo"),
+});
 
 export const criarVagaSchema = z.object({
   categoriaProfissionalId: z.coerce.number({ message: "Selecione a função" }),

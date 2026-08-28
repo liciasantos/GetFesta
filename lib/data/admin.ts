@@ -32,3 +32,48 @@ export type EmpresaOption = { usuario_id: string; nome_fantasia: string };
 export async function listEmpresasParaSelect(): Promise<EmpresaOption[]> {
   return query<EmpresaOption>(`SELECT usuario_id, nome_fantasia FROM empresas ORDER BY nome_fantasia ASC`);
 }
+
+export type HeroBannerAdmin = {
+  id: string;
+  titulo: string;
+  texto: string | null;
+  botao_label: string | null;
+  botao_url: string | null;
+  imagem_fundo: string;
+  ativo: boolean;
+  ordem: number;
+};
+
+export async function listHeroBannersAdmin(): Promise<HeroBannerAdmin[]> {
+  return query<HeroBannerAdmin>(
+    `SELECT id, titulo, texto, botao_label, botao_url, imagem_fundo, ativo, ordem
+     FROM banners_hero ORDER BY ordem ASC, id ASC`
+  );
+}
+
+export type EmpresaAdmin = {
+  usuario_id: string;
+  nome_fantasia: string;
+  email: string | null;
+  cidades: string[];
+  selo_verificado: boolean;
+  aprovada_para_destaque: boolean;
+  perfil_reivindicado: boolean;
+  ativo: boolean;
+  criado_em: string;
+};
+
+export async function listEmpresasAdmin(): Promise<EmpresaAdmin[]> {
+  return query<EmpresaAdmin>(
+    `SELECT
+       e.usuario_id, e.nome_fantasia, u.email, u.ativo, u.criado_em,
+       e.selo_verificado, e.aprovada_para_destaque, e.perfil_reivindicado,
+       COALESCE(
+         (SELECT array_agg(DISTINCT ci.nome) FROM empresa_areas_atuacao ea JOIN cidades ci ON ci.id = ea.cidade_id WHERE ea.empresa_id = e.usuario_id),
+         ARRAY[]::text[]
+       ) AS cidades
+     FROM empresas e
+     JOIN usuarios u ON u.id = e.usuario_id
+     ORDER BY u.criado_em DESC`
+  );
+}

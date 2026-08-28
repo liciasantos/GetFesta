@@ -165,8 +165,8 @@ async function main() {
   // mesesDestaque = quantos meses de elegibilidade a "Destaques da semana" o
   // plano da de brinde ao assinar (renovacao exige o plano bimestral).
   for (const [tipo, nome, valor, descontoAnual, limite, mesesDestaque] of [
-    ["empresa_gratis", "Grátis", 0.0, 0, 4, 0],
-    ["empresa_leads", "Light", 20.0, 5, 25, 0],
+    ["empresa_gratis", "Grátis", 0.0, 0, 6, 0],
+    ["empresa_leads", "Light", 25.9, 5, 30, 0],
     ["empresa_completo", "Completo", 55.0, 5, null, 2],
     ["profissional", "Profissional", 2.5, 0, null, 0],
   ] as const) {
@@ -443,6 +443,19 @@ async function main() {
       [categorias[categoriaSlug], empresaIds[nomeFantasia], i]
     );
   }
+
+  console.log("Seed: banner principal da home (administrado, sem empresa)...");
+  await pool.query(
+    `INSERT INTO banners_hero (titulo, texto, botao_label, botao_url, imagem_fundo, ativo, ordem)
+     VALUES ($1, $2, $3, $4, $5, true, 0)`,
+    [
+      "Encontre quem faz sua festa acontecer",
+      "Publique seu pedido grátis e receba interesse de fornecedores da sua região.",
+      "Publicar pedido",
+      "/publicar-pedido",
+      "/banner_wow-personagens.jpg",
+    ]
+  );
 
   console.log("Seed: pedidos de demonstração (publicados sem login)...");
   const pedidosSeed = [

@@ -36,6 +36,7 @@ export type EmpresaCard = {
   nota_exibida: string | null;
   nota_fonte: "nativa" | "google" | "nenhuma";
   total_avaliacoes_exibido: number;
+  url_perfil_google: string | null;
   perfil_reivindicado: boolean;
 };
 
@@ -65,7 +66,8 @@ const EMPRESA_CARD_SELECT = `
     ) AS cidades,
     ${NOTA_EXIBIDA_SQL} AS nota_exibida,
     ${NOTA_FONTE_SQL} AS nota_fonte,
-    CASE WHEN e.total_avaliacoes >= 5 THEN e.total_avaliacoes ELSE COALESCE(g.total_avaliacoes_google, 0) END AS total_avaliacoes_exibido
+    CASE WHEN e.total_avaliacoes >= 5 THEN e.total_avaliacoes ELSE COALESCE(g.total_avaliacoes_google, 0) END AS total_avaliacoes_exibido,
+    g.url_perfil_google
   FROM empresas e
   LEFT JOIN empresa_avaliacoes_google g ON g.empresa_id = e.usuario_id
 `;
@@ -176,6 +178,37 @@ export async function contatoLiberadoParaCliente(empresaId: string, clienteUsuar
     [empresaId, clienteUsuarioId]
   );
   return row?.liberado ?? false;
+}
+
+export type AvaliacaoGoogle = {
+  googlePlaceId: string | null;
+  notaMediaGoogle: string;
+  totalAvaliacoesGoogle: number;
+  urlPerfilGoogle: string;
+  ativo: boolean;
+};
+
+/** Dado bruto da avaliacao do Google importada pela propria empresa, pra pre-preencher o formulario de edicao. */
+export async function getAvaliacaoGoogle(empresaId: string): Promise<AvaliacaoGoogle | null> {
+  const row = await queryOne<{
+    google_place_id: string | null;
+    nota_media_google: string;
+    total_avaliacoes_google: number;
+    url_perfil_google: string;
+    ativo: boolean;
+  }>(
+    `SELECT google_place_id, nota_media_google, total_avaliacoes_google, url_perfil_google, ativo
+     FROM empresa_avaliacoes_google WHERE empresa_id = $1`,
+    [empresaId]
+  );
+  if (!row) return null;
+  return {
+    googlePlaceId: row.google_place_id,
+    notaMediaGoogle: row.nota_media_google,
+    totalAvaliacoesGoogle: row.total_avaliacoes_google,
+    urlPerfilGoogle: row.url_perfil_google,
+    ativo: row.ativo,
+  };
 }
 
 export async function getNomeFantasia(empresaId: string): Promise<string | null> {

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import LoginForm from "./LoginForm";
+import GoogleAuthButton from "@/components/GoogleAuthButton";
 
 const TIPOS = [
   {
@@ -27,7 +28,11 @@ const TIPOS = [
   },
 ] as const;
 
-export default async function EntrarPage({ searchParams }: { searchParams: Promise<{ tipo?: string }> }) {
+export default async function EntrarPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tipo?: string; googleErro?: string; emailConfirmado?: string; emailErro?: string }>;
+}) {
   const sp = await searchParams;
   const tipoAtual = TIPOS.find((t) => t.value === sp.tipo) ?? TIPOS[0];
 
@@ -35,6 +40,22 @@ export default async function EntrarPage({ searchParams }: { searchParams: Promi
     <div className="mx-auto max-w-sm px-6 py-12">
       <h1 className="text-center text-xl font-extrabold">Entrar na GetFesta</h1>
       <p className="mt-1 text-center text-[12.5px] text-muted">Área de acesso — selecione quem você é</p>
+
+      {sp.googleErro && (
+        <p className="mt-4 rounded-lg border border-danger/30 bg-danger-soft p-2.5 text-center text-[12px] text-danger-dark">
+          Não deu pra continuar com o Google agora. Tente de novo ou entre com e-mail e senha.
+        </p>
+      )}
+      {sp.emailConfirmado && (
+        <p className="mt-4 rounded-lg border border-ok/30 bg-ok-soft p-2.5 text-center text-[12px] text-ok">
+          E-mail confirmado com sucesso! Pode entrar normalmente.
+        </p>
+      )}
+      {sp.emailErro && (
+        <p className="mt-4 rounded-lg border border-danger/30 bg-danger-soft p-2.5 text-center text-[12px] text-danger-dark">
+          Esse link de confirmação é inválido ou expirou.
+        </p>
+      )}
 
       <div className="mt-5 flex rounded-lg border border-border bg-surface-alt p-1">
         {TIPOS.map((t) => (
@@ -54,6 +75,10 @@ export default async function EntrarPage({ searchParams }: { searchParams: Promi
 
       <div className="mt-5 rounded-xl border border-border bg-surface p-5">
         <LoginForm />
+
+        {(tipoAtual.value === "cliente" || tipoAtual.value === "profissional") && (
+          <GoogleAuthButton tipo={tipoAtual.value} label="Continuar com Google" />
+        )}
       </div>
 
       <p className="mt-4 text-center text-[12.5px] text-muted">

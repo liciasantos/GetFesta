@@ -1,6 +1,7 @@
 import { listCidades } from "@/lib/data/geo";
 import { listCategoriasProfissionais } from "@/lib/data/profissionais";
 import RegistroProfissionalForm from "./RegistroProfissionalForm";
+import GoogleAuthButton from "@/components/GoogleAuthButton";
 
 export default async function CadastroProfissionalPage() {
   const [cidades, categorias] = await Promise.all([listCidades(), listCategoriasProfissionais()]);
@@ -12,7 +13,11 @@ export default async function CadastroProfissionalPage() {
       </p>
       <div className="mt-6 rounded-xl border border-border bg-surface p-5">
         <RegistroProfissionalForm cidades={cidades} categorias={categorias} />
+        <GoogleAuthButton tipo="profissional" label="Cadastrar com Google" />
       </div>
+      <p className="mt-3 text-center text-[11.5px] leading-relaxed text-muted-2">
+        Cadastrando com Google, você completa cidade, funções e demais dados depois, no seu catálogo.
+      </p>
     </div>
   );
 }

@@ -54,6 +54,19 @@ export default async function EmpresaPerfilPage({ params }: { params: Promise<{ 
                     <span>
                       ⭐ <b className="text-text">{Number(empresa.nota_exibida).toFixed(1)}</b> (
                       {empresa.total_avaliacoes_exibido} avaliações)
+                      {empresa.nota_fonte === "google" && empresa.url_perfil_google && (
+                        <>
+                          {" "}
+                          <a
+                            href={empresa.url_perfil_google}
+                            target="_blank"
+                            rel="noopener noreferrer nofollow"
+                            className="ml-1 rounded-full bg-surface-alt px-2 py-0.5 text-[10.5px] font-bold text-muted hover:underline"
+                          >
+                            Nota no Google ↗
+                          </a>
+                        </>
+                      )}
                     </span>
                   ) : (
                     <span>Empresa nova na GetFesta</span>

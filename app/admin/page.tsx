@@ -14,10 +14,22 @@ export default async function AdminPage() {
       <p className="mt-1 text-sm text-muted">Área restrita — visível só pra quem tem login de admin.</p>
 
       <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Link href="/admin/banners" className="card-hover rounded-xl border border-border bg-surface p-5">
-          <div className="text-[14px] font-bold">Banner principal &amp; destaques</div>
+        <Link href="/admin/hero" className="card-hover rounded-xl border border-border bg-surface p-5">
+          <div className="text-[14px] font-bold">Banner principal da home</div>
           <p className="mt-1 text-[12.5px] text-muted">
-            Incluir anúncios, ativar/desativar e organizar a ordem de exibição no carrossel da home.
+            Título, texto, botão e imagem de fundo do carrossel no topo da home — 100% administrado.
+          </p>
+        </Link>
+        <Link href="/admin/banners" className="card-hover rounded-xl border border-border bg-surface p-5">
+          <div className="text-[14px] font-bold">Destaques da semana</div>
+          <p className="mt-1 text-[12.5px] text-muted">
+            Selecionar quais empresas aparecem em destaque por categoria — só entram quando pagam o anúncio.
+          </p>
+        </Link>
+        <Link href="/admin/empresas" className="card-hover rounded-xl border border-border bg-surface p-5">
+          <div className="text-[14px] font-bold">Empresas cadastradas</div>
+          <p className="mt-1 text-[12.5px] text-muted">
+            Dar selo de verificado, aprovar pra destaque, ou remover uma conta.
           </p>
         </Link>
       </div>
