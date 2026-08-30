@@ -1,4 +1,5 @@
 import { query } from "@/lib/db";
+import { POLITICA_PRIVACIDADE_PADRAO, TERMOS_USO_PADRAO } from "@/lib/legal-content";
 
 export const CONFIG_COMO_FUNCIONA_BG = "como_funciona_bg";
 export const CONFIG_BUSCA_BANNER_BG = "busca_banner_bg";
@@ -10,6 +11,8 @@ export const CONFIG_SOCIAL_YOUTUBE = "social_youtube";
 export const CONFIG_CONTATO_EMAIL = "contato_email";
 export const CONFIG_CONTATO_TELEFONE = "contato_telefone";
 export const CONFIG_CONTATO_WHATSAPP = "contato_whatsapp";
+export const CONFIG_POLITICA_PRIVACIDADE = "politica_privacidade_texto";
+export const CONFIG_TERMOS_USO = "termos_uso_texto";
 
 const FALLBACKS: Record<string, string> = {
   [CONFIG_COMO_FUNCIONA_BG]: "/sitio-festa-infantil.jpg",
@@ -17,6 +20,8 @@ const FALLBACKS: Record<string, string> = {
   [CONFIG_CTA_FORNECEDOR_BG]: "/festa-heroi.jpg",
   [CONFIG_CTA_FORNECEDOR_COR]: "#1f2933",
   [CONFIG_CONTATO_EMAIL]: "contato@getfesta.com.br",
+  [CONFIG_POLITICA_PRIVACIDADE]: POLITICA_PRIVACIDADE_PADRAO,
+  [CONFIG_TERMOS_USO]: TERMOS_USO_PADRAO,
 };
 
 /** Le todas as configuracoes editaveis pelo admin de uma vez (imagens de

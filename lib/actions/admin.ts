@@ -352,9 +352,12 @@ export async function salvarConfiguracaoSite(chave: string, valor: string): Prom
 
   revalidatePath("/admin/aparencia");
   revalidatePath("/admin/site");
+  revalidatePath("/admin/legal");
   revalidatePath("/");
   revalidatePath("/busca");
   revalidatePath("/contato");
+  revalidatePath("/privacidade");
+  revalidatePath("/termos");
   return { ok: true };
 }
 
