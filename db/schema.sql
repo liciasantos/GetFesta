@@ -361,17 +361,30 @@ CREATE TABLE profissional_google_agenda (
 -- ---------------------------------------------------------------------
 -- 6-B. DISPONIBILIDADE (calendario proprio, sem depender de servico externo)
 -- ---------------------------------------------------------------------
--- O profissional marca manualmente os dias em que NAO esta disponivel;
--- ausencia de registro para uma data = disponivel. Simples, privado (nada
--- sai da GetFesta) e sem a friccao de conectar uma conta Google.
+-- O profissional marca manualmente os dias/horarios em que NAO esta
+-- disponivel; ausencia de registro para uma data = disponivel. Simples,
+-- privado (nada sai da GetFesta) e sem a friccao de conectar uma conta
+-- Google. hora_inicio/hora_fim nulos = dia inteiro bloqueado; preenchidos =
+-- so aquele intervalo do dia (pode ter varias linhas de horario por dia).
 CREATE TABLE profissional_dias_indisponiveis (
     id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     profissional_id  UUID NOT NULL REFERENCES profissionais(usuario_id) ON DELETE CASCADE,
     data             DATE NOT NULL,
+    hora_inicio      TIME,
+    hora_fim         TIME,
     criado_em        TIMESTAMPTZ NOT NULL DEFAULT now(),
-    UNIQUE (profissional_id, data)
+    CONSTRAINT horario_valido CHECK (
+        (hora_inicio IS NULL AND hora_fim IS NULL)
+        OR (hora_inicio IS NOT NULL AND hora_fim IS NOT NULL AND hora_fim > hora_inicio)
+    )
 );
 CREATE INDEX idx_profissional_dias_indisp ON profissional_dias_indisponiveis(profissional_id, data);
+-- so pode existir 1 bloqueio de "dia inteiro" por profissional/data
+CREATE UNIQUE INDEX idx_profissional_dia_inteiro_unico
+    ON profissional_dias_indisponiveis (profissional_id, data) WHERE hora_inicio IS NULL;
+-- evita cadastrar o mesmo intervalo de horario duas vezes no mesmo dia
+CREATE UNIQUE INDEX idx_profissional_horario_unico
+    ON profissional_dias_indisponiveis (profissional_id, data, hora_inicio, hora_fim) WHERE hora_inicio IS NOT NULL;
 
 -- ---------------------------------------------------------------------
 -- 7. PEDIDOS (publicados pelo cliente, sem exigir login)

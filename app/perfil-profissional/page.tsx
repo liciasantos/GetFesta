@@ -3,7 +3,7 @@ import { getSession } from "@/lib/auth";
 import { getMeuPerfilProfissional, listCategoriasProfissionais } from "@/lib/data/profissionais";
 import { listCidades } from "@/lib/data/geo";
 import { listVagasCompativeis } from "@/lib/data/vagas";
-import { listDiasIndisponiveis } from "@/lib/data/disponibilidade";
+import { listBloqueiosIndisponibilidade } from "@/lib/data/disponibilidade";
 import AvatarUpload from "@/components/AvatarUpload";
 import GaleriaManager from "@/components/GaleriaManager";
 import DisponibilidadeCalendar from "@/components/DisponibilidadeCalendar";
@@ -27,12 +27,12 @@ export default async function PerfilProfissionalPage() {
   const session = await getSession();
   if (!session || session.tipo !== "profissional") redirect("/entrar");
 
-  const [perfil, categorias, cidades, vagas, diasIndisponiveis] = await Promise.all([
+  const [perfil, categorias, cidades, vagas, bloqueiosDisponibilidade] = await Promise.all([
     getMeuPerfilProfissional(session.usuarioId),
     listCategoriasProfissionais(),
     listCidades(),
     listVagasCompativeis(session.usuarioId),
-    listDiasIndisponiveis(session.usuarioId),
+    listBloqueiosIndisponibilidade(session.usuarioId),
   ]);
   if (!perfil) redirect("/entrar");
 
@@ -106,7 +106,7 @@ export default async function PerfilProfissionalPage() {
 
       <div className="mt-5 rounded-xl border border-border bg-surface p-5">
         <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Calendário de disponibilidade</h2>
-        <DisponibilidadeCalendar diasIndisponiveisIniciais={diasIndisponiveis} />
+        <DisponibilidadeCalendar bloqueiosIniciais={bloqueiosDisponibilidade} />
       </div>
 
       <div className="mt-5 rounded-xl border border-border bg-surface p-5">

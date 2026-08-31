@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { getMeuPerfilProfissional, getTelefoneProfissional } from "@/lib/data/profissionais";
-import { listDiasIndisponiveis } from "@/lib/data/disponibilidade";
+import { listBloqueiosIndisponibilidade } from "@/lib/data/disponibilidade";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 import { Badge } from "@/components/ui";
 import GaleriaLightbox from "@/components/GaleriaLightbox";
@@ -36,10 +36,12 @@ export default async function PerfilProfissionalParaEmpresaPage({ params }: { pa
   const perfil = await getMeuPerfilProfissional(id);
   if (!perfil) notFound();
 
-  const [telefone, diasIndisponiveis] = await Promise.all([
+  const [telefone, bloqueiosDisponibilidade] = await Promise.all([
     getTelefoneProfissional(perfil.usuario_id),
-    listDiasIndisponiveis(perfil.usuario_id),
+    listBloqueiosIndisponibilidade(perfil.usuario_id),
   ]);
+  const diasInteiros = bloqueiosDisponibilidade.filter((b) => !b.horaInicio);
+  const horariosEspecificos = bloqueiosDisponibilidade.filter((b) => b.horaInicio);
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-8">
@@ -122,19 +124,42 @@ export default async function PerfilProfissionalParaEmpresaPage({ params }: { pa
 
       <div className="mt-5 rounded-xl border border-border bg-surface p-5">
         <h2 className="mb-1 text-xs font-bold uppercase tracking-wide text-muted-2">Calendário de disponibilidade</h2>
-        {diasIndisponiveis.length > 0 ? (
-          <div className="mt-2">
-            <p className="mb-1.5 text-[11px] font-bold uppercase text-muted-2">Dias marcados como indisponível</p>
-            <div className="flex flex-wrap gap-1.5">
-              {diasIndisponiveis.map((d) => (
-                <span key={d} className="rounded-full bg-accent-soft px-2.5 py-1 text-[11px] font-bold text-accent-dark">
-                  {new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", timeZone: "UTC" })}
-                </span>
-              ))}
-            </div>
-          </div>
+        {diasInteiros.length === 0 && horariosEspecificos.length === 0 ? (
+          <p className="mt-1 text-[12.5px] text-ok">✓ Nenhum bloqueio cadastrado — sem restrição por enquanto.</p>
         ) : (
-          <p className="mt-1 text-[12.5px] text-ok">✓ Nenhum dia marcado como indisponível — sem restrição por enquanto.</p>
+          <>
+            {diasInteiros.length > 0 && (
+              <div className="mt-2">
+                <p className="mb-1.5 text-[11px] font-bold uppercase text-muted-2">Dias inteiros indisponíveis</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {diasInteiros.map((b) => (
+                    <span
+                      key={b.id}
+                      className="rounded-full bg-accent-soft px-2.5 py-1 text-[11px] font-bold text-accent-dark"
+                    >
+                      {new Date(b.data).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", timeZone: "UTC" })}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {horariosEspecificos.length > 0 && (
+              <div className="mt-3">
+                <p className="mb-1.5 text-[11px] font-bold uppercase text-muted-2">Horários específicos indisponíveis</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {horariosEspecificos.map((b) => (
+                    <span
+                      key={b.id}
+                      className="rounded-full border border-border bg-surface-alt px-2.5 py-1 text-[11px] font-bold text-text"
+                    >
+                      {new Date(b.data).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", timeZone: "UTC" })} ·{" "}
+                      {b.horaInicio}–{b.horaFim}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
