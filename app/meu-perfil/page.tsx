@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { getMeuPerfilCliente } from "@/lib/data/clientes";
 import { listCidades } from "@/lib/data/geo";
 import AvatarUpload from "@/components/AvatarUpload";
+import AlterarSenhaForm from "@/components/AlterarSenhaForm";
 import { atualizarFotoCliente } from "@/lib/actions/perfil";
 import PerfilClienteForm from "./PerfilClienteForm";
 
@@ -26,6 +27,11 @@ export default async function MeuPerfilPage() {
 
       <div className="mt-5 rounded-xl border border-border bg-surface p-5">
         <PerfilClienteForm perfil={perfil} cidades={cidades} />
+      </div>
+
+      <div className="mt-5 rounded-xl border border-border bg-surface p-5">
+        <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Alterar senha</h2>
+        <AlterarSenhaForm />
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import { listDiasIndisponiveis } from "@/lib/data/disponibilidade";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 import { Badge } from "@/components/ui";
 import GaleriaLightbox from "@/components/GaleriaLightbox";
+import PortfolioPdfViewer from "@/components/PortfolioPdfViewer";
 
 export const dynamic = "force-dynamic";
 
@@ -91,6 +92,13 @@ export default async function PerfilProfissionalParaEmpresaPage({ params }: { pa
           </Badge>
         )}
       </div>
+
+      {perfil.portfolio_pdf_url && (
+        <div className="mt-5 rounded-xl border border-border bg-surface p-5">
+          <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Portfólio/currículo</h2>
+          <PortfolioPdfViewer url={perfil.portfolio_pdf_url} nome={perfil.portfolio_pdf_nome ?? "portfolio.pdf"} />
+        </div>
+      )}
 
       {perfil.galeria.length > 0 && (
         <div className="mt-5 rounded-xl border border-border bg-surface p-5">

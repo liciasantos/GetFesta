@@ -4,6 +4,7 @@ import { useActionState, useEffect, useState, useTransition } from "react";
 import { registrarProfissional, type ActionState } from "@/lib/actions/auth";
 import { getBairrosAction, criarBairroCustomAction } from "@/lib/actions/geo";
 import { buttonClass } from "@/components/ui";
+import AceiteTermosCheckbox from "@/components/AceiteTermosCheckbox";
 import type { Cidade, Bairro } from "@/lib/data/geo";
 import type { CategoriaProfissional } from "@/lib/data/profissionais";
 
@@ -115,6 +116,7 @@ export default function RegistroProfissionalForm({
         Autorizo o uso dos meus dados de cadastro (incluindo medidas, quando informadas) para fins de caracterização de
         personagem e contato por empresas na GetFesta, conforme a Política de Privacidade.
       </label>
+      <AceiteTermosCheckbox />
 
       {state?.error && <p className="text-[12.5px] font-semibold text-accent-dark">{state.error}</p>}
       <button type="submit" disabled={pending} className={buttonClass("primary")}>

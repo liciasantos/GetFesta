@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { registrarCliente, type ActionState } from "@/lib/actions/auth";
 import { buttonClass } from "@/components/ui";
+import AceiteTermosCheckbox from "@/components/AceiteTermosCheckbox";
 import type { Cidade } from "@/lib/data/geo";
 
 export default function RegistroClienteForm({ cidades }: { cidades: Cidade[] }) {
@@ -22,6 +23,7 @@ export default function RegistroClienteForm({ cidades }: { cidades: Cidade[] }) 
         </select>
       </Field>
       <Field label="Senha"><input name="senha" type="password" required minLength={6} className="rounded-md border border-border px-3 py-2.5 text-sm" /></Field>
+      <AceiteTermosCheckbox />
       {state?.error && <p className="text-[12.5px] font-semibold text-accent-dark">{state.error}</p>}
       <button type="submit" disabled={pending} className={buttonClass("primary")}>
         {pending ? "Criando conta..." : "Criar minha conta"}

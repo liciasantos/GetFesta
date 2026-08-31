@@ -48,6 +48,7 @@ CREATE TABLE usuarios (
     email_verificado    BOOLEAN NOT NULL DEFAULT FALSE,
     ativo               BOOLEAN NOT NULL DEFAULT TRUE,
     banido              BOOLEAN NOT NULL DEFAULT FALSE,
+    termos_aceitos_em   TIMESTAMPTZ,  -- registro do aceite do checkbox "Li e concordo com..." no cadastro
     criado_em           TIMESTAMPTZ NOT NULL DEFAULT now(),
     atualizado_em       TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -62,6 +63,9 @@ CREATE INDEX idx_usuarios_tipo ON usuarios(tipo);
 --   'social_instagram' / 'social_tiktok' / 'social_youtube' - links do rodape/contato
 --     (ver /admin/site); valor vazio = icone fica desabilitado.
 --   'contato_email' / 'contato_telefone' / 'contato_whatsapp' - pagina /contato.
+--   'politica_privacidade_texto' / 'termos_uso_texto' - conteudo de /privacidade
+--     e /termos, editavel em /admin/legal. Marcacao simples renderizada por
+--     components/ConteudoLegal.tsx ("## " titulo, "- " lista, "**" negrito).
 CREATE TABLE configuracoes_site (
     chave         VARCHAR(60) PRIMARY KEY,
     valor         TEXT NOT NULL,
@@ -218,6 +222,8 @@ CREATE TABLE profissionais (
     slug                      VARCHAR(80) UNIQUE NOT NULL,   -- URL bonita: /profissional/slug (gerado do nome no cadastro)
     nome                      VARCHAR(180) NOT NULL,
     foto_perfil_url            TEXT,
+    portfolio_pdf_url           TEXT,          -- data URI do PDF de portfolio/curriculo, visivel so pra empresa autenticada
+    portfolio_pdf_nome          VARCHAR(200),  -- nome original do arquivo, exibido no botao de abrir
     sexo                        VARCHAR(20),           -- feminino / masculino / nao_binario / prefiro_nao_informar
     medidas_habilitadas         BOOLEAN NOT NULL DEFAULT FALSE, -- opt-in: exibe as medidas abaixo (uso ator/cosplayer)
     altura_cm                  SMALLINT,

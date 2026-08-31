@@ -8,6 +8,8 @@ import AvatarUpload from "@/components/AvatarUpload";
 import GaleriaManager from "@/components/GaleriaManager";
 import DisponibilidadeCalendar from "@/components/DisponibilidadeCalendar";
 import CandidatarVagaButton from "@/components/CandidatarVagaButton";
+import AlterarSenhaForm from "@/components/AlterarSenhaForm";
+import PortfolioPdfUpload from "@/components/PortfolioPdfUpload";
 import { adicionarFotoGaleriaProfissional, atualizarFotoProfissional, removerFotoGaleriaProfissional } from "@/lib/actions/perfil";
 import { Badge } from "@/components/ui";
 import { formatCurrencyBRL, formatDateBR } from "@/lib/format";
@@ -98,12 +100,22 @@ export default async function PerfilProfissionalPage() {
       </div>
 
       <div className="mt-5 rounded-xl border border-border bg-surface p-5">
+        <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Portfólio/currículo (PDF)</h2>
+        <PortfolioPdfUpload nomeAtual={perfil.portfolio_pdf_nome} />
+      </div>
+
+      <div className="mt-5 rounded-xl border border-border bg-surface p-5">
         <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Calendário de disponibilidade</h2>
         <DisponibilidadeCalendar diasIndisponiveisIniciais={diasIndisponiveis} />
       </div>
 
       <div className="mt-5 rounded-xl border border-border bg-surface p-5">
         <PerfilProfissionalForm perfil={perfil} categorias={categorias} cidades={cidades} />
+      </div>
+
+      <div className="mt-5 rounded-xl border border-border bg-surface p-5">
+        <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Alterar senha</h2>
+        <AlterarSenhaForm />
       </div>
     </div>
   );

@@ -1,11 +1,17 @@
 import { z } from "zod";
 
+const aceitouTermosSchema = z
+  .string()
+  .optional()
+  .refine((v) => v === "on", "É necessário aceitar a Política de Privacidade e os Termos de Uso");
+
 export const registrarClienteSchema = z.object({
   nome: z.string().min(2, "Informe seu nome"),
   email: z.string().email("E-mail inválido"),
   telefone: z.string().min(10, "Telefone inválido"),
   senha: z.string().min(6, "Mínimo de 6 caracteres"),
   cidadeId: z.coerce.number().optional(),
+  aceitouTermos: aceitouTermosSchema,
 });
 
 export const registrarEmpresaSchema = z.object({
@@ -21,6 +27,7 @@ export const registrarEmpresaSchema = z.object({
   senha: z.string().min(6, "Mínimo de 6 caracteres"),
   cidadeId: z.coerce.number({ message: "Selecione a cidade de atuação" }),
   categoriaIds: z.array(z.coerce.number()).min(1, "Selecione ao menos uma categoria"),
+  aceitouTermos: aceitouTermosSchema,
 });
 
 export const registrarProfissionalSchema = z.object({
@@ -31,12 +38,33 @@ export const registrarProfissionalSchema = z.object({
   bairroId: z.coerce.number({ message: "Selecione o bairro" }),
   categoriaIds: z.array(z.coerce.number()).min(1, "Selecione ao menos uma categoria"),
   consentimento: z.string().optional().refine((v) => v === "on", "É necessário aceitar o termo de uso de dados"),
+  aceitouTermos: aceitouTermosSchema,
 });
 
 export const loginSchema = z.object({
   email: z.string().email("E-mail inválido"),
   senha: z.string().min(1, "Informe a senha"),
 });
+
+export const esqueciSenhaSchema = z.object({
+  email: z.string().email("E-mail inválido"),
+});
+
+export const redefinirSenhaSchema = z
+  .object({
+    token: z.string().min(1, "Link inválido"),
+    novaSenha: z.string().min(6, "Mínimo de 6 caracteres"),
+    confirmarSenha: z.string(),
+  })
+  .refine((v) => v.novaSenha === v.confirmarSenha, { message: "As senhas não coincidem", path: ["confirmarSenha"] });
+
+export const alterarSenhaSchema = z
+  .object({
+    senhaAtual: z.string().min(1, "Informe sua senha atual"),
+    senhaNova: z.string().min(6, "Mínimo de 6 caracteres"),
+    confirmarSenha: z.string(),
+  })
+  .refine((v) => v.senhaNova === v.confirmarSenha, { message: "As senhas não coincidem", path: ["confirmarSenha"] });
 
 export const atualizarPerfilClienteSchema = z.object({
   nome: z.string().min(2, "Informe seu nome"),

@@ -59,6 +59,10 @@ export default async function AdminPage() {
             Ajustar quais funções de profissional aparecem pra quais categorias de empresa.
           </p>
         </Link>
+        <Link href="/admin/legal" className="card-hover rounded-xl border border-border bg-surface p-5">
+          <div className="text-[14px] font-bold">Privacidade e Termos de Uso</div>
+          <p className="mt-1 text-[12.5px] text-muted">Editar o texto das páginas de Política de Privacidade e Termos de Uso.</p>
+        </Link>
         <Link href="/admin/pedidos" className="card-hover rounded-xl border border-border bg-surface p-5">
           <div className="text-[14px] font-bold">Moderação de pedidos</div>
           <p className="mt-1 text-[12.5px] text-muted">Ocultar ou remover um pedido de cliente.</p>

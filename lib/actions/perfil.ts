@@ -22,6 +22,10 @@ const MAX_FOTOS_GALERIA = 12;
 // profissional_galeria.tipo='foto': secao 6 do schema fala em 1-2 fotos no modo
 // limitado; o pedido do usuario foi "area para incluir 4 fotos" no catalogo.
 const MAX_FOTOS_GALERIA_PROFISSIONAL = 4;
+// portfolio/curriculo em PDF - guardado como data URI (mesmo esquema de foto,
+// sem storage externo). ~6MB em base64 = ~4.5MB de arquivo real, o bastante
+// pra um PDF de portfolio sem pesar demais no banco.
+const MAX_PDF_DATA_URL_LENGTH = 6_000_000;
 
 export type UploadResult = { error?: string; ok?: boolean };
 export type PerfilActionState = { error?: string; success?: boolean } | undefined;
@@ -120,6 +124,34 @@ export async function atualizarFotoProfissional(dataUrl: string): Promise<Upload
   if (dataUrl.length > MAX_AVATAR_DATA_URL_LENGTH) return { error: "Imagem muito grande, escolha uma foto menor." };
 
   await query(`UPDATE profissionais SET foto_perfil_url = $1 WHERE usuario_id = $2`, [dataUrl, session.usuarioId]);
+  revalidatePath("/perfil-profissional");
+  return { ok: true };
+}
+
+/** Portfolio/curriculo em PDF - visivel so pra empresa autenticada visitando o
+ * perfil (mesma regra do resto do catalogo de profissional). */
+export async function atualizarPortfolioPdfProfissional(dataUrl: string, nomeArquivo: string): Promise<UploadResult> {
+  const session = await getSession();
+  if (!session || session.tipo !== "profissional") return { error: "Sessão inválida." };
+  if (!dataUrl.startsWith("data:application/pdf")) return { error: "Escolha um arquivo PDF." };
+  if (dataUrl.length > MAX_PDF_DATA_URL_LENGTH) return { error: "PDF muito grande - escolha um arquivo menor." };
+
+  await query(`UPDATE profissionais SET portfolio_pdf_url = $1, portfolio_pdf_nome = $2 WHERE usuario_id = $3`, [
+    dataUrl,
+    nomeArquivo.slice(0, 200),
+    session.usuarioId,
+  ]);
+  revalidatePath("/perfil-profissional");
+  return { ok: true };
+}
+
+export async function removerPortfolioPdfProfissional(): Promise<UploadResult> {
+  const session = await getSession();
+  if (!session || session.tipo !== "profissional") return { error: "Sessão inválida." };
+
+  await query(`UPDATE profissionais SET portfolio_pdf_url = NULL, portfolio_pdf_nome = NULL WHERE usuario_id = $1`, [
+    session.usuarioId,
+  ]);
   revalidatePath("/perfil-profissional");
   return { ok: true };
 }

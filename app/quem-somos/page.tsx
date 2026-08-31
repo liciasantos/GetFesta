@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { buttonClass } from "@/components/ui";
+import BgImage from "@/components/BgImage";
 
 export default function QuemSomosPage() {
   return (
@@ -7,8 +8,7 @@ export default function QuemSomosPage() {
       {/* HERO — imagem de fundo com overlay escuro (garante leitura do texto
           em branco independente da imagem escolhida) + titulo/paragrafo editorial. */}
       <section className="relative overflow-hidden">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/quem-somos-exemplo.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <BgImage src="/quem-somos-exemplo.webp" className="object-cover" priority sizes="100vw" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/45 to-black/60" />
 
         <div className="relative mx-auto max-w-5xl px-6 pt-20 pb-16 sm:pt-28 sm:pb-24">

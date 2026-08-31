@@ -4,6 +4,7 @@ import { getSession } from "@/lib/auth";
 import { getEmpresaById, getAvaliacaoGoogle } from "@/lib/data/empresas";
 import AvatarUpload from "@/components/AvatarUpload";
 import GaleriaManager from "@/components/GaleriaManager";
+import AlterarSenhaForm from "@/components/AlterarSenhaForm";
 import { atualizarLogoEmpresa, adicionarFotoGaleria, removerFotoGaleria } from "@/lib/actions/perfil";
 import PerfilEmpresaForm from "./PerfilEmpresaForm";
 import AvaliacaoGoogleForm from "./AvaliacaoGoogleForm";
@@ -50,6 +51,11 @@ export default async function PainelPerfilPage() {
       <div className="mt-5 rounded-xl border border-border bg-surface p-5">
         <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Nota do Google Meu Negócio</h2>
         <AvaliacaoGoogleForm avaliacao={avaliacaoGoogle} />
+      </div>
+
+      <div className="mt-5 rounded-xl border border-border bg-surface p-5">
+        <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Alterar senha</h2>
+        <AlterarSenhaForm />
       </div>
     </div>
   );

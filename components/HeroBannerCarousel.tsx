@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui";
+import BgImage from "@/components/BgImage";
 import type { HeroBanner } from "@/lib/data/banners";
 
 const ROTATE_MS = 5500;
@@ -32,22 +33,25 @@ export default function Hero({ banners }: { banners: HeroBanner[] }) {
             {/* imagem propria pro mobile (evita corte/alinhamento ruim da
                 versao larga do desktop em telas estreitas) - cai pra mesma
                 imagem se o admin nao cadastrou uma versao mobile. */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <BgImage
               src={b.imagem_fundo_mobile || b.imagem_fundo}
-              alt=""
-              className="h-full w-full object-cover sm:hidden"
+              className="object-cover sm:hidden"
+              priority={i === 0}
+              sizes="100vw"
             />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={b.imagem_fundo} alt="" className="hidden h-full w-full object-cover sm:block" />
+            <BgImage
+              src={b.imagem_fundo}
+              className="hidden object-cover sm:block"
+              priority={i === 0}
+              sizes="100vw"
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10" />
             <div className="absolute inset-0 bg-gradient-to-r from-black/45 via-black/5 to-transparent" />
           </div>
         ))
       ) : (
         <div className="absolute inset-0">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/banner_wow-personagens.jpg" alt="" className="h-full w-full object-cover" />
+          <BgImage src="/banner_wow-personagens.webp" className="object-cover" priority sizes="100vw" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10" />
           <div className="absolute inset-0 bg-gradient-to-r from-black/45 via-black/5 to-transparent" />
         </div>

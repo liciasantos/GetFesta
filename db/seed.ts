@@ -469,7 +469,7 @@ async function main() {
       "Publique seu pedido grátis e receba interesse de fornecedores da sua região.",
       "Publicar pedido",
       "/publicar-pedido",
-      "/banner_wow-personagens.jpg",
+      "/banner_wow-personagens.webp",
     ]
   );
 

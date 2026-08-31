@@ -2,12 +2,21 @@
 
 import { redirect } from "next/navigation";
 import { query, queryOne } from "@/lib/db";
-import { createSession, destroySession, hashPassword, verifyPassword } from "@/lib/auth";
-import { loginSchema, registrarClienteSchema, registrarEmpresaSchema, registrarProfissionalSchema } from "@/lib/validators";
+import { createSession, destroySession, getSession, hashPassword, verifyPassword } from "@/lib/auth";
+import {
+  alterarSenhaSchema,
+  esqueciSenhaSchema,
+  loginSchema,
+  redefinirSenhaSchema,
+  registrarClienteSchema,
+  registrarEmpresaSchema,
+  registrarProfissionalSchema,
+} from "@/lib/validators";
 import { buildEmailVerificationToken } from "@/lib/email-verification";
-import { buildConfirmacaoCadastroEmail, sendEmail } from "@/lib/email";
+import { buildConfirmacaoCadastroEmail, buildResetSenhaEmail, sendEmail } from "@/lib/email";
 import { getAppUrl } from "@/lib/google-oauth";
 import { gerarSlugUnicoEmpresa, gerarSlugUnicoProfissional } from "@/lib/slug";
+import { buildPasswordResetToken, decodePasswordResetToken, isPasswordResetTokenAindaValido } from "@/lib/password-reset";
 
 async function enviarEmailConfirmacaoCadastro(usuarioId: string, email: string, nome: string) {
   const token = buildEmailVerificationToken(usuarioId);
@@ -16,7 +25,7 @@ async function enviarEmailConfirmacaoCadastro(usuarioId: string, email: string, 
   await sendEmail({ to: email, subject, html });
 }
 
-export type ActionState = { error?: string; fieldErrors?: Record<string, string> } | undefined;
+export type ActionState = { error?: string; fieldErrors?: Record<string, string>; success?: boolean } | undefined;
 
 export async function login(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   const parsed = loginSchema.safeParse({
@@ -64,6 +73,7 @@ export async function registrarCliente(_prevState: ActionState, formData: FormDa
     telefone: formData.get("telefone"),
     senha: formData.get("senha"),
     cidadeId: formData.get("cidadeId") || undefined,
+    aceitouTermos: formData.get("aceitouTermos") || undefined,
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
@@ -76,7 +86,7 @@ export async function registrarCliente(_prevState: ActionState, formData: FormDa
 
   const senhaHash = await hashPassword(parsed.data.senha);
   const usuario = await queryOne<{ id: string }>(
-    `INSERT INTO usuarios (tipo, email, senha_hash, telefone) VALUES ('cliente', $1, $2, $3) RETURNING id`,
+    `INSERT INTO usuarios (tipo, email, senha_hash, telefone, termos_aceitos_em) VALUES ('cliente', $1, $2, $3, now()) RETURNING id`,
     [parsed.data.email, senhaHash, parsed.data.telefone]
   );
   if (!usuario) return { error: "Não foi possível criar a conta, tente novamente" };
@@ -112,6 +122,7 @@ export async function registrarEmpresa(_prevState: ActionState, formData: FormDa
     senha: formData.get("senha"),
     cidadeId: formData.get("cidadeId"),
     categoriaIds: formData.getAll("categoriaIds"),
+    aceitouTermos: formData.get("aceitouTermos") || undefined,
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
@@ -130,7 +141,7 @@ export async function registrarEmpresa(_prevState: ActionState, formData: FormDa
 
   const senhaHash = await hashPassword(parsed.data.senha);
   const usuario = await queryOne<{ id: string }>(
-    `INSERT INTO usuarios (tipo, email, senha_hash, telefone) VALUES ('empresa', $1, $2, $3) RETURNING id`,
+    `INSERT INTO usuarios (tipo, email, senha_hash, telefone, termos_aceitos_em) VALUES ('empresa', $1, $2, $3, now()) RETURNING id`,
     [parsed.data.email, senhaHash, parsed.data.telefoneContato]
   );
   if (!usuario) return { error: "Não foi possível criar a conta, tente novamente" };
@@ -190,6 +201,7 @@ export async function registrarProfissional(_prevState: ActionState, formData: F
     bairroId: formData.get("bairroId"),
     categoriaIds: formData.getAll("categoriaIds"),
     consentimento: formData.get("consentimento") || undefined,
+    aceitouTermos: formData.get("aceitouTermos") || undefined,
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
@@ -202,7 +214,7 @@ export async function registrarProfissional(_prevState: ActionState, formData: F
 
   const senhaHash = await hashPassword(parsed.data.senha);
   const usuario = await queryOne<{ id: string }>(
-    `INSERT INTO usuarios (tipo, email, senha_hash, telefone) VALUES ('profissional', $1, $2, $3) RETURNING id`,
+    `INSERT INTO usuarios (tipo, email, senha_hash, telefone, termos_aceitos_em) VALUES ('profissional', $1, $2, $3, now()) RETURNING id`,
     [parsed.data.email, senhaHash, parsed.data.telefone]
   );
   if (!usuario) return { error: "Não foi possível criar a conta, tente novamente" };
@@ -232,4 +244,90 @@ export async function registrarProfissional(_prevState: ActionState, formData: F
   await enviarEmailConfirmacaoCadastro(usuario.id, parsed.data.email, parsed.data.nome);
   await createSession({ usuarioId: usuario.id, tipo: "profissional" });
   redirect("/perfil-profissional");
+}
+
+// ---------------------------------------------------------------------
+// SENHA — esqueci minha senha (link por e-mail) e trocar senha no perfil
+// ---------------------------------------------------------------------
+
+/** Sempre responde com sucesso, exista ou não o e-mail na base - evita que o
+ * formulário sirva pra descobrir quais e-mails têm conta na GetFesta. */
+export async function solicitarResetSenha(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  const parsed = esqueciSenhaSchema.safeParse({ email: formData.get("email") });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
+  }
+
+  const usuario = await queryOne<{ id: string; senha_hash: string | null; nome: string | null }>(
+    `SELECT u.id, u.senha_hash, COALESCE(c.nome, e.nome_fantasia, p.nome) AS nome
+     FROM usuarios u
+     LEFT JOIN clientes c ON c.usuario_id = u.id
+     LEFT JOIN empresas e ON e.usuario_id = u.id
+     LEFT JOIN profissionais p ON p.usuario_id = u.id
+     WHERE u.email = $1 AND u.ativo = true`,
+    [parsed.data.email]
+  );
+
+  if (usuario?.senha_hash) {
+    const token = buildPasswordResetToken(usuario.id, usuario.senha_hash);
+    const link = `${getAppUrl()}/redefinir-senha?token=${token}`;
+    const { subject, html } = buildResetSenhaEmail(usuario.nome ?? "", link);
+    await sendEmail({ to: parsed.data.email, subject, html });
+  }
+
+  return { success: true };
+}
+
+export async function redefinirSenha(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  const parsed = redefinirSenhaSchema.safeParse({
+    token: formData.get("token"),
+    novaSenha: formData.get("novaSenha"),
+    confirmarSenha: formData.get("confirmarSenha"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
+  }
+
+  const decoded = decodePasswordResetToken(parsed.data.token);
+  if (!decoded) return { error: "Esse link é inválido ou já expirou. Solicite um novo." };
+
+  const usuario = await queryOne<{ senha_hash: string | null }>(`SELECT senha_hash FROM usuarios WHERE id = $1`, [
+    decoded.usuarioId,
+  ]);
+  if (!usuario?.senha_hash || !isPasswordResetTokenAindaValido(decoded.fp, usuario.senha_hash)) {
+    return { error: "Esse link já foi usado ou expirou. Solicite um novo." };
+  }
+
+  const novoHash = await hashPassword(parsed.data.novaSenha);
+  await query(`UPDATE usuarios SET senha_hash = $1 WHERE id = $2`, [novoHash, decoded.usuarioId]);
+
+  return { success: true };
+}
+
+/** Troca de senha feita de dentro do perfil (cliente/empresa/profissional
+ * usam a mesma action - senha fica em usuarios, tipo-agnostico). */
+export async function alterarSenhaPropria(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  const session = await getSession();
+  if (!session) return { error: "Sessão inválida." };
+
+  const parsed = alterarSenhaSchema.safeParse({
+    senhaAtual: formData.get("senhaAtual"),
+    senhaNova: formData.get("senhaNova"),
+    confirmarSenha: formData.get("confirmarSenha"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
+  }
+
+  const usuario = await queryOne<{ senha_hash: string | null }>(`SELECT senha_hash FROM usuarios WHERE id = $1`, [
+    session.usuarioId,
+  ]);
+  if (!usuario?.senha_hash || !(await verifyPassword(parsed.data.senhaAtual, usuario.senha_hash))) {
+    return { error: "Senha atual incorreta." };
+  }
+
+  const novoHash = await hashPassword(parsed.data.senhaNova);
+  await query(`UPDATE usuarios SET senha_hash = $1 WHERE id = $2`, [novoHash, session.usuarioId]);
+
+  return { success: true };
 }

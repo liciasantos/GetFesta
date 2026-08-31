@@ -15,6 +15,7 @@ import { hexToRgba } from "@/lib/color";
 import { PLANOS_BENEFICIOS, formatPrecoPlano } from "@/lib/planos-beneficios";
 import { Badge, PlaceholderImg, buttonClass } from "@/components/ui";
 import Hero from "@/components/HeroBannerCarousel";
+import BgImage from "@/components/BgImage";
 import MiniPedidoForm from "@/components/MiniPedidoForm";
 import PedidosCarousel from "@/components/PedidosCarousel";
 import DestaquesGrid, { DestaquesKicker } from "@/components/DestaquesGrid";
@@ -81,8 +82,7 @@ export default async function HomePage() {
           cima, inspirado numa referencia de site de turismo que o usuario
           trouxe (fundo atmosferico + coluna de intro + steps com divisorias) */}
       <section id="como-funciona" className="relative min-h-[420px] w-full overflow-hidden bg-text sm:min-h-[465px]">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={config[CONFIG_COMO_FUNCIONA_BG]} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <BgImage src={config[CONFIG_COMO_FUNCIONA_BG]} className="object-cover" sizes="100vw" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/5 to-black/15" />
 
         {/* faixa fixada na base da imagem via position absolute (nao margem
@@ -298,8 +298,7 @@ export default async function HomePage() {
       {/* CTA FORNECEDOR — full banner de fundo por trás do box (nao mais dentro
           dele), afastado da seção de planos com uma margem extra pra respirar. */}
       <section className="relative mt-11 overflow-hidden border-b border-border px-6 py-16 sm:py-20">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={config[CONFIG_CTA_FORNECEDOR_BG]} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <BgImage src={config[CONFIG_CTA_FORNECEDOR_BG]} className="object-cover" sizes="100vw" />
         <div className="absolute inset-0" style={{ backgroundColor: hexToRgba(config[CONFIG_CTA_FORNECEDOR_COR], 0.8) }} />
 
         <div className="relative mx-auto max-w-6xl">

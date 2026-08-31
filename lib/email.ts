@@ -36,6 +36,30 @@ export async function sendEmail({ to, subject, html }: { to: string; subject: st
   }
 }
 
+export function buildResetSenhaEmail(nome: string, linkReset: string): { subject: string; html: string } {
+  return {
+    subject: "Redefinir sua senha na GetFesta",
+    html: `
+      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; color: #1f2933;">
+        <h1 style="color: #e14f30; font-size: 20px;">Olá, ${nome}</h1>
+        <p style="font-size: 14px; line-height: 1.6;">
+          Recebemos um pedido para redefinir a senha da sua conta na GetFesta. Clique no botão abaixo pra escolher
+          uma nova senha:
+        </p>
+        <p style="margin: 24px 0;">
+          <a href="${linkReset}" style="background: #ff6b4a; color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">
+            Redefinir minha senha
+          </a>
+        </p>
+        <p style="font-size: 12px; color: #6b7684;">
+          Esse link vale por 1 hora. Se você não pediu essa redefinição, pode ignorar este e-mail — sua senha
+          continua a mesma.
+        </p>
+      </div>
+    `,
+  };
+}
+
 export function buildConfirmacaoCadastroEmail(nome: string, linkConfirmacao: string): { subject: string; html: string } {
   return {
     subject: "Confirme seu cadastro na GetFesta",

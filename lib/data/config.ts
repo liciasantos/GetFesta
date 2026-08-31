@@ -15,9 +15,9 @@ export const CONFIG_POLITICA_PRIVACIDADE = "politica_privacidade_texto";
 export const CONFIG_TERMOS_USO = "termos_uso_texto";
 
 const FALLBACKS: Record<string, string> = {
-  [CONFIG_COMO_FUNCIONA_BG]: "/sitio-festa-infantil.jpg",
-  [CONFIG_BUSCA_BANNER_BG]: "/baloes-lilas.jpg",
-  [CONFIG_CTA_FORNECEDOR_BG]: "/festa-heroi.jpg",
+  [CONFIG_COMO_FUNCIONA_BG]: "/sitio-festa-infantil.webp",
+  [CONFIG_BUSCA_BANNER_BG]: "/baloes-lilas.webp",
+  [CONFIG_CTA_FORNECEDOR_BG]: "/festa-heroi.webp",
   [CONFIG_CTA_FORNECEDOR_COR]: "#1f2933",
   [CONFIG_CONTATO_EMAIL]: "contato@getfesta.com.br",
   [CONFIG_POLITICA_PRIVACIDADE]: POLITICA_PRIVACIDADE_PADRAO,

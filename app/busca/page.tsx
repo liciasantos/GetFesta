@@ -3,6 +3,7 @@ import { listCategorias, listCidades } from "@/lib/data/geo";
 import { searchEmpresas } from "@/lib/data/empresas";
 import { getConfiguracoesSite, CONFIG_BUSCA_BANNER_BG } from "@/lib/data/config";
 import { Badge, PlaceholderImg } from "@/components/ui";
+import BgImage from "@/components/BgImage";
 
 export const dynamic = "force-dynamic";
 
@@ -38,8 +39,7 @@ export default async function BuscaPage({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/busca-banner-bg.svg" alt="" className="absolute inset-0 h-full w-full object-cover" />
         {/* foto sutil por cima da cor de fundo, opacidade baixa pra não brigar com o texto */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={config[CONFIG_BUSCA_BANNER_BG]} alt="" className="absolute inset-0 h-full w-full object-cover opacity-20" />
+        <BgImage src={config[CONFIG_BUSCA_BANNER_BG]} className="object-cover opacity-20" sizes="100vw" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/5 to-transparent" />
 
         <div className="relative mx-auto w-full max-w-6xl px-6 py-10">
