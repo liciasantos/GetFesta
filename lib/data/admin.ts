@@ -304,6 +304,16 @@ export async function listPagamentosAdmin(limit = 50): Promise<PagamentoAdmin[]>
 }
 
 // ---------------------------------------------------------------------
+// USUARIOS ADMIN — quem tem acesso ao painel administrativo
+// ---------------------------------------------------------------------
+
+export type AdminUsuario = { id: string; email: string | null; criado_em: string };
+
+export async function listAdmins(): Promise<AdminUsuario[]> {
+  return query<AdminUsuario>(`SELECT id, email, criado_em FROM usuarios WHERE tipo = 'admin' ORDER BY criado_em ASC`);
+}
+
+// ---------------------------------------------------------------------
 // MODERACAO DE PEDIDOS
 // ---------------------------------------------------------------------
 

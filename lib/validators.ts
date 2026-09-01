@@ -46,6 +46,11 @@ export const loginSchema = z.object({
   senha: z.string().min(1, "Informe a senha"),
 });
 
+export const criarAdminSchema = z.object({
+  email: z.string().email("E-mail inválido"),
+  senha: z.string().min(6, "Mínimo de 6 caracteres"),
+});
+
 export const esqueciSenhaSchema = z.object({
   email: z.string().email("E-mail inválido"),
 });

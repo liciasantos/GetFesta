@@ -99,6 +99,10 @@ export default async function AdminPage() {
           <div className="text-[14px] font-bold">Fluxo de caixa</div>
           <p className="mt-1 text-[12.5px] text-muted">Quanto entrou no mês e no ano, histórico de pagamentos.</p>
         </Link>
+        <Link href="/admin/usuarios" className="card-hover rounded-xl border border-border bg-surface p-5">
+          <div className="text-[14px] font-bold">Usuários do admin</div>
+          <p className="mt-1 text-[12.5px] text-muted">Adicionar ou remover quem tem acesso ao painel administrativo.</p>
+        </Link>
       </div>
     </div>
   );

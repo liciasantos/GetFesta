@@ -3,9 +3,10 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { query, queryOne, pool } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { getSession, hashPassword } from "@/lib/auth";
 import {
   atualizarBannerHeroSchema,
+  criarAdminSchema,
   criarBannerHeroSchema,
   criarBannerSchema,
   criarPlanoPeriodoSchema,
@@ -237,8 +238,10 @@ export async function alternarAprovadaDestaqueProfissional(profissionalId: strin
 /** Apaga o profissional e tudo que depende dele. A maioria das tabelas
  * (categorias, galeria, avaliacoes, vinculo, google agenda, disponibilidade,
  * candidaturas) referencia profissionais com ON DELETE CASCADE, mas
- * vagas_profissionais.profissional_selecionado_id e conversas.profissional_id
- * nao tem cascade - precisa limpar essas antes do DELETE FROM usuarios. */
+ * vagas_profissionais.profissional_selecionado_id, conversas.profissional_id
+ * e assinaturas.usuario_id (todo profissional ganha uma assinatura trial no
+ * cadastro) nao tem cascade - precisa limpar essas antes do DELETE FROM
+ * usuarios. */
 export async function removerProfissional(profissionalId: string): Promise<SimpleActionResult> {
   const session = await requireAdmin();
   if (!session) return { error: "Sessão inválida." };
@@ -251,6 +254,7 @@ export async function removerProfissional(profissionalId: string): Promise<Simpl
       [profissionalId]
     );
     await client.query(`DELETE FROM conversas WHERE profissional_id = $1`, [profissionalId]);
+    await client.query(`DELETE FROM assinaturas WHERE usuario_id = $1`, [profissionalId]);
     await client.query(`DELETE FROM usuarios WHERE id = $1`, [profissionalId]);
     await client.query("COMMIT");
   } catch {
@@ -484,6 +488,48 @@ export async function removerPlanoPeriodo(periodoId: number): Promise<SimpleActi
 
   await query(`DELETE FROM plano_periodos WHERE id = $1`, [periodoId]);
   revalidatePath("/admin/planos");
+  return { ok: true };
+}
+
+// ---------------------------------------------------------------------
+// USUARIOS ADMIN — adicionar/remover quem tem acesso ao painel
+// ---------------------------------------------------------------------
+
+export async function criarAdmin(_prevState: BannerActionState, formData: FormData): Promise<BannerActionState> {
+  const session = await requireAdmin();
+  if (!session) return { error: "Sessão inválida." };
+
+  const parsed = criarAdminSchema.safeParse({
+    email: formData.get("email"),
+    senha: formData.get("senha"),
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
+
+  const existente = await queryOne(`SELECT id FROM usuarios WHERE email = $1`, [parsed.data.email]);
+  if (existente) return { error: "Já existe uma conta com esse e-mail." };
+
+  const senhaHash = await hashPassword(parsed.data.senha);
+  await query(`INSERT INTO usuarios (tipo, email, senha_hash, ativo) VALUES ('admin', $1, $2, true)`, [
+    parsed.data.email,
+    senhaHash,
+  ]);
+
+  revalidatePath("/admin/usuarios");
+  redirect("/admin/usuarios");
+}
+
+/** Nao deixa remover a si mesmo (evitaria o admin se travar fora do painel
+ * sem querer) nem remover o ultimo admin restante (ninguem mais teria acesso). */
+export async function removerAdmin(adminId: string): Promise<SimpleActionResult> {
+  const session = await requireAdmin();
+  if (!session) return { error: "Sessão inválida." };
+  if (session.usuarioId === adminId) return { error: "Você não pode remover a própria conta." };
+
+  const total = await queryOne<{ total: string }>(`SELECT count(*) AS total FROM usuarios WHERE tipo = 'admin'`);
+  if (Number(total?.total ?? 0) <= 1) return { error: "Precisa sobrar pelo menos um admin." };
+
+  await query(`DELETE FROM usuarios WHERE id = $1 AND tipo = 'admin'`, [adminId]);
+  revalidatePath("/admin/usuarios");
   return { ok: true };
 }
 
