@@ -15,6 +15,7 @@ export const CONFIG_POLITICA_PRIVACIDADE = "politica_privacidade_texto";
 export const CONFIG_TERMOS_USO = "termos_uso_texto";
 export const CONFIG_GOOGLE_ADS_CLIENT = "google_ads_client";
 export const CONFIG_GOOGLE_ADS_SLOT = "google_ads_slot";
+export const CONFIG_CLARITY_PROJECT_ID = "clarity_project_id";
 
 const FALLBACKS: Record<string, string> = {
   [CONFIG_COMO_FUNCIONA_BG]: "/sitio-festa-infantil.webp",
@@ -41,6 +42,7 @@ export async function getConfiguracoesSite(): Promise<Record<string, string>> {
     [CONFIG_CONTATO_WHATSAPP]: "",
     [CONFIG_GOOGLE_ADS_CLIENT]: "",
     [CONFIG_GOOGLE_ADS_SLOT]: "",
+    [CONFIG_CLARITY_PROJECT_ID]: "",
     ...FALLBACKS,
     ...porChave,
   };

@@ -11,6 +11,7 @@ import {
   CONFIG_CONTATO_WHATSAPP,
   CONFIG_GOOGLE_ADS_CLIENT,
   CONFIG_GOOGLE_ADS_SLOT,
+  CONFIG_CLARITY_PROJECT_ID,
 } from "@/lib/data/config";
 import TextConfigForm from "@/components/admin/TextConfigForm";
 
@@ -59,6 +60,14 @@ export default async function AdminSitePage() {
           campos={[
             { chave: CONFIG_GOOGLE_ADS_CLIENT, label: "Client ID (publisher)", placeholder: "ca-pub-1234567890123456", atual: config[CONFIG_GOOGLE_ADS_CLIENT] },
             { chave: CONFIG_GOOGLE_ADS_SLOT, label: "Slot ID (bloco de anúncio)", placeholder: "1234567890", atual: config[CONFIG_GOOGLE_ADS_SLOT] },
+          ]}
+        />
+
+        <TextConfigForm
+          titulo="Microsoft Clarity"
+          descricao="Project ID do Clarity (gravação de sessão/heatmap). Deixe em branco pra manter desativado."
+          campos={[
+            { chave: CONFIG_CLARITY_PROJECT_ID, label: "Project ID", placeholder: "ybkd3k9ukf", atual: config[CONFIG_CLARITY_PROJECT_ID] },
           ]}
         />
       </div>
