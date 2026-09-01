@@ -84,6 +84,15 @@ export async function registrarCliente(_prevState: ActionState, formData: FormDa
     return { error: "Já existe uma conta com esse e-mail" };
   }
 
+  const telefoneDuplicado = await queryOne(
+    `SELECT id FROM usuarios WHERE telefone IS NOT NULL
+       AND right(regexp_replace(telefone, '\\D', '', 'g'), 11) = right(regexp_replace($1, '\\D', '', 'g'), 11)`,
+    [parsed.data.telefone]
+  );
+  if (telefoneDuplicado) {
+    return { error: "Esse telefone já está cadastrado em outra conta." };
+  }
+
   const senhaHash = await hashPassword(parsed.data.senha);
   const usuario = await queryOne<{ id: string }>(
     `INSERT INTO usuarios (tipo, email, senha_hash, telefone, termos_aceitos_em) VALUES ('cliente', $1, $2, $3, now()) RETURNING id`,
@@ -137,6 +146,15 @@ export async function registrarEmpresa(_prevState: ActionState, formData: FormDa
   );
   if (existente) {
     return { error: "Já existe uma conta com esse e-mail ou CNPJ" };
+  }
+
+  const telefoneDuplicado = await queryOne(
+    `SELECT id FROM usuarios WHERE telefone IS NOT NULL
+       AND right(regexp_replace(telefone, '\\D', '', 'g'), 11) = right(regexp_replace($1, '\\D', '', 'g'), 11)`,
+    [parsed.data.telefoneContato]
+  );
+  if (telefoneDuplicado) {
+    return { error: "Esse telefone já está cadastrado em outra conta." };
   }
 
   const senhaHash = await hashPassword(parsed.data.senha);
@@ -210,6 +228,15 @@ export async function registrarProfissional(_prevState: ActionState, formData: F
   const existente = await queryOne(`SELECT id FROM usuarios WHERE email = $1`, [parsed.data.email]);
   if (existente) {
     return { error: "Já existe uma conta com esse e-mail" };
+  }
+
+  const telefoneDuplicado = await queryOne(
+    `SELECT id FROM usuarios WHERE telefone IS NOT NULL
+       AND right(regexp_replace(telefone, '\\D', '', 'g'), 11) = right(regexp_replace($1, '\\D', '', 'g'), 11)`,
+    [parsed.data.telefone]
+  );
+  if (telefoneDuplicado) {
+    return { error: "Esse telefone já está cadastrado em outra conta." };
   }
 
   const senhaHash = await hashPassword(parsed.data.senha);

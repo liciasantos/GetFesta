@@ -234,6 +234,85 @@ export async function alternarAprovadaDestaqueProfissional(profissionalId: strin
   return { ok: true };
 }
 
+/** Apaga o profissional e tudo que depende dele. A maioria das tabelas
+ * (categorias, galeria, avaliacoes, vinculo, google agenda, disponibilidade,
+ * candidaturas) referencia profissionais com ON DELETE CASCADE, mas
+ * vagas_profissionais.profissional_selecionado_id e conversas.profissional_id
+ * nao tem cascade - precisa limpar essas antes do DELETE FROM usuarios. */
+export async function removerProfissional(profissionalId: string): Promise<SimpleActionResult> {
+  const session = await requireAdmin();
+  if (!session) return { error: "Sessão inválida." };
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query(
+      `UPDATE vagas_profissionais SET profissional_selecionado_id = NULL WHERE profissional_selecionado_id = $1`,
+      [profissionalId]
+    );
+    await client.query(`DELETE FROM conversas WHERE profissional_id = $1`, [profissionalId]);
+    await client.query(`DELETE FROM usuarios WHERE id = $1`, [profissionalId]);
+    await client.query("COMMIT");
+  } catch {
+    await client.query("ROLLBACK");
+    return { error: "Não foi possível remover esse profissional - ele ainda tem vínculos em outras áreas do sistema." };
+  } finally {
+    client.release();
+  }
+
+  revalidatePath("/admin/profissionais");
+  revalidatePath("/painel/vagas");
+  return { ok: true };
+}
+
+// ---------------------------------------------------------------------
+// CLIENTES — banir/reativar login e remoção
+// ---------------------------------------------------------------------
+
+export async function alternarBanidoCliente(clienteId: string): Promise<SimpleActionResult> {
+  const session = await requireAdmin();
+  if (!session) return { error: "Sessão inválida." };
+
+  await query(
+    `UPDATE usuarios SET banido = NOT banido, ativo = CASE WHEN banido THEN true ELSE false END
+     WHERE id = $1 AND tipo = 'cliente'`,
+    [clienteId]
+  );
+  revalidatePath("/admin/clientes");
+  return { ok: true };
+}
+
+/** Apaga o cliente e tudo que depende dele. avaliacoes/avaliacoes_cliente/
+ * eventos_rsvp exigem cliente_id NOT NULL (sem cascade) - precisam ser
+ * apagadas. pedidos.cliente_id e conversas.cliente_id sao nullable
+ * (justamente pra suportar pedido de convidado) - deixamos o pedido existir
+ * mas sem vinculo com a conta removida. */
+export async function removerCliente(clienteId: string): Promise<SimpleActionResult> {
+  const session = await requireAdmin();
+  if (!session) return { error: "Sessão inválida." };
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query(`DELETE FROM avaliacoes WHERE cliente_id = $1`, [clienteId]);
+    await client.query(`DELETE FROM avaliacoes_cliente WHERE cliente_id = $1`, [clienteId]);
+    await client.query(`DELETE FROM eventos_rsvp WHERE cliente_id = $1`, [clienteId]);
+    await client.query(`DELETE FROM conversas WHERE cliente_id = $1`, [clienteId]);
+    await client.query(`UPDATE pedidos SET cliente_id = NULL WHERE cliente_id = $1`, [clienteId]);
+    await client.query(`DELETE FROM usuarios WHERE id = $1`, [clienteId]);
+    await client.query("COMMIT");
+  } catch {
+    await client.query("ROLLBACK");
+    return { error: "Não foi possível remover esse cliente - ele ainda tem vínculos em outras áreas do sistema." };
+  } finally {
+    client.release();
+  }
+
+  revalidatePath("/admin/clientes");
+  revalidatePath("/");
+  return { ok: true };
+}
+
 /** Liga/desliga uma célula da matriz "função do profissional x categoria da
  * empresa" - define quem aparece em "buscar profissionais" no painel de cada
  * empresa (ver lib/data/profissionais.ts:listProfissionaisCompativeis). */

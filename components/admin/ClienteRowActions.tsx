@@ -2,16 +2,16 @@
 
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { alternarAprovadaDestaqueProfissional, removerProfissional } from "@/lib/actions/admin";
+import { alternarBanidoCliente, removerCliente } from "@/lib/actions/admin";
 
-export default function ProfissionalRowActions({
-  profissionalId,
+export default function ClienteRowActions({
+  clienteId,
   nome,
-  aprovadaParaDestaque,
+  banido,
 }: {
-  profissionalId: string;
+  clienteId: string;
   nome: string;
-  aprovadaParaDestaque: boolean;
+  banido: boolean;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -29,12 +29,16 @@ export default function ProfissionalRowActions({
       <button
         type="button"
         disabled={isPending}
-        onClick={() => run(() => alternarAprovadaDestaqueProfissional(profissionalId))}
+        onClick={() => {
+          if (banido || window.confirm(`Banir "${nome}"? Ele não vai mais conseguir entrar na conta até ser reativado.`)) {
+            run(() => alternarBanidoCliente(clienteId));
+          }
+        }}
         className={`rounded-md border px-2.5 py-1 text-[11.5px] font-bold disabled:opacity-50 ${
-          aprovadaParaDestaque ? "border-accent bg-accent-soft text-accent-dark" : "border-border-strong hover:bg-surface-alt"
+          banido ? "border-note-border bg-note-bg text-note-text" : "border-border-strong hover:bg-surface-alt"
         }`}
       >
-        {aprovadaParaDestaque ? "✓ Em destaque" : "Aprovar p/ destaque"}
+        {banido ? "✓ Banido — clique pra reativar" : "Banir cliente"}
       </button>
       <button
         type="button"
@@ -42,15 +46,15 @@ export default function ProfissionalRowActions({
         onClick={() => {
           if (
             window.confirm(
-              `Remover "${nome}" definitivamente? Isso apaga o perfil, galeria, avaliações e candidaturas desse profissional. Não pode ser desfeito.`
+              `Remover "${nome}" definitivamente? Isso apaga o perfil e avaliações desse cliente (os pedidos publicados continuam, só ficam sem o vínculo com essa conta). Não pode ser desfeito.`
             )
           ) {
-            run(() => removerProfissional(profissionalId));
+            run(() => removerCliente(clienteId));
           }
         }}
         className="rounded-md border border-border-strong px-2.5 py-1 text-[11.5px] font-bold text-danger-dark hover:bg-danger-soft disabled:opacity-50"
       >
-        Remover profissional
+        Remover cliente
       </button>
     </div>
   );

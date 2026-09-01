@@ -9,6 +9,8 @@ import {
   CONFIG_CONTATO_EMAIL,
   CONFIG_CONTATO_TELEFONE,
   CONFIG_CONTATO_WHATSAPP,
+  CONFIG_GOOGLE_ADS_CLIENT,
+  CONFIG_GOOGLE_ADS_SLOT,
 } from "@/lib/data/config";
 import TextConfigForm from "@/components/admin/TextConfigForm";
 
@@ -27,7 +29,7 @@ export default async function AdminSitePage() {
       </Link>
       <h1 className="mb-1 mt-3 text-xl font-extrabold">Redes sociais e contato</h1>
       <p className="mb-6 text-sm text-muted">
-        Aparecem no rodapé do site e na página "Contato". Deixe em branco pra manter desabilitado.
+        Aparecem no rodapé do site e na página &quot;Contato&quot;. Deixe em branco pra manter desabilitado.
       </p>
 
       <div className="flex flex-col gap-5">
@@ -48,6 +50,15 @@ export default async function AdminSitePage() {
             { chave: CONFIG_CONTATO_EMAIL, label: "E-mail", placeholder: "contato@getfesta.com.br", atual: config[CONFIG_CONTATO_EMAIL] },
             { chave: CONFIG_CONTATO_TELEFONE, label: "Telefone", placeholder: "(21) 99999-9999", atual: config[CONFIG_CONTATO_TELEFONE] },
             { chave: CONFIG_CONTATO_WHATSAPP, label: "WhatsApp (DDD + número)", placeholder: "21999999999", atual: config[CONFIG_CONTATO_WHATSAPP] },
+          ]}
+        />
+
+        <TextConfigForm
+          titulo="Anúncio Google (AdSense)"
+          descricao="Box de anúncio exibido acima do rodapé em todas as páginas. Deixe em branco pra manter desativado."
+          campos={[
+            { chave: CONFIG_GOOGLE_ADS_CLIENT, label: "Client ID (publisher)", placeholder: "ca-pub-1234567890123456", atual: config[CONFIG_GOOGLE_ADS_CLIENT] },
+            { chave: CONFIG_GOOGLE_ADS_SLOT, label: "Slot ID (bloco de anúncio)", placeholder: "1234567890", atual: config[CONFIG_GOOGLE_ADS_SLOT] },
           ]}
         />
       </div>

@@ -13,6 +13,8 @@ export const CONFIG_CONTATO_TELEFONE = "contato_telefone";
 export const CONFIG_CONTATO_WHATSAPP = "contato_whatsapp";
 export const CONFIG_POLITICA_PRIVACIDADE = "politica_privacidade_texto";
 export const CONFIG_TERMOS_USO = "termos_uso_texto";
+export const CONFIG_GOOGLE_ADS_CLIENT = "google_ads_client";
+export const CONFIG_GOOGLE_ADS_SLOT = "google_ads_slot";
 
 const FALLBACKS: Record<string, string> = {
   [CONFIG_COMO_FUNCIONA_BG]: "/sitio-festa-infantil.webp",
@@ -37,6 +39,8 @@ export async function getConfiguracoesSite(): Promise<Record<string, string>> {
     [CONFIG_SOCIAL_YOUTUBE]: "",
     [CONFIG_CONTATO_TELEFONE]: "",
     [CONFIG_CONTATO_WHATSAPP]: "",
+    [CONFIG_GOOGLE_ADS_CLIENT]: "",
+    [CONFIG_GOOGLE_ADS_SLOT]: "",
     ...FALLBACKS,
     ...porChave,
   };

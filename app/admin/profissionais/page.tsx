@@ -20,7 +20,7 @@ export default async function AdminProfissionaisPage() {
 
       <h1 className="mb-1 mt-3 text-xl font-extrabold">Profissionais cadastrados</h1>
       <p className="text-sm text-muted">
-        Aprove pra destaque quem pagou o anúncio — aparece na seção "Profissionais em destaque" no painel das
+        Aprove pra destaque quem pagou o anúncio — aparece na seção &quot;Profissionais em destaque&quot; no painel das
         empresas compatíveis. A ordenação da busca normal já usa a nota média das avaliações das empresas.
       </p>
 
@@ -46,7 +46,11 @@ export default async function AdminProfissionaisPage() {
                 {new Date(p.criado_em).toLocaleDateString("pt-BR")}
               </p>
             </div>
-            <ProfissionalRowActions profissionalId={p.usuario_id} aprovadaParaDestaque={p.aprovada_para_destaque} />
+            <ProfissionalRowActions
+              profissionalId={p.usuario_id}
+              nome={p.nome}
+              aprovadaParaDestaque={p.aprovada_para_destaque}
+            />
           </div>
         ))}
         {profissionais.length === 0 && <p className="text-sm text-muted">Nenhum profissional cadastrado ainda.</p>}

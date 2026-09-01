@@ -41,6 +41,12 @@ export default async function AdminPage() {
             Selecionar quais empresas aparecem em destaque por categoria — só entram quando pagam o anúncio.
           </p>
         </Link>
+        <Link href="/admin/clientes" className="card-hover rounded-xl border border-border bg-surface p-5">
+          <div className="text-[14px] font-bold">Clientes cadastrados</div>
+          <p className="mt-1 text-[12.5px] text-muted">
+            Ver total de clientes e pedidos publicados, banir ou remover uma conta.
+          </p>
+        </Link>
         <Link href="/admin/empresas" className="card-hover rounded-xl border border-border bg-surface p-5">
           <div className="text-[14px] font-bold">Empresas cadastradas</div>
           <p className="mt-1 text-[12.5px] text-muted">
@@ -50,7 +56,7 @@ export default async function AdminPage() {
         <Link href="/admin/profissionais" className="card-hover rounded-xl border border-border bg-surface p-5">
           <div className="text-[14px] font-bold">Profissionais cadastrados</div>
           <p className="mt-1 text-[12.5px] text-muted">
-            Aprovar pra destaque quem pagou o anúncio na área "Vagas para profissionais" das empresas.
+            Aprovar pra destaque quem pagou o anúncio na área &quot;Vagas para profissionais&quot; das empresas.
           </p>
         </Link>
         <Link href="/admin/categorias-compativeis" className="card-hover rounded-xl border border-border bg-surface p-5">
@@ -70,12 +76,12 @@ export default async function AdminPage() {
         <Link href="/admin/aparencia" className="card-hover rounded-xl border border-border bg-surface p-5">
           <div className="text-[14px] font-bold">Aparência do site</div>
           <p className="mt-1 text-[12.5px] text-muted">
-            Trocar as imagens de fundo da seção "Como funciona" e do banner de busca.
+            Trocar as imagens de fundo da seção &quot;Como funciona&quot; e do banner de busca.
           </p>
         </Link>
         <Link href="/admin/site" className="card-hover rounded-xl border border-border bg-surface p-5">
           <div className="text-[14px] font-bold">Redes sociais e contato</div>
-          <p className="mt-1 text-[12.5px] text-muted">Links do rodapé e dados da página "Contato".</p>
+          <p className="mt-1 text-[12.5px] text-muted">Links do rodapé e dados da página &quot;Contato&quot;.</p>
         </Link>
         <Link href="/admin/planos" className="card-hover rounded-xl border border-border bg-surface p-5">
           <div className="text-[14px] font-bold">Periodicidade e descontos</div>

@@ -185,6 +185,57 @@ export async function listAssinaturasAdmin(): Promise<AssinaturaAdmin[]> {
   );
 }
 
+export type ClienteAdmin = {
+  usuario_id: string;
+  nome: string;
+  email: string | null;
+  cidade_nome: string | null;
+  ativo: boolean;
+  banido: boolean;
+  total_pedidos: number;
+  criado_em: string;
+};
+
+export async function listClientesAdmin(): Promise<ClienteAdmin[]> {
+  return query<ClienteAdmin>(
+    `SELECT
+       c.usuario_id, c.nome, u.email, ci.nome AS cidade_nome, u.ativo, u.banido, u.criado_em,
+       (SELECT COUNT(*)::int FROM pedidos pd WHERE pd.cliente_id = c.usuario_id) AS total_pedidos
+     FROM clientes c
+     JOIN usuarios u ON u.id = c.usuario_id
+     LEFT JOIN cidades ci ON ci.id = c.cidade_id
+     ORDER BY u.criado_em DESC`
+  );
+}
+
+export type EstatisticasClientes = {
+  totalClientes: number;
+  totalPedidos: number;
+  pedidosUltimos30Dias: number;
+  clientesBanidos: number;
+};
+
+export async function getEstatisticasClientes(): Promise<EstatisticasClientes> {
+  const row = await queryOne<{
+    total_clientes: string;
+    total_pedidos: string;
+    pedidos_30_dias: string;
+    clientes_banidos: string;
+  }>(
+    `SELECT
+       (SELECT COUNT(*) FROM usuarios WHERE tipo = 'cliente') AS total_clientes,
+       (SELECT COUNT(*) FROM pedidos) AS total_pedidos,
+       (SELECT COUNT(*) FROM pedidos WHERE criado_em >= now() - interval '30 days') AS pedidos_30_dias,
+       (SELECT COUNT(*) FROM usuarios WHERE tipo = 'cliente' AND banido) AS clientes_banidos`
+  );
+  return {
+    totalClientes: Number(row?.total_clientes ?? 0),
+    totalPedidos: Number(row?.total_pedidos ?? 0),
+    pedidosUltimos30Dias: Number(row?.pedidos_30_dias ?? 0),
+    clientesBanidos: Number(row?.clientes_banidos ?? 0),
+  };
+}
+
 export async function listEmpresasAdmin(): Promise<EmpresaAdmin[]> {
   return query<EmpresaAdmin>(
     `SELECT

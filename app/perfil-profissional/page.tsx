@@ -4,6 +4,7 @@ import { getMeuPerfilProfissional, listCategoriasProfissionais } from "@/lib/dat
 import { listCidades } from "@/lib/data/geo";
 import { listVagasCompativeis } from "@/lib/data/vagas";
 import { listBloqueiosIndisponibilidade } from "@/lib/data/disponibilidade";
+import { getConfiguracoesSite, CONFIG_CONTATO_EMAIL } from "@/lib/data/config";
 import AvatarUpload from "@/components/AvatarUpload";
 import GaleriaManager from "@/components/GaleriaManager";
 import DisponibilidadeCalendar from "@/components/DisponibilidadeCalendar";
@@ -11,7 +12,7 @@ import CandidatarVagaButton from "@/components/CandidatarVagaButton";
 import AlterarSenhaForm from "@/components/AlterarSenhaForm";
 import PortfolioPdfUpload from "@/components/PortfolioPdfUpload";
 import { adicionarFotoGaleriaProfissional, atualizarFotoProfissional, removerFotoGaleriaProfissional } from "@/lib/actions/perfil";
-import { Badge } from "@/components/ui";
+import { Badge, buttonClass } from "@/components/ui";
 import { formatCurrencyBRL, formatDateBR } from "@/lib/format";
 import PerfilProfissionalForm from "./PerfilProfissionalForm";
 
@@ -27,14 +28,21 @@ export default async function PerfilProfissionalPage() {
   const session = await getSession();
   if (!session || session.tipo !== "profissional") redirect("/entrar");
 
-  const [perfil, categorias, cidades, vagas, bloqueiosDisponibilidade] = await Promise.all([
+  const [perfil, categorias, cidades, vagas, bloqueiosDisponibilidade, config] = await Promise.all([
     getMeuPerfilProfissional(session.usuarioId),
     listCategoriasProfissionais(),
     listCidades(),
     listVagasCompativeis(session.usuarioId),
     listBloqueiosIndisponibilidade(session.usuarioId),
+    getConfiguracoesSite(),
   ]);
   if (!perfil) redirect("/entrar");
+
+  const emailContato = config[CONFIG_CONTATO_EMAIL];
+  const assuntoDestaque = encodeURIComponent("Quero destacar meu perfil na GetFesta");
+  const corpoDestaque = encodeURIComponent(
+    `Olá! Sou ${perfil.nome} e quero saber mais sobre como destacar meu perfil profissional na GetFesta.`
+  );
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-10">
@@ -59,6 +67,22 @@ export default async function PerfilProfissionalPage() {
         <Badge tone={perfil.disponibilidade_status === "disponivel" ? "ok" : "muted"}>
           {DISPONIBILIDADE_LABEL[perfil.disponibilidade_status]}
         </Badge>
+      </div>
+
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-accent bg-accent-soft p-5">
+        <div>
+          <h2 className="text-[14px] font-bold text-accent-dark">✨ Torne-se premium e se destaque</h2>
+          <p className="mt-1 text-[12.5px] text-accent-dark">
+            Perfis em destaque aparecem primeiro pras empresas que buscam por sua função. Fale com a gente pra
+            contratar essa área.
+          </p>
+        </div>
+        <a
+          href={`mailto:${emailContato}?subject=${assuntoDestaque}&body=${corpoDestaque}`}
+          className={buttonClass("primary", "sm")}
+        >
+          Entrar em contato por e-mail
+        </a>
       </div>
 
       <h2 className="mb-2 mt-8 text-xs font-bold uppercase tracking-wide text-muted-2">
