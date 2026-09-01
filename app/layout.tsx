@@ -6,6 +6,7 @@ import SiteFooter from "@/components/SiteFooter";
 import CookieConsent from "@/components/CookieConsent";
 import GoogleAdBanner from "@/components/GoogleAdBanner";
 import GoogleAdsenseHead from "@/components/GoogleAdsenseHead";
+import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <GoogleAdBanner />
         <SiteFooter />
         <CookieConsent />
+        <Analytics />
       </body>
     </html>
   );
