@@ -20,7 +20,7 @@ export default function BgImage({
 }) {
   if (src.startsWith("data:")) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={src} alt={alt} className={className} />;
+    return <img src={src} alt={alt} className={`absolute inset-0 h-full w-full ${className ?? ""}`} />;
   }
   return <Image src={src} alt={alt} fill sizes={sizes} priority={priority} className={className} />;
 }

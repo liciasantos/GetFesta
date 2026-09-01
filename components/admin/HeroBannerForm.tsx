@@ -103,6 +103,9 @@ export default function HeroBannerForm({
         name="imagemFundoMobile"
         label="Imagem de fundo (mobile) — opcional, senão reusa a de desktop"
         initialUrl={banner?.imagem_fundo_mobile}
+        targetWidth={1080}
+        targetHeight={1350}
+        hint="ou arraste a imagem aqui — recomendado ~1080×1350px, retrato (mais alto que largo, formato de celular)"
       />
 
       {state?.error && <p className="text-[12.5px] font-semibold text-accent-dark">{state.error}</p>}

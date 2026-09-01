@@ -10,10 +10,16 @@ export default function ImageFieldUpload({
   name,
   initialUrl,
   label = "Imagem de fundo",
+  targetWidth = 1600,
+  targetHeight = 600,
+  hint = "ou arraste a imagem aqui — recomendado ~1600×600px, landscape",
 }: {
   name: string;
   initialUrl?: string | null;
   label?: string;
+  targetWidth?: number;
+  targetHeight?: number;
+  hint?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(initialUrl ?? null);
@@ -27,7 +33,7 @@ export default function ImageFieldUpload({
       return;
     }
     try {
-      const resized = await resizeImageToDataUrlWide(file);
+      const resized = await resizeImageToDataUrlWide(file, targetWidth, targetHeight);
       setPreview(resized.dataUrl);
     } catch {
       setError("Não foi possível processar essa imagem.");
@@ -67,7 +73,7 @@ export default function ImageFieldUpload({
       >
         {preview ? "Trocar imagem" : "Escolher imagem"}
       </button>
-      <p className="mt-1 text-[10.5px] text-muted-2">ou arraste a imagem aqui — recomendado ~1600×600px, landscape</p>
+      <p className="mt-1 text-[10.5px] text-muted-2">{hint}</p>
       {error && <p className="mt-1.5 text-[11.5px] font-semibold text-accent-dark">{error}</p>}
       <input
         ref={inputRef}
