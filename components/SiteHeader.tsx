@@ -52,6 +52,12 @@ export default async function SiteHeader() {
       <Link href="/publicar-pedido" className="hover:text-text">
         Publicar pedido
       </Link>
+      <Link href="/empresas" className="hover:text-text">
+        Pra empresas
+      </Link>
+      <Link href="/profissionais" className="hover:text-text">
+        Pra profissionais
+      </Link>
     </>
   );
 

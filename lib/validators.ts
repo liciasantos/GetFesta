@@ -5,6 +5,11 @@ const aceitouTermosSchema = z
   .optional()
   .refine((v) => v === "on", "É necessário aceitar a Política de Privacidade e os Termos de Uso");
 
+const aceitouLgpdImagensSchema = z
+  .string()
+  .optional()
+  .refine((v) => v === "on", "É necessário confirmar a declaração sobre imagens de crianças e adolescentes");
+
 export const registrarClienteSchema = z.object({
   nome: z.string().min(2, "Informe seu nome"),
   email: z.string().email("E-mail inválido"),
@@ -28,6 +33,7 @@ export const registrarEmpresaSchema = z.object({
   cidadeId: z.coerce.number({ message: "Selecione a cidade de atuação" }),
   categoriaIds: z.array(z.coerce.number()).min(1, "Selecione ao menos uma categoria"),
   aceitouTermos: aceitouTermosSchema,
+  aceitouLgpdImagens: aceitouLgpdImagensSchema,
 });
 
 export const registrarProfissionalSchema = z.object({

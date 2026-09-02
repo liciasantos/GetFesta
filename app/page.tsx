@@ -50,10 +50,44 @@ export default async function HomePage() {
       <Hero banners={heroBanners} />
 
       {/* BOX "SEM CUSTO PRA QUEM CONTRATA" — sobrepõe a base do banner, como um
-          card flutuante (negative margin puxa pra cima do hero) */}
+          card flutuante (negative margin puxa pra cima do hero). O seletor de
+          jornada entra como primeiro bloco dentro desse mesmo card, pra
+          aparecer logo no inicio sem quebrar o efeito de sobreposicao com o
+          Hero (que depende de nao ter nada entre os dois na DOM). */}
       <section className="relative z-10 px-6">
         <div className="mx-auto -mt-[46px] max-w-6xl rounded-2xl border border-border bg-surface p-6 shadow-card-hover sm:-mt-16 sm:p-8">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
+          <div className="border-b border-border pb-6">
+            <span className="section-kicker">Comece por aqui</span>
+            <h2 className="mt-2 text-xl font-extrabold sm:text-2xl">Qual é a sua jornada na GetFesta?</h2>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              <JourneyCard
+                href="#publicar-pedido"
+                emoji="🎉"
+                titulo="Estou organizando uma festa"
+                texto="Publique o que você precisa e receba propostas no WhatsApp — sem custo."
+                cta="Publicar meu pedido"
+              />
+              <JourneyCard
+                href="/empresas"
+                emoji="🏢"
+                titulo="Sou uma empresa"
+                texto="Receba pedidos de clientes da sua região e contrate profissionais freelance."
+                cta="Saiba mais"
+              />
+              <JourneyCard
+                href="/profissionais"
+                emoji="✨"
+                titulo="Sou profissional"
+                texto="Monte seu catálogo, gerencie sua agenda e apareça pras empresas certas."
+                cta="Saiba mais"
+              />
+            </div>
+          </div>
+
+          <div
+            id="publicar-pedido"
+            className="mt-6 flex flex-col gap-5 scroll-mt-24 lg:flex-row lg:items-center lg:justify-between lg:gap-10"
+          >
             <div className="lg:max-w-[280px] lg:shrink-0">
               <span className="section-kicker">Sem custo pra quem contrata</span>
               <h1 className="mt-2 font-display text-3xl font-extrabold leading-[1.1] tracking-tight sm:text-4xl">
@@ -328,5 +362,31 @@ export default async function HomePage() {
         </div>
       </section>
     </div>
+  );
+}
+
+function JourneyCard({
+  href,
+  emoji,
+  titulo,
+  texto,
+  cta,
+}: {
+  href: string;
+  emoji: string;
+  titulo: string;
+  texto: string;
+  cta: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="card-hover flex flex-col gap-2 rounded-xl border border-border bg-surface-alt p-4 hover:border-accent-soft-2 hover:bg-accent-soft"
+    >
+      <span className="text-2xl">{emoji}</span>
+      <span className="text-[14px] font-bold">{titulo}</span>
+      <p className="text-[12px] leading-relaxed text-muted">{texto}</p>
+      <span className="mt-1 text-[12px] font-bold text-accent-dark">{cta} →</span>
+    </Link>
   );
 }

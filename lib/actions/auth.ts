@@ -132,6 +132,7 @@ export async function registrarEmpresa(_prevState: ActionState, formData: FormDa
     cidadeId: formData.get("cidadeId"),
     categoriaIds: formData.getAll("categoriaIds"),
     aceitouTermos: formData.get("aceitouTermos") || undefined,
+    aceitouLgpdImagens: formData.get("aceitouLgpdImagens") || undefined,
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
@@ -166,8 +167,8 @@ export async function registrarEmpresa(_prevState: ActionState, formData: FormDa
 
   const slug = await gerarSlugUnicoEmpresa(parsed.data.nomeFantasia);
   await query(
-    `INSERT INTO empresas (usuario_id, slug, razao_social, nome_fantasia, cnpj, instagram, telefone_contato, perfil_reivindicado)
-     VALUES ($1,$2,$3,$4,$5,$6,$7, true)`,
+    `INSERT INTO empresas (usuario_id, slug, razao_social, nome_fantasia, cnpj, instagram, telefone_contato, perfil_reivindicado, lgpd_imagens_aceito_em)
+     VALUES ($1,$2,$3,$4,$5,$6,$7, true, now())`,
     [
       usuario.id,
       slug,

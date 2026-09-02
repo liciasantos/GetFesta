@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { registrarEmpresa, type ActionState } from "@/lib/actions/auth";
 import { buttonClass } from "@/components/ui";
 import AceiteTermosCheckbox from "@/components/AceiteTermosCheckbox";
+import AceiteLgpdImagensCheckbox from "@/components/AceiteLgpdImagensCheckbox";
 import type { Cidade, Categoria } from "@/lib/data/geo";
 
 export default function RegistroEmpresaForm({
@@ -70,6 +71,7 @@ export default function RegistroEmpresaForm({
         <input name="senha" type="password" required minLength={6} className="rounded-md border border-border px-3 py-2.5 text-sm" />
       </Field>
       <AceiteTermosCheckbox />
+      <AceiteLgpdImagensCheckbox />
       {state?.error && <p className="text-[12.5px] font-semibold text-accent-dark">{state.error}</p>}
       <button type="submit" disabled={pending} className={buttonClass("primary")}>
         {pending ? "Criando conta..." : "Quero receber pedidos de festa"}

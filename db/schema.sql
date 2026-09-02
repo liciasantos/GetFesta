@@ -142,6 +142,10 @@ CREATE TABLE empresas (
     elegivel_destaque       BOOLEAN NOT NULL DEFAULT FALSE,   -- nota minima atingida
     aprovada_para_destaque  BOOLEAN NOT NULL DEFAULT FALSE,   -- curadoria manual do admin
     perfil_reivindicado     BOOLEAN NOT NULL DEFAULT TRUE,    -- FALSE = cadastro assistido, empresa ainda nao confirmou a conta
+    -- prova de consentimento LGPD (art. 14) sobre a responsabilidade de ter
+    -- autorizacao dos pais/responsaveis pra qualquer foto com rosto de
+    -- crianca/adolescente publicada na galeria - marcado no cadastro.
+    lgpd_imagens_aceito_em  TIMESTAMPTZ,
     criado_em               TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

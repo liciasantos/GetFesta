@@ -14,6 +14,7 @@ const COLUNAS = [
   {
     titulo: "Para empresas",
     links: [
+      { label: "Saiba mais", href: "/empresas" },
       { label: "Cadastrar minha empresa", href: "/cadastro/empresa" },
       { label: "Entrar no painel", href: "/entrar?tipo=empresa" },
     ],
@@ -21,6 +22,7 @@ const COLUNAS = [
   {
     titulo: "Para profissionais",
     links: [
+      { label: "Saiba mais", href: "/profissionais" },
       { label: "Criar catálogo profissional", href: "/cadastro/profissional" },
       { label: "Entrar", href: "/entrar?tipo=profissional" },
     ],

@@ -41,6 +41,12 @@ export default async function PainelPerfilPage() {
       <div className="mt-5 rounded-xl border border-border bg-surface p-5">
         <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Galeria de fotos</h2>
         <GaleriaManager fotos={empresa.galeria} onAdd={adicionarFotoGaleria} onRemove={removerFotoGaleria} />
+        <p className="mt-3 rounded-lg border border-note-border bg-note-bg p-3 text-[11.5px] leading-relaxed text-note-text">
+          ⚠️ <b>Atenção com fotos de crianças e adolescentes:</b> se a foto mostrar o rosto de uma criança ou
+          adolescente, a lei (LGPD, art. 14) exige autorização específica dos pais ou responsáveis pra publicar essa
+          imagem. Sem essa autorização, borre ou corte o rosto antes de subir a foto. Ao publicar, você declara ser
+          o responsável por essa autorização e assume as consequências pelo uso indevido da imagem.
+        </p>
       </div>
 
       <div className="mt-5 rounded-xl border border-border bg-surface p-5">
