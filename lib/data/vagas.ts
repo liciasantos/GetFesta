@@ -12,16 +12,20 @@ export type VagaFeedItem = {
   descricao: string;
   criado_em: string;
   empresa_nome_fantasia: string;
+  sexo_desejado: string;
 };
 
 /** Vagas em aberto que combinam com as funções e a cidade do profissional -
  * mesmo padrão de "lead compatível" já usado pra pedidos no painel da empresa
- * (lib/data/pedidos.ts:listPedidosCompativeis), só que na direção inversa. */
+ * (lib/data/pedidos.ts:listPedidosCompativeis), só que na direção inversa.
+ * sexo_desejado='indiferente' aparece pra todo mundo; senão, só combina se
+ * bater com o sexo do profissional (quem é nao_binario/prefiro_nao_informar
+ * ou nao informou so ve vagas indiferentes). */
 export async function listVagasCompativeis(profissionalId: string): Promise<(VagaFeedItem & { ja_candidatado: boolean })[]> {
   return query<VagaFeedItem & { ja_candidatado: boolean }>(
     `SELECT
        v.id, cp.nome AS categoria_nome, ci.nome AS cidade_nome, b.nome AS bairro_nome,
-       v.data_evento, v.hora_inicio, v.duracao_horas, v.valor, v.descricao, v.criado_em,
+       v.data_evento, v.hora_inicio, v.duracao_horas, v.valor, v.descricao, v.criado_em, v.sexo_desejado,
        e.nome_fantasia AS empresa_nome_fantasia,
        EXISTS (SELECT 1 FROM vaga_candidaturas vc WHERE vc.vaga_id = v.id AND vc.profissional_id = $1) AS ja_candidatado
      FROM vagas_profissionais v
@@ -33,6 +37,7 @@ export async function listVagasCompativeis(profissionalId: string): Promise<(Vag
      LEFT JOIN bairros pb ON pb.id = p.bairro_id
      WHERE v.status = 'aberta'
        AND pb.cidade_id = v.cidade_id
+       AND (v.sexo_desejado = 'indiferente' OR v.sexo_desejado = p.sexo)
        AND EXISTS (
          SELECT 1 FROM profissional_categorias pc WHERE pc.profissional_id = $1 AND pc.categoria_id = v.categoria_profissional_id
        )
@@ -53,6 +58,7 @@ export type MinhaVaga = {
   descricao: string;
   criado_em: string;
   status: string;
+  sexo_desejado: string;
   total_candidatos: number;
   realizada: boolean;
   profissional_selecionado_id: string | null;
@@ -62,7 +68,7 @@ export type MinhaVaga = {
 const MINHA_VAGA_SELECT = `
   SELECT
     v.id, cp.nome AS categoria_nome, ci.nome AS cidade_nome, b.nome AS bairro_nome,
-    v.data_evento, v.hora_inicio, v.duracao_horas, v.valor, v.descricao, v.criado_em, v.status,
+    v.data_evento, v.hora_inicio, v.duracao_horas, v.valor, v.descricao, v.criado_em, v.status, v.sexo_desejado,
     (v.data_evento < CURRENT_DATE) AS realizada,
     v.profissional_selecionado_id, sel.nome AS profissional_selecionado_nome,
     (SELECT count(*)::int FROM vaga_candidaturas vc WHERE vc.vaga_id = v.id) AS total_candidatos

@@ -4,6 +4,7 @@ import { getSession } from "@/lib/auth";
 import { listBannersAdmin } from "@/lib/data/admin";
 import { Badge, buttonClass } from "@/components/ui";
 import { formatCurrencyBRL, formatDateBR } from "@/lib/format";
+import { statusVencimento } from "@/lib/expiracao";
 import BannerRowActions from "@/components/admin/BannerRowActions";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +14,6 @@ export default async function AdminBannersPage() {
   if (!session || session.tipo !== "admin") redirect("/entrar");
 
   const banners = await listBannersAdmin();
-  const hoje = new Date();
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-10">
@@ -28,21 +28,23 @@ export default async function AdminBannersPage() {
         </Link>
       </div>
       <p className="text-sm text-muted">
-        Empresas que pagaram pelo anúncio de categoria — a ordem aqui controla a sequência na seção "Destaques da
-        semana" da home e da área do cliente logado.
+        Empresas que pagaram pelo anúncio de categoria — a ordem aqui controla a sequência na seção &quot;Destaques da
+        semana&quot; da home e da área do cliente logado.
       </p>
 
       <div className="mt-6 flex flex-col gap-2.5">
         {banners.map((b, i) => {
-          const vencido = new Date(b.fim_em) < hoje;
+          const status = statusVencimento(b.fim_em);
           return (
             <div key={b.id} className="flex flex-col gap-2.5 rounded-xl border border-border bg-surface p-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-bold">{b.nome_fantasia}</span>
                   <Badge tone="muted">{b.categoria_nome}</Badge>
-                  <Badge tone={b.ativo && !vencido ? "ok" : "warn"}>
-                    {!b.ativo ? "Desativado" : vencido ? "Vencido" : "No ar"}
+                  <Badge
+                    tone={!b.ativo ? "muted" : status === "vencido" ? "danger" : status === "atencao" ? "warn" : "ok"}
+                  >
+                    {!b.ativo ? "Desativado" : status === "vencido" ? "Vencido" : status === "atencao" ? "Vence em breve" : "No ar"}
                   </Badge>
                 </div>
                 <p className="mt-1 text-[12px] text-muted">

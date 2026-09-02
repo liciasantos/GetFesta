@@ -247,9 +247,15 @@ export async function registrarProfissional(_prevState: ActionState, formData: F
   if (!usuario) return { error: "Não foi possível criar a conta, tente novamente" };
 
   const slug = await gerarSlugUnicoProfissional(parsed.data.nome);
+  // portfolio em PDF liberado de graca so pros 30 primeiros profissionais -
+  // marcado uma unica vez aqui no cadastro, nunca recalculado depois (ver
+  // coluna profissional_liberado_gratis no schema).
+  const totalProfissionais = await queryOne<{ total: string }>(`SELECT count(*) AS total FROM profissionais`);
+  const portfolioLiberadoGratis = Number(totalProfissionais?.total ?? 0) < 30;
   await query(
-    `INSERT INTO profissionais (usuario_id, slug, nome, bairro_id, consentimento_dados_em) VALUES ($1,$2,$3,$4, now())`,
-    [usuario.id, slug, parsed.data.nome, parsed.data.bairroId]
+    `INSERT INTO profissionais (usuario_id, slug, nome, bairro_id, consentimento_dados_em, portfolio_liberado_gratis)
+     VALUES ($1,$2,$3,$4,now(),$5)`,
+    [usuario.id, slug, parsed.data.nome, parsed.data.bairroId, portfolioLiberadoGratis]
   );
 
   for (const categoriaId of parsed.data.categoriaIds) {

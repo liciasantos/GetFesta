@@ -92,14 +92,15 @@ export async function criarBannerHero(_prevState: BannerActionState, formData: F
     botaoUrl: formData.get("botaoUrl") || undefined,
     imagemFundo: formData.get("imagemFundo"),
     imagemFundoMobile: formData.get("imagemFundoMobile") || undefined,
+    regiaoAlvo: formData.get("regiaoAlvo") || undefined,
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
 
   const proximaOrdem = await queryOne<{ max: number | null }>(`SELECT max(ordem) AS max FROM banners_hero`);
 
   await query(
-    `INSERT INTO banners_hero (titulo, texto, botao_label, botao_url, imagem_fundo, imagem_fundo_mobile, ativo, ordem)
-     VALUES ($1,$2,$3,$4,$5,$6,true,$7)`,
+    `INSERT INTO banners_hero (titulo, texto, botao_label, botao_url, imagem_fundo, imagem_fundo_mobile, regiao_alvo, ativo, ordem)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,true,$8)`,
     [
       parsed.data.titulo,
       parsed.data.texto ?? null,
@@ -107,6 +108,7 @@ export async function criarBannerHero(_prevState: BannerActionState, formData: F
       parsed.data.botaoUrl ?? null,
       parsed.data.imagemFundo,
       parsed.data.imagemFundoMobile ?? null,
+      parsed.data.regiaoAlvo ?? null,
       (proximaOrdem?.max ?? -1) + 1,
     ]
   );
@@ -128,13 +130,14 @@ export async function atualizarBannerHero(_prevState: BannerActionState, formDat
     botaoUrl: formData.get("botaoUrl") || undefined,
     imagemFundo: formData.get("imagemFundo"),
     imagemFundoMobile: formData.get("imagemFundoMobile") || undefined,
+    regiaoAlvo: formData.get("regiaoAlvo") || undefined,
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
 
   await query(
     `UPDATE banners_hero
-     SET titulo = $1, texto = $2, botao_label = $3, botao_url = $4, imagem_fundo = $5, imagem_fundo_mobile = $6
-     WHERE id = $7`,
+     SET titulo = $1, texto = $2, botao_label = $3, botao_url = $4, imagem_fundo = $5, imagem_fundo_mobile = $6, regiao_alvo = $7
+     WHERE id = $8`,
     [
       parsed.data.titulo,
       parsed.data.texto ?? null,
@@ -142,6 +145,7 @@ export async function atualizarBannerHero(_prevState: BannerActionState, formDat
       parsed.data.botaoUrl ?? null,
       parsed.data.imagemFundo,
       parsed.data.imagemFundoMobile ?? null,
+      parsed.data.regiaoAlvo ?? null,
       parsed.data.id,
     ]
   );
@@ -235,6 +239,38 @@ export async function alternarAprovadaDestaqueProfissional(profissionalId: strin
   return { ok: true };
 }
 
+/** Concede/revoga manualmente o plano premium do profissional (libera o
+ * portfolio em PDF pra quem nao esta entre os 30 primeiros) - ate o Mercado
+ * Pago estar integrado, essa e a unica forma de ativar o plano pago. Sem
+ * fim_em (indefinido) porque o admin controla manualmente quando revogar. */
+export async function alternarPremiumProfissional(profissionalId: string): Promise<SimpleActionResult> {
+  const session = await requireAdmin();
+  if (!session) return { error: "Sessão inválida." };
+
+  const ativa = await queryOne<{ id: string }>(
+    `SELECT a.id FROM assinaturas a JOIN planos p ON p.id = a.plano_id
+     WHERE a.usuario_id = $1 AND p.tipo = 'profissional' AND a.status = 'ativa'
+       AND (a.fim_em IS NULL OR a.fim_em > now())
+     ORDER BY a.criado_em DESC LIMIT 1`,
+    [profissionalId]
+  );
+
+  if (ativa) {
+    await query(`UPDATE assinaturas SET status = 'cancelada' WHERE id = $1`, [ativa.id]);
+  } else {
+    const plano = await queryOne<{ id: number }>(`SELECT id FROM planos WHERE tipo = 'profissional' LIMIT 1`);
+    if (!plano) return { error: "Plano do profissional não encontrado." };
+    await query(`INSERT INTO assinaturas (usuario_id, plano_id, status) VALUES ($1, $2, 'ativa')`, [
+      profissionalId,
+      plano.id,
+    ]);
+  }
+
+  revalidatePath("/admin/profissionais");
+  revalidatePath("/perfil-profissional");
+  return { ok: true };
+}
+
 /** Apaga o profissional e tudo que depende dele. A maioria das tabelas
  * (categorias, galeria, avaliacoes, vinculo, google agenda, disponibilidade,
  * candidaturas) referencia profissionais com ON DELETE CASCADE, mas
@@ -243,23 +279,30 @@ export async function alternarAprovadaDestaqueProfissional(profissionalId: strin
  * cadastro) nao tem cascade - precisa limpar essas antes do DELETE FROM
  * usuarios. */
 export async function removerProfissional(profissionalId: string): Promise<SimpleActionResult> {
+  return removerProfissionaisEmLote([profissionalId]);
+}
+
+/** Mesma logica de removerProfissional, mas apagando varios de uma vez numa
+ * unica transacao (usado pelo bulk-delete de /admin/profissionais). */
+export async function removerProfissionaisEmLote(profissionalIds: string[]): Promise<SimpleActionResult> {
   const session = await requireAdmin();
   if (!session) return { error: "Sessão inválida." };
+  if (profissionalIds.length === 0) return { error: "Nenhum profissional selecionado." };
 
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
     await client.query(
-      `UPDATE vagas_profissionais SET profissional_selecionado_id = NULL WHERE profissional_selecionado_id = $1`,
-      [profissionalId]
+      `UPDATE vagas_profissionais SET profissional_selecionado_id = NULL WHERE profissional_selecionado_id = ANY($1::uuid[])`,
+      [profissionalIds]
     );
-    await client.query(`DELETE FROM conversas WHERE profissional_id = $1`, [profissionalId]);
-    await client.query(`DELETE FROM assinaturas WHERE usuario_id = $1`, [profissionalId]);
-    await client.query(`DELETE FROM usuarios WHERE id = $1`, [profissionalId]);
+    await client.query(`DELETE FROM conversas WHERE profissional_id = ANY($1::uuid[])`, [profissionalIds]);
+    await client.query(`DELETE FROM assinaturas WHERE usuario_id = ANY($1::uuid[])`, [profissionalIds]);
+    await client.query(`DELETE FROM usuarios WHERE id = ANY($1::uuid[])`, [profissionalIds]);
     await client.query("COMMIT");
   } catch {
     await client.query("ROLLBACK");
-    return { error: "Não foi possível remover esse profissional - ele ainda tem vínculos em outras áreas do sistema." };
+    return { error: "Não foi possível remover — algum profissional ainda tem vínculos em outras áreas do sistema." };
   } finally {
     client.release();
   }
@@ -621,10 +664,34 @@ export async function alternarPedidoOculto(pedidoId: string): Promise<SimpleActi
 }
 
 export async function removerPedidoAdmin(pedidoId: string): Promise<SimpleActionResult> {
+  return removerPedidosEmLote([pedidoId]);
+}
+
+/** avaliacoes/avaliacoes_cliente exigem pedido_id NOT NULL (sem cascade) -
+ * precisam ser apagadas antes; conversas/eventos_rsvp sao nullable mas nao
+ * tem cascade tambem, entao limpamos igual pra nao deixar lixo referenciando
+ * um pedido que nao existe mais. pedido_categorias tem ON DELETE CASCADE. */
+export async function removerPedidosEmLote(pedidoIds: string[]): Promise<SimpleActionResult> {
   const session = await requireAdmin();
   if (!session) return { error: "Sessão inválida." };
+  if (pedidoIds.length === 0) return { error: "Nenhum pedido selecionado." };
 
-  await query(`DELETE FROM pedidos WHERE id = $1`, [pedidoId]);
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query(`DELETE FROM avaliacoes WHERE pedido_id = ANY($1::uuid[])`, [pedidoIds]);
+    await client.query(`DELETE FROM avaliacoes_cliente WHERE pedido_id = ANY($1::uuid[])`, [pedidoIds]);
+    await client.query(`DELETE FROM conversas WHERE pedido_id = ANY($1::uuid[])`, [pedidoIds]);
+    await client.query(`DELETE FROM eventos_rsvp WHERE pedido_id = ANY($1::uuid[])`, [pedidoIds]);
+    await client.query(`DELETE FROM pedidos WHERE id = ANY($1::uuid[])`, [pedidoIds]);
+    await client.query("COMMIT");
+  } catch {
+    await client.query("ROLLBACK");
+    return { error: "Não foi possível remover — algum pedido ainda tem vínculos em outras áreas do sistema." };
+  } finally {
+    client.release();
+  }
+
   revalidatePath("/admin/pedidos");
   revalidatePath("/");
   revalidatePath("/pedidos");

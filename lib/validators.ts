@@ -106,6 +106,7 @@ export const atualizarPerfilProfissionalSchema = z.object({
   cinturaCm: z.coerce.number().optional().nullable(),
   manequim: z.string().max(10).optional(),
   calcado: z.string().max(10).optional(),
+  temTatuagem: z.enum(["sim", "nao"]).optional().nullable(),
 });
 
 export const ORCAMENTO_FAIXAS = ["ate_700", "700_3000", "3000_8000", "acima_8000"] as const;
@@ -168,6 +169,7 @@ export const criarBannerHeroSchema = z.object({
   botaoUrl: z.string().max(500).optional(),
   imagemFundo: z.string().min(4, "Escolha uma imagem de fundo (desktop)"),
   imagemFundoMobile: z.string().optional(),
+  regiaoAlvo: z.enum(["RJ", "SP"]).optional(),
 });
 
 export const atualizarBannerHeroSchema = z.object({
@@ -178,6 +180,7 @@ export const atualizarBannerHeroSchema = z.object({
   botaoUrl: z.string().max(500).optional(),
   imagemFundo: z.string().min(4, "Escolha uma imagem de fundo (desktop)"),
   imagemFundoMobile: z.string().optional(),
+  regiaoAlvo: z.enum(["RJ", "SP"]).optional(),
 });
 
 export const criarPlanoPeriodoSchema = z.object({
@@ -212,4 +215,5 @@ export const criarVagaSchema = z.object({
   duracaoHoras: z.coerce.number().min(0.5, "Informe a duração em horas").max(48),
   valor: z.coerce.number().min(0).optional().nullable(),
   descricao: z.string().min(10, "Conte mais sobre o que a vaga precisa"),
+  sexoDesejado: z.enum(["feminino", "masculino", "indiferente"]).optional(),
 });

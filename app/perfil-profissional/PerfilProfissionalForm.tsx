@@ -41,12 +41,14 @@ export default function PerfilProfissionalForm({
   const categoriasSelecionadas = new Set(perfil.categorias.map((c) => c.id));
 
   useEffect(() => {
-    if (!cidadeId) {
-      setBairros([]);
-      return;
-    }
+    if (!cidadeId) return;
     getBairrosAction(Number(cidadeId)).then(setBairros);
   }, [cidadeId]);
+
+  function handleCidadeChange(value: string) {
+    setCidadeId(value ? Number(value) : "");
+    setBairros([]);
+  }
 
   async function handleSubmit(formData: FormData) {
     if (bairroSel === BAIRRO_OUTRO && cidadeId && bairroCustomNome.trim().length >= 2) {
@@ -79,7 +81,7 @@ export default function PerfilProfissionalForm({
       <Field label="Cidade">
         <select
           value={cidadeId}
-          onChange={(e) => setCidadeId(e.target.value ? Number(e.target.value) : "")}
+          onChange={(e) => handleCidadeChange(e.target.value)}
           className="rounded-md border border-border px-3 py-2.5 text-sm"
         >
           <option value="">Selecione</option>
@@ -171,6 +173,13 @@ export default function PerfilProfissionalForm({
             </Field>
             <Field label="Calçado">
               <input name="calcado" defaultValue={perfil.calcado ?? ""} placeholder="Ex: 38" className="rounded-md border border-border px-3 py-2 text-sm" />
+            </Field>
+            <Field label="Tem tatuagem?">
+              <select name="temTatuagem" defaultValue={perfil.tem_tatuagem ?? ""} className="rounded-md border border-border px-3 py-2 text-sm">
+                <option value="">Não informar</option>
+                <option value="nao">Não</option>
+                <option value="sim">Sim</option>
+              </select>
             </Field>
           </div>
         )}

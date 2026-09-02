@@ -2,16 +2,18 @@
 
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { alternarAprovadaDestaqueProfissional, removerProfissional } from "@/lib/actions/admin";
+import { alternarAprovadaDestaqueProfissional, alternarPremiumProfissional, removerProfissional } from "@/lib/actions/admin";
 
 export default function ProfissionalRowActions({
   profissionalId,
   nome,
   aprovadaParaDestaque,
+  premiumAtivo,
 }: {
   profissionalId: string;
   nome: string;
   aprovadaParaDestaque: boolean;
+  premiumAtivo: boolean;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -35,6 +37,16 @@ export default function ProfissionalRowActions({
         }`}
       >
         {aprovadaParaDestaque ? "✓ Em destaque" : "Aprovar p/ destaque"}
+      </button>
+      <button
+        type="button"
+        disabled={isPending}
+        onClick={() => run(() => alternarPremiumProfissional(profissionalId))}
+        className={`rounded-md border px-2.5 py-1 text-[11.5px] font-bold disabled:opacity-50 ${
+          premiumAtivo ? "border-gold bg-gold-soft text-[#8a6300]" : "border-border-strong hover:bg-surface-alt"
+        }`}
+      >
+        {premiumAtivo ? "✓ Premium concedido" : "Conceder premium"}
       </button>
       <button
         type="button"

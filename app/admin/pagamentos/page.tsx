@@ -3,14 +3,15 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { listAssinaturasAdmin, listPlanosEmpresaParaSelect } from "@/lib/data/admin";
 import { Badge } from "@/components/ui";
+import { statusVencimento } from "@/lib/expiracao";
 import AssinaturaRowActions from "@/components/admin/AssinaturaRowActions";
 
 export const dynamic = "force-dynamic";
 
-const STATUS_TONE: Record<string, "ok" | "warn" | "muted" | "ad"> = {
+const STATUS_TONE: Record<string, "ok" | "warn" | "danger" | "muted" | "ad"> = {
   ativa: "ok",
   trial: "muted",
-  atrasada: "warn",
+  atrasada: "danger",
   cancelada: "muted",
   expirada: "muted",
 };
@@ -57,7 +58,9 @@ export default async function AdminPagamentosPage() {
       </div>
 
       <div className="mt-6 flex flex-col gap-2.5">
-        {assinaturas.map((a) => (
+        {assinaturas.map((a) => {
+          const vencimento = a.status === "ativa" ? statusVencimento(a.fim_em) : "ok";
+          return (
           <div key={a.usuario_id} className="flex flex-col gap-2.5 rounded-xl border border-border bg-surface p-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div className="flex flex-wrap items-center gap-2">
@@ -68,18 +71,35 @@ export default async function AdminPagamentosPage() {
                   {a.status ? STATUS_LABEL[a.status] ?? a.status : "Sem assinatura"}
                 </Badge>
                 {a.dias_atraso !== null && a.dias_atraso > 0 && (
-                  <Badge tone="warn">{a.dias_atraso}d de atraso</Badge>
+                  <Badge tone="danger">{a.dias_atraso}d de atraso</Badge>
                 )}
+                {vencimento === "atencao" && <Badge tone="warn">Vence em breve</Badge>}
               </div>
               <p className="mt-1 text-[12px] text-muted">
                 {a.plano_nome ?? "—"}
                 {a.valor_mensal && ` · R$ ${Number(a.valor_mensal).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/mês`}
-                {a.fim_em && ` · vence em ${new Date(a.fim_em).toLocaleDateString("pt-BR")}`}
+                {a.fim_em && (
+                  <>
+                    {" · vence em "}
+                    <span
+                      className={
+                        vencimento === "vencido"
+                          ? "font-bold text-danger-dark"
+                          : vencimento === "atencao"
+                          ? "font-bold text-note-text"
+                          : ""
+                      }
+                    >
+                      {new Date(a.fim_em).toLocaleDateString("pt-BR")}
+                    </span>
+                  </>
+                )}
               </p>
             </div>
             <AssinaturaRowActions empresaId={a.usuario_id} planoAtualId={a.plano_id} planos={planos} />
           </div>
-        ))}
+          );
+        })}
         {assinaturas.length === 0 && <p className="text-sm text-muted">Nenhuma empresa cadastrada ainda.</p>}
       </div>
     </div>

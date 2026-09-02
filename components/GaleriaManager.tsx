@@ -152,7 +152,7 @@ function FotoThumb({
         onClick={() => onRemove(foto.id)}
         disabled={pending}
         aria-label="Remover foto"
-        className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-xs font-bold text-white opacity-0 transition-opacity group-hover:opacity-100 disabled:opacity-50"
+        className="absolute right-1.5 top-1.5 flex h-8 w-8 items-center justify-center rounded-full bg-black/70 text-base font-bold text-white shadow-sm disabled:opacity-50"
       >
         {removingId === foto.id ? "…" : "×"}
       </button>

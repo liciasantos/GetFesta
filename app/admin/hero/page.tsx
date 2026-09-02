@@ -43,6 +43,7 @@ export default async function AdminHeroPage() {
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-bold">{b.titulo}</span>
                   <Badge tone={b.ativo ? "ok" : "warn"}>{b.ativo ? "No ar" : "Desativado"}</Badge>
+                  {b.regiao_alvo && <Badge tone="muted">Só {b.regiao_alvo}</Badge>}
                 </div>
                 <p className="mt-1 max-w-md text-[12px] text-muted">
                   {b.texto ?? <em className="text-muted-2">sem texto</em>} · ordem {b.ordem}

@@ -1,27 +1,44 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useState, useTransition } from "react";
 import { criarVaga, type VagaActionState } from "@/lib/actions/vagas";
-import { getBairrosAction } from "@/lib/actions/geo";
+import { getBairrosAction, criarBairroCustomAction } from "@/lib/actions/geo";
 import { buttonClass } from "@/components/ui";
 import type { Cidade, Bairro } from "@/lib/data/geo";
 import type { CategoriaProfissional } from "@/lib/data/profissionais";
+
+const BAIRRO_OUTRO = "outro";
 
 export default function NovaVagaForm({ cidades, categorias }: { cidades: Cidade[]; categorias: CategoriaProfissional[] }) {
   const [state, formAction, pending] = useActionState<VagaActionState, FormData>(criarVaga, undefined);
   const [cidadeId, setCidadeId] = useState<number | "">("");
   const [bairros, setBairros] = useState<Bairro[]>([]);
+  const [bairroSel, setBairroSel] = useState<number | "" | typeof BAIRRO_OUTRO>("");
+  const [bairroCustomNome, setBairroCustomNome] = useState("");
+  const [, startTransition] = useTransition();
 
   useEffect(() => {
-    if (!cidadeId) {
-      setBairros([]);
-      return;
-    }
+    if (!cidadeId) return;
     getBairrosAction(Number(cidadeId)).then(setBairros);
   }, [cidadeId]);
 
+  function handleCidadeChange(value: string) {
+    setCidadeId(value ? Number(value) : "");
+    setBairros([]);
+  }
+
+  async function handleSubmit(formData: FormData) {
+    if (bairroSel === BAIRRO_OUTRO && cidadeId && bairroCustomNome.trim().length >= 2) {
+      const bairro = await criarBairroCustomAction(Number(cidadeId), bairroCustomNome.trim());
+      formData.set("bairroId", bairro ? String(bairro.id) : "");
+    } else {
+      formData.set("bairroId", bairroSel === BAIRRO_OUTRO ? "" : String(bairroSel));
+    }
+    startTransition(() => formAction(formData));
+  }
+
   return (
-    <form action={formAction} className="flex flex-col gap-3">
+    <form action={handleSubmit} className="flex flex-col gap-3">
       <Field label="Função que você precisa">
         <select name="categoriaProfissionalId" required defaultValue="" className="rounded-md border border-border px-3 py-2.5 text-sm">
           <option value="" disabled>
@@ -39,7 +56,7 @@ export default function NovaVagaForm({ cidades, categorias }: { cidades: Cidade[
         <Field label="Cidade do evento">
           <select
             value={cidadeId}
-            onChange={(e) => setCidadeId(e.target.value ? Number(e.target.value) : "")}
+            onChange={(e) => handleCidadeChange(e.target.value)}
             className="rounded-md border border-border px-3 py-2.5 text-sm"
           >
             <option value="">Selecione</option>
@@ -53,16 +70,37 @@ export default function NovaVagaForm({ cidades, categorias }: { cidades: Cidade[
           <input type="hidden" name="cidadeId" value={cidadeId} />
         </Field>
         <Field label="Bairro (opcional)">
-          <select name="bairroId" defaultValue="" className="rounded-md border border-border px-3 py-2.5 text-sm">
+          <select
+            value={bairroSel}
+            onChange={(e) => setBairroSel(e.target.value === BAIRRO_OUTRO ? BAIRRO_OUTRO : e.target.value ? Number(e.target.value) : "")}
+            className="rounded-md border border-border px-3 py-2.5 text-sm"
+          >
             <option value="">{bairros.length ? "Selecione" : "Escolha a cidade primeiro"}</option>
             {bairros.map((b) => (
               <option key={b.id} value={b.id}>
                 {b.nome}
               </option>
             ))}
+            <option value={BAIRRO_OUTRO}>Outro (não está na lista)</option>
           </select>
+          {bairroSel === BAIRRO_OUTRO && (
+            <input
+              value={bairroCustomNome}
+              onChange={(e) => setBairroCustomNome(e.target.value)}
+              placeholder="Digite o nome do bairro"
+              className="mt-2 rounded-md border border-border px-3 py-2.5 text-sm"
+            />
+          )}
         </Field>
       </div>
+
+      <Field label="Gênero desejado pra vaga">
+        <select name="sexoDesejado" defaultValue="indiferente" className="rounded-md border border-border px-3 py-2.5 text-sm">
+          <option value="indiferente">Indiferente</option>
+          <option value="feminino">Feminino</option>
+          <option value="masculino">Masculino</option>
+        </select>
+      </Field>
 
       <div className="grid grid-cols-2 gap-3">
         <Field label="Data do evento">

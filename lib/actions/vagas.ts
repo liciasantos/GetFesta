@@ -21,13 +21,14 @@ export async function criarVaga(_prevState: VagaActionState, formData: FormData)
     duracaoHoras: formData.get("duracaoHoras"),
     valor: formData.get("valor") || undefined,
     descricao: formData.get("descricao"),
+    sexoDesejado: formData.get("sexoDesejado") || undefined,
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
 
   await query(
     `INSERT INTO vagas_profissionais (
-       empresa_id, categoria_profissional_id, cidade_id, bairro_id, data_evento, hora_inicio, duracao_horas, valor, descricao
-     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+       empresa_id, categoria_profissional_id, cidade_id, bairro_id, data_evento, hora_inicio, duracao_horas, valor, descricao, sexo_desejado
+     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
     [
       session.usuarioId,
       parsed.data.categoriaProfissionalId,
@@ -38,6 +39,7 @@ export async function criarVaga(_prevState: VagaActionState, formData: FormData)
       parsed.data.duracaoHoras,
       parsed.data.valor ?? null,
       parsed.data.descricao,
+      parsed.data.sexoDesejado ?? "indiferente",
     ]
   );
 

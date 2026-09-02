@@ -23,10 +23,12 @@ export type PerfilProfissional = {
   cintura_cm: number | null;
   manequim: string | null;
   calcado: string | null;
+  tem_tatuagem: string | null;
   nota_media: number | null;
   total_avaliacoes: number;
   portfolio_pdf_url: string | null;
   portfolio_pdf_nome: string | null;
+  portfolio_liberado_gratis: boolean;
   categorias: { id: number; nome: string }[];
   galeria: { id: string; url: string }[];
 };
@@ -51,17 +53,19 @@ export async function getMeuPerfilProfissional(idOuSlug: string): Promise<Perfil
     cintura_cm: number | null;
     manequim: string | null;
     calcado: string | null;
+    tem_tatuagem: string | null;
     nota_media: number | null;
     total_avaliacoes: number;
     portfolio_pdf_url: string | null;
     portfolio_pdf_nome: string | null;
+    portfolio_liberado_gratis: boolean;
   }>(
     `SELECT p.usuario_id, p.slug, p.nome, p.foto_perfil_url, p.bairro_id, b.nome AS bairro_nome,
             ci.id AS cidade_id, ci.nome AS cidade_nome, p.disponibilidade_status,
-            p.sexo, p.medidas_habilitadas, p.altura_cm, p.peso_kg, p.cintura_cm, p.manequim, p.calcado,
+            p.sexo, p.medidas_habilitadas, p.altura_cm, p.peso_kg, p.cintura_cm, p.manequim, p.calcado, p.tem_tatuagem,
             (SELECT ROUND(AVG(ap.nota)::numeric, 1) FROM avaliacoes_profissional ap WHERE ap.profissional_id = p.usuario_id) AS nota_media,
             (SELECT COUNT(*)::int FROM avaliacoes_profissional ap WHERE ap.profissional_id = p.usuario_id) AS total_avaliacoes,
-            p.portfolio_pdf_url, p.portfolio_pdf_nome
+            p.portfolio_pdf_url, p.portfolio_pdf_nome, p.portfolio_liberado_gratis
      FROM profissionais p
      LEFT JOIN bairros b ON b.id = p.bairro_id
      LEFT JOIN cidades ci ON ci.id = b.cidade_id

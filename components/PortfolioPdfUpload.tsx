@@ -6,7 +6,7 @@ import { atualizarPortfolioPdfProfissional, removerPortfolioPdfProfissional } fr
 import { fileToDataUrl } from "@/lib/pdf-client";
 import { buttonClass } from "@/components/ui";
 
-export default function PortfolioPdfUpload({ nomeAtual }: { nomeAtual: string | null }) {
+export default function PortfolioPdfUpload({ nomeAtual, elegivel }: { nomeAtual: string | null; elegivel: boolean }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [nome, setNome] = useState(nomeAtual);
@@ -51,11 +51,17 @@ export default function PortfolioPdfUpload({ nomeAtual }: { nomeAtual: string | 
   return (
     <div>
       <p className="text-[12.5px]">{nome ? `📄 ${nome}` : "Nenhum arquivo enviado ainda."}</p>
+      {!elegivel && (
+        <p className="mt-1 text-[11.5px] font-semibold text-accent-dark">
+          🔒 O portfólio em PDF é gratuito só pros 30 primeiros profissionais cadastrados. Fale com a gente pra
+          contratar o plano premium e liberar.
+        </p>
+      )}
       <div className="mt-2 flex flex-wrap gap-2">
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          disabled={isPending}
+          disabled={isPending || !elegivel}
           className={buttonClass("secondary", "sm")}
         >
           {isPending ? "Enviando..." : nome ? "Trocar PDF" : "Enviar PDF"}

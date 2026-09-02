@@ -118,6 +118,7 @@ export default async function PerfilProfissionalParaEmpresaPage({ params }: { pa
             <Medida label="Cintura" value={perfil.cintura_cm ? `${perfil.cintura_cm} cm` : null} />
             <Medida label="Manequim" value={perfil.manequim} />
             <Medida label="Calçado" value={perfil.calcado} />
+            <Medida label="Tatuagem" value={perfil.tem_tatuagem === "sim" ? "Sim" : perfil.tem_tatuagem === "nao" ? "Não" : null} />
           </div>
         </div>
       )}

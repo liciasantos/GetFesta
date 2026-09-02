@@ -98,6 +98,18 @@ export default function HeroBannerForm({
         </Field>
       </div>
 
+      <Field label="Região que vê esse banner">
+        <select name="regiaoAlvo" defaultValue={banner?.regiao_alvo ?? ""} className="rounded-md border border-border px-3 py-2.5 text-sm">
+          <option value="">Todas as regiões (padrão/fallback)</option>
+          <option value="RJ">Só Rio de Janeiro</option>
+          <option value="SP">Só São Paulo</option>
+        </select>
+        <p className="mt-1 text-[10.5px] text-muted-2">
+          Detectamos a região do visitante pelo IP. Quem estiver em SP vê banners de SP (se existir algum ativo);
+          todo o resto (RJ, outros estados, local) vê os banners de RJ ou sem região definida.
+        </p>
+      </Field>
+
       <ImageFieldUpload name="imagemFundo" label="Imagem de fundo (desktop)" initialUrl={banner?.imagem_fundo} />
       <ImageFieldUpload
         name="imagemFundoMobile"

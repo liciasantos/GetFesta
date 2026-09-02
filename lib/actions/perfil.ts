@@ -81,6 +81,7 @@ export async function atualizarPerfilProfissional(
     cinturaCm: formData.get("cinturaCm") || undefined,
     manequim: formData.get("manequim") || undefined,
     calcado: formData.get("calcado") || undefined,
+    temTatuagem: formData.get("temTatuagem") || undefined,
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
 
@@ -89,8 +90,8 @@ export async function atualizarPerfilProfissional(
   await query(
     `UPDATE profissionais
      SET nome = $1, bairro_id = $2, disponibilidade_status = $3, sexo = $4, medidas_habilitadas = $5,
-         altura_cm = $6, peso_kg = $7, cintura_cm = $8, manequim = $9, calcado = $10
-     WHERE usuario_id = $11`,
+         altura_cm = $6, peso_kg = $7, cintura_cm = $8, manequim = $9, calcado = $10, tem_tatuagem = $11
+     WHERE usuario_id = $12`,
     [
       parsed.data.nome,
       parsed.data.bairroId ?? null,
@@ -102,6 +103,7 @@ export async function atualizarPerfilProfissional(
       medidasHabilitadas ? parsed.data.cinturaCm ?? null : null,
       medidasHabilitadas ? parsed.data.manequim ?? null : null,
       medidasHabilitadas ? parsed.data.calcado ?? null : null,
+      medidasHabilitadas ? parsed.data.temTatuagem ?? null : null,
       session.usuarioId,
     ]
   );
@@ -128,13 +130,40 @@ export async function atualizarFotoProfissional(dataUrl: string): Promise<Upload
   return { ok: true };
 }
 
+export async function verificarElegibilidadePortfolio(profissionalId: string): Promise<boolean> {
+  const resultado = await queryOne<{ elegivel: boolean }>(
+    `SELECT (
+       (SELECT portfolio_liberado_gratis FROM profissionais WHERE usuario_id = $1)
+       OR EXISTS (
+         SELECT 1 FROM assinaturas a JOIN planos p ON p.id = a.plano_id
+         WHERE a.usuario_id = $1 AND p.tipo = 'profissional' AND a.status = 'ativa'
+           AND (a.fim_em IS NULL OR a.fim_em > now())
+       )
+     ) AS elegivel`,
+    [profissionalId]
+  );
+  return resultado?.elegivel ?? false;
+}
+
 /** Portfolio/curriculo em PDF - visivel so pra empresa autenticada visitando o
- * perfil (mesma regra do resto do catalogo de profissional). */
+ * perfil (mesma regra do resto do catalogo de profissional). Liberado de
+ * graca so pros 30 primeiros profissionais (portfolio_liberado_gratis,
+ * marcado no cadastro); depois disso exige assinatura ativa do plano
+ * 'profissional' (concedida manualmente pelo admin em /admin/profissionais
+ * ate o Mercado Pago estar integrado - ver trocarPlanoManualAdmin). */
 export async function atualizarPortfolioPdfProfissional(dataUrl: string, nomeArquivo: string): Promise<UploadResult> {
   const session = await getSession();
   if (!session || session.tipo !== "profissional") return { error: "Sessão inválida." };
   if (!dataUrl.startsWith("data:application/pdf")) return { error: "Escolha um arquivo PDF." };
   if (dataUrl.length > MAX_PDF_DATA_URL_LENGTH) return { error: "PDF muito grande - escolha um arquivo menor." };
+
+  const elegivel = await verificarElegibilidadePortfolio(session.usuarioId);
+  if (!elegivel) {
+    return {
+      error:
+        "O portfólio em PDF é gratuito só pros 30 primeiros profissionais cadastrados. Fale com a gente pra contratar o plano premium.",
+    };
+  }
 
   await query(`UPDATE profissionais SET portfolio_pdf_url = $1, portfolio_pdf_nome = $2 WHERE usuario_id = $3`, [
     dataUrl,

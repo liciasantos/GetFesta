@@ -11,7 +11,12 @@ import DisponibilidadeCalendar from "@/components/DisponibilidadeCalendar";
 import CandidatarVagaButton from "@/components/CandidatarVagaButton";
 import AlterarSenhaForm from "@/components/AlterarSenhaForm";
 import PortfolioPdfUpload from "@/components/PortfolioPdfUpload";
-import { adicionarFotoGaleriaProfissional, atualizarFotoProfissional, removerFotoGaleriaProfissional } from "@/lib/actions/perfil";
+import {
+  adicionarFotoGaleriaProfissional,
+  atualizarFotoProfissional,
+  removerFotoGaleriaProfissional,
+  verificarElegibilidadePortfolio,
+} from "@/lib/actions/perfil";
 import { Badge, buttonClass } from "@/components/ui";
 import { formatCurrencyBRL, formatDateBR } from "@/lib/format";
 import PerfilProfissionalForm from "./PerfilProfissionalForm";
@@ -28,13 +33,14 @@ export default async function PerfilProfissionalPage() {
   const session = await getSession();
   if (!session || session.tipo !== "profissional") redirect("/entrar");
 
-  const [perfil, categorias, cidades, vagas, bloqueiosDisponibilidade, config] = await Promise.all([
+  const [perfil, categorias, cidades, vagas, bloqueiosDisponibilidade, config, portfolioElegivel] = await Promise.all([
     getMeuPerfilProfissional(session.usuarioId),
     listCategoriasProfissionais(),
     listCidades(),
     listVagasCompativeis(session.usuarioId),
     listBloqueiosIndisponibilidade(session.usuarioId),
     getConfiguracoesSite(),
+    verificarElegibilidadePortfolio(session.usuarioId),
   ]);
   if (!perfil) redirect("/entrar");
 
@@ -125,7 +131,7 @@ export default async function PerfilProfissionalPage() {
 
       <div className="mt-5 rounded-xl border border-border bg-surface p-5">
         <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Portfólio/currículo (PDF)</h2>
-        <PortfolioPdfUpload nomeAtual={perfil.portfolio_pdf_nome} />
+        <PortfolioPdfUpload nomeAtual={perfil.portfolio_pdf_nome} elegivel={portfolioElegivel} />
       </div>
 
       <div className="mt-5 rounded-xl border border-border bg-surface p-5">

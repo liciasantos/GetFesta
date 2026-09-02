@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { listCategorias, listCidades } from "@/lib/data/geo";
 import { getEmpresasDestaque } from "@/lib/data/empresas";
 import { listPedidosFeed } from "@/lib/data/pedidos";
@@ -23,6 +24,11 @@ import DestaquesGrid, { DestaquesKicker } from "@/components/DestaquesGrid";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
+  // geolocalizacao por IP, injetada automaticamente pela Vercel em producao
+  // (nao existe em dev local - listHeroBannersAtivos trata null como "sem
+  // deteccao", cai pro fallback de RJ/global).
+  const regiaoVisitante = (await headers()).get("x-vercel-ip-country-region");
+
   const [categorias, cidades, empresasDestaque, pedidos, banners, heroBanners, config, session, planosEmpresa] =
     await Promise.all([
       listCategorias(),
@@ -30,7 +36,7 @@ export default async function HomePage() {
       getEmpresasDestaque(4),
       listPedidosFeed({ limit: 15 }),
       listBannersAtivos(),
-      listHeroBannersAtivos(),
+      listHeroBannersAtivos(regiaoVisitante),
       getConfiguracoesSite(),
       getSession(),
       listPlanosEmpresa(),
@@ -100,6 +106,12 @@ export default async function HomePage() {
               <p className="mt-3 max-w-xs text-lg font-bold leading-snug text-white sm:text-xl">
                 Do pedido ao fornecedor certo, em três passos — sem custo pra quem contrata.
               </p>
+              <Link
+                href="/quem-somos"
+                className="mt-5 inline-flex w-fit items-center gap-1.5 rounded-lg border border-white/40 px-4 py-2 text-[12.5px] font-bold text-white hover:bg-white/10"
+              >
+                Conheça a GetFesta →
+              </Link>
             </div>
             {[
               {

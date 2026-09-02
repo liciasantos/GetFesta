@@ -37,14 +37,14 @@ function SegmentosList({ onNavigate }: { onNavigate?: () => void }) {
       {SEGMENTOS.map((s) => (
         <div key={s.tipo} className="flex items-center justify-between gap-3 rounded-lg px-2 py-2.5 hover:bg-surface-alt">
           <div>
-            <div className="text-[12.5px] font-bold">{s.label}</div>
-            <div className="text-[11px] text-muted">{s.desc}</div>
+            <div className="text-[14px] font-bold">{s.label}</div>
+            <div className="text-[12px] text-muted">{s.desc}</div>
           </div>
           <div className="flex shrink-0 flex-col items-end gap-1">
-            <Link href={s.entrar} onClick={onNavigate} className="text-[11.5px] font-bold text-accent-dark hover:underline">
+            <Link href={s.entrar} onClick={onNavigate} className="text-[13px] font-bold text-accent-dark hover:underline">
               Entrar
             </Link>
-            <Link href={s.cadastrar} onClick={onNavigate} className="text-[10.5px] font-semibold text-muted hover:underline">
+            <Link href={s.cadastrar} onClick={onNavigate} className="text-[12px] font-semibold text-muted hover:underline">
               {s.cadastrarLabel}
             </Link>
           </div>

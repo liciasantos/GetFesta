@@ -231,6 +231,7 @@ CREATE TABLE profissionais (
     cintura_cm                  SMALLINT,
     manequim                   VARCHAR(10),
     calcado                    VARCHAR(10),
+    tem_tatuagem                VARCHAR(3),            -- sim / nao / NULL = nao informado - relevante pra personagem (ex: princesa/principe)
     bairro_id                  INTEGER REFERENCES bairros(id),
     tem_veiculo                 BOOLEAN DEFAULT FALSE,
     tipo_veiculo                VARCHAR(20),           -- carro / moto / nenhum
@@ -240,6 +241,11 @@ CREATE TABLE profissionais (
     disponibilidade_status       status_disponibilidade NOT NULL DEFAULT 'nao_informado',
     consentimento_dados_em       TIMESTAMPTZ,           -- aceite do termo especifico LGPD
     aprovada_para_destaque       BOOLEAN NOT NULL DEFAULT FALSE, -- curadoria manual do admin (anuncio pago), mesmo padrao de empresas.aprovada_para_destaque
+    -- portfolio em PDF liberado de graca pros 30 primeiros profissionais
+    -- cadastrados (marcado uma unica vez no cadastro, nao recalculado depois -
+    -- ver registrarProfissional em lib/actions/auth.ts); a partir do 31o,
+    -- só quem tem assinatura ativa do plano 'profissional' pode subir PDF.
+    portfolio_liberado_gratis    BOOLEAN NOT NULL DEFAULT FALSE,
     criado_em                    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -314,6 +320,7 @@ CREATE TABLE vagas_profissionais (
     duracao_horas               NUMERIC(4,1) NOT NULL,
     valor                       NUMERIC(10,2),          -- NULL = a combinar
     descricao                   TEXT NOT NULL,
+    sexo_desejado                VARCHAR(20) NOT NULL DEFAULT 'indiferente', -- feminino / masculino / indiferente
     status                      status_vaga NOT NULL DEFAULT 'aberta',
     -- preenchido quando a empresa marca "fechei com esse profissional" - é o
     -- jeito de saber se ela fechou (e com quem) depois que a data do evento
@@ -591,6 +598,11 @@ CREATE TABLE banners_hero (
     botao_url    VARCHAR(500),
     imagem_fundo TEXT NOT NULL,          -- data URI, mesmo padrao de logo/galeria (sem storage externo)
     imagem_fundo_mobile TEXT,            -- opcional: NULL = reusa a imagem desktop
+    -- alvo regional: NULL = aparece pra qualquer visitante (padrao/fallback).
+    -- 'SP'/'RJ' = so aparece pra quem foi geolocalizado (por IP) nesse estado;
+    -- se nao houver banner ativo pro estado detectado, cai pros banners com
+    -- regiao_alvo NULL ou 'RJ' (ver listHeroBannersAtivos em lib/data/banners.ts).
+    regiao_alvo  VARCHAR(2),
     ativo        BOOLEAN NOT NULL DEFAULT TRUE,
     ordem        INTEGER NOT NULL DEFAULT 0,
     criado_em    TIMESTAMPTZ NOT NULL DEFAULT now()

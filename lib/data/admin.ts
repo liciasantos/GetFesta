@@ -41,20 +41,21 @@ export type HeroBannerAdmin = {
   botao_url: string | null;
   imagem_fundo: string;
   imagem_fundo_mobile: string | null;
+  regiao_alvo: string | null;
   ativo: boolean;
   ordem: number;
 };
 
 export async function listHeroBannersAdmin(): Promise<HeroBannerAdmin[]> {
   return query<HeroBannerAdmin>(
-    `SELECT id, titulo, texto, botao_label, botao_url, imagem_fundo, imagem_fundo_mobile, ativo, ordem
+    `SELECT id, titulo, texto, botao_label, botao_url, imagem_fundo, imagem_fundo_mobile, regiao_alvo, ativo, ordem
      FROM banners_hero ORDER BY ordem ASC, id ASC`
   );
 }
 
 export async function getHeroBannerAdmin(id: string): Promise<HeroBannerAdmin | null> {
   const rows = await query<HeroBannerAdmin>(
-    `SELECT id, titulo, texto, botao_label, botao_url, imagem_fundo, imagem_fundo_mobile, ativo, ordem
+    `SELECT id, titulo, texto, botao_label, botao_url, imagem_fundo, imagem_fundo_mobile, regiao_alvo, ativo, ordem
      FROM banners_hero WHERE id = $1`,
     [id]
   );
@@ -81,6 +82,8 @@ export type ProfissionalAdmin = {
   email: string | null;
   categorias: string[];
   aprovada_para_destaque: boolean;
+  portfolio_liberado_gratis: boolean;
+  premium_ativo: boolean;
   nota_media: number | null;
   total_avaliacoes: number;
   criado_em: string;
@@ -89,7 +92,12 @@ export type ProfissionalAdmin = {
 export async function listProfissionaisAdmin(): Promise<ProfissionalAdmin[]> {
   return query<ProfissionalAdmin>(
     `SELECT
-       p.usuario_id, p.slug, p.nome, u.email, p.aprovada_para_destaque, p.criado_em,
+       p.usuario_id, p.slug, p.nome, u.email, p.aprovada_para_destaque, p.portfolio_liberado_gratis, p.criado_em,
+       EXISTS (
+         SELECT 1 FROM assinaturas a JOIN planos pl ON pl.id = a.plano_id
+         WHERE a.usuario_id = p.usuario_id AND pl.tipo = 'profissional' AND a.status = 'ativa'
+           AND (a.fim_em IS NULL OR a.fim_em > now())
+       ) AS premium_ativo,
        COALESCE(
          (SELECT array_agg(cp.nome ORDER BY cp.nome) FROM profissional_categorias pc JOIN categorias_profissionais cp ON cp.id = pc.categoria_id WHERE pc.profissional_id = p.usuario_id),
          ARRAY[]::text[]

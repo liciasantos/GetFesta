@@ -1,10 +1,11 @@
 import { type ReactNode } from "react";
 
-export function Badge({ children, tone = "ok" }: { children: ReactNode; tone?: "ok" | "ad" | "warn" | "muted" }) {
+export function Badge({ children, tone = "ok" }: { children: ReactNode; tone?: "ok" | "ad" | "warn" | "danger" | "muted" }) {
   const tones: Record<string, string> = {
     ok: "bg-ok-soft text-ok",
     ad: "bg-gold-soft text-[#8a6300]",
     warn: "bg-note-bg text-note-text border border-note-border",
+    danger: "bg-danger-soft text-danger-dark",
     muted: "bg-surface-alt text-muted border border-border",
   };
   return (
