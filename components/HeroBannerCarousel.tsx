@@ -68,13 +68,21 @@ export default function Hero({ banners }: { banners: HeroBanner[] }) {
                 </h2>
                 {current.texto && <p className="mt-2 max-w-sm text-[13.5px] text-white/85">{current.texto}</p>}
                 {current.botao_label && current.botao_url && (
-                  <div className="mt-5">
+                  <div className="mt-5 flex flex-wrap items-center gap-2.5">
                     <Link
                       href={current.botao_url}
                       className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-white px-4 py-2.5 text-sm font-bold text-accent-dark hover:bg-white/90"
                     >
                       {current.botao_label}
                     </Link>
+                    {current.botao2_label && current.botao2_url && (
+                      <Link
+                        href={current.botao2_url}
+                        className="inline-flex w-fit items-center gap-1.5 rounded-lg border border-white/70 px-4 py-2.5 text-sm font-bold text-white hover:bg-white/10"
+                      >
+                        {current.botao2_label}
+                      </Link>
+                    )}
                   </div>
                 )}
                 {banners.length > 1 && (

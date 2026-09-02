@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { alternarBannerAtivo, moverBanner, removerBanner } from "@/lib/actions/admin";
@@ -46,6 +47,13 @@ export default function BannerRowActions({
       >
         ↓
       </button>
+      <Link
+        href={`/admin/banners/${bannerId}/editar`}
+        aria-label="Editar anúncio"
+        className="flex h-7 w-7 items-center justify-center rounded-md border border-border-strong text-muted hover:bg-surface-alt"
+      >
+        ✏️
+      </Link>
       <button
         type="button"
         disabled={isPending}

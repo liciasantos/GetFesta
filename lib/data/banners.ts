@@ -31,11 +31,14 @@ export type HeroBanner = {
   texto: string | null;
   botao_label: string | null;
   botao_url: string | null;
+  botao2_label: string | null;
+  botao2_url: string | null;
   imagem_fundo: string;
   imagem_fundo_mobile: string | null;
 };
 
-const HERO_BANNER_CAMPOS = "id, titulo, texto, botao_label, botao_url, imagem_fundo, imagem_fundo_mobile";
+const HERO_BANNER_CAMPOS =
+  "id, titulo, texto, botao_label, botao_url, botao2_label, botao2_url, imagem_fundo, imagem_fundo_mobile";
 
 /** Banner principal (topo da home) - 100% administrado, independente de
  * empresa (ver /admin/hero e banners_hero). `regiaoVisitante` vem da

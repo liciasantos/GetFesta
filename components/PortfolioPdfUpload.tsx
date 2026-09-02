@@ -53,7 +53,7 @@ export default function PortfolioPdfUpload({ nomeAtual, elegivel }: { nomeAtual:
       <p className="text-[12.5px]">{nome ? `📄 ${nome}` : "Nenhum arquivo enviado ainda."}</p>
       {!elegivel && (
         <p className="mt-1 text-[11.5px] font-semibold text-accent-dark">
-          🔒 O portfólio em PDF exige o plano Light ou Premium (grátis por 1 ano pros 30 primeiros profissionais
+          🔒 O portfólio em PDF exige o plano Light ou Premium (grátis por 1 ano pros 20 primeiros profissionais
           cadastrados). Fale com a gente pra contratar.
         </p>
       )}

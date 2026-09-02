@@ -74,7 +74,7 @@ export default function ProfissionaisAdminList({
                   {p.plano_atual_tipo === "profissional_premium" && <Badge tone="ad">Premium</Badge>}
                   {p.plano_atual_tipo === "profissional_light" && <Badge tone="ok">Light</Badge>}
                   {p.portfolio_liberado_gratis && p.plano_atual_tipo !== "profissional_premium" && p.plano_atual_tipo !== "profissional_light" && (
-                    <Badge tone="ok">Portfólio grátis (30 primeiros)</Badge>
+                    <Badge tone="ok">Portfólio grátis (20 primeiros)</Badge>
                   )}
                 </div>
                 <p className="mt-1 text-[12px] text-muted">

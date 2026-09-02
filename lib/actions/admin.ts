@@ -6,6 +6,7 @@ import { query, queryOne, pool } from "@/lib/db";
 import { getSession, hashPassword } from "@/lib/auth";
 import {
   atualizarBannerHeroSchema,
+  atualizarBannerSchema,
   criarAdminSchema,
   criarBannerHeroSchema,
   criarBannerSchema,
@@ -55,6 +56,39 @@ export async function criarBanner(_prevState: BannerActionState, formData: FormD
   redirect("/admin/banners");
 }
 
+export async function atualizarBanner(_prevState: BannerActionState, formData: FormData): Promise<BannerActionState> {
+  const session = await requireAdmin();
+  if (!session) return { error: "Sessão inválida." };
+
+  const parsed = atualizarBannerSchema.safeParse({
+    id: formData.get("id"),
+    categoriaId: formData.get("categoriaId"),
+    empresaId: formData.get("empresaId"),
+    inicioEm: formData.get("inicioEm"),
+    fimEm: formData.get("fimEm"),
+    valorPago: formData.get("valorPago"),
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
+
+  await query(
+    `UPDATE banners_categoria
+     SET categoria_id = $1, empresa_id = $2, inicio_em = $3, fim_em = $4, valor_pago = $5
+     WHERE id = $6`,
+    [
+      parsed.data.categoriaId,
+      parsed.data.empresaId,
+      parsed.data.inicioEm,
+      parsed.data.fimEm,
+      parsed.data.valorPago,
+      parsed.data.id,
+    ]
+  );
+
+  revalidatePath("/admin/banners");
+  revalidatePath("/");
+  redirect("/admin/banners");
+}
+
 export type SimpleActionResult = { error?: string; ok?: boolean };
 
 export async function alternarBannerAtivo(bannerId: string): Promise<SimpleActionResult> {
@@ -90,6 +124,8 @@ export async function criarBannerHero(_prevState: BannerActionState, formData: F
     texto: formData.get("texto") || undefined,
     botaoLabel: formData.get("botaoLabel") || undefined,
     botaoUrl: formData.get("botaoUrl") || undefined,
+    botao2Label: formData.get("botao2Label") || undefined,
+    botao2Url: formData.get("botao2Url") || undefined,
     imagemFundo: formData.get("imagemFundo"),
     imagemFundoMobile: formData.get("imagemFundoMobile") || undefined,
     regiaoAlvo: formData.get("regiaoAlvo") || undefined,
@@ -99,13 +135,15 @@ export async function criarBannerHero(_prevState: BannerActionState, formData: F
   const proximaOrdem = await queryOne<{ max: number | null }>(`SELECT max(ordem) AS max FROM banners_hero`);
 
   await query(
-    `INSERT INTO banners_hero (titulo, texto, botao_label, botao_url, imagem_fundo, imagem_fundo_mobile, regiao_alvo, ativo, ordem)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,true,$8)`,
+    `INSERT INTO banners_hero (titulo, texto, botao_label, botao_url, botao2_label, botao2_url, imagem_fundo, imagem_fundo_mobile, regiao_alvo, ativo, ordem)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,true,$10)`,
     [
       parsed.data.titulo,
       parsed.data.texto ?? null,
       parsed.data.botaoLabel ?? null,
       parsed.data.botaoUrl ?? null,
+      parsed.data.botao2Label ?? null,
+      parsed.data.botao2Url ?? null,
       parsed.data.imagemFundo,
       parsed.data.imagemFundoMobile ?? null,
       parsed.data.regiaoAlvo ?? null,
@@ -128,6 +166,8 @@ export async function atualizarBannerHero(_prevState: BannerActionState, formDat
     texto: formData.get("texto") || undefined,
     botaoLabel: formData.get("botaoLabel") || undefined,
     botaoUrl: formData.get("botaoUrl") || undefined,
+    botao2Label: formData.get("botao2Label") || undefined,
+    botao2Url: formData.get("botao2Url") || undefined,
     imagemFundo: formData.get("imagemFundo"),
     imagemFundoMobile: formData.get("imagemFundoMobile") || undefined,
     regiaoAlvo: formData.get("regiaoAlvo") || undefined,
@@ -136,13 +176,16 @@ export async function atualizarBannerHero(_prevState: BannerActionState, formDat
 
   await query(
     `UPDATE banners_hero
-     SET titulo = $1, texto = $2, botao_label = $3, botao_url = $4, imagem_fundo = $5, imagem_fundo_mobile = $6, regiao_alvo = $7
-     WHERE id = $8`,
+     SET titulo = $1, texto = $2, botao_label = $3, botao_url = $4, botao2_label = $5, botao2_url = $6,
+         imagem_fundo = $7, imagem_fundo_mobile = $8, regiao_alvo = $9
+     WHERE id = $10`,
     [
       parsed.data.titulo,
       parsed.data.texto ?? null,
       parsed.data.botaoLabel ?? null,
       parsed.data.botaoUrl ?? null,
+      parsed.data.botao2Label ?? null,
+      parsed.data.botao2Url ?? null,
       parsed.data.imagemFundo,
       parsed.data.imagemFundoMobile ?? null,
       parsed.data.regiaoAlvo ?? null,
@@ -473,6 +516,8 @@ export async function salvarConfiguracaoSite(chave: string, valor: string): Prom
   revalidatePath("/contato");
   revalidatePath("/privacidade");
   revalidatePath("/termos");
+  revalidatePath("/empresas");
+  revalidatePath("/profissionais");
   return { ok: true };
 }
 

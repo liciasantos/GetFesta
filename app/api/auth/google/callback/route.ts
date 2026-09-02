@@ -41,11 +41,11 @@ export async function GET(request: NextRequest) {
     await query(`INSERT INTO clientes (usuario_id, nome) VALUES ($1, $2)`, [usuario.id, perfil.nome]);
   } else {
     // Mesma regra de bonus de lancamento do cadastro por email/senha (ver
-    // lib/actions/auth.ts registrarProfissional): os 30 primeiros ganham o
+    // lib/actions/auth.ts registrarProfissional): os 20 primeiros ganham o
     // bonus Light (6 fotos + PDF) por 1 ano - calculado dinamicamente em
     // lib/data/limites-profissional.ts, nao precisa de assinatura aqui.
     const totalProfissionais = await queryOne<{ total: string }>(`SELECT count(*) AS total FROM profissionais`);
-    const portfolioLiberadoGratis = Number(totalProfissionais?.total ?? 0) < 30;
+    const portfolioLiberadoGratis = Number(totalProfissionais?.total ?? 0) < 20;
     await query(
       `INSERT INTO profissionais (usuario_id, nome, consentimento_dados_em, portfolio_liberado_gratis) VALUES ($1, $2, now(), $3)`,
       [usuario.id, perfil.nome, portfolioLiberadoGratis]

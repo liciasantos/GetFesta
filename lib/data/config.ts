@@ -16,6 +16,14 @@ export const CONFIG_TERMOS_USO = "termos_uso_texto";
 export const CONFIG_GOOGLE_ADS_CLIENT = "google_ads_client";
 export const CONFIG_GOOGLE_ADS_SLOT = "google_ads_slot";
 export const CONFIG_CLARITY_PROJECT_ID = "clarity_project_id";
+export const CONFIG_PROFISSIONAIS_HERO_BG = "profissionais_hero_bg";
+export const CONFIG_PROFISSIONAIS_HERO_IMAGEM = "profissionais_hero_imagem";
+export const CONFIG_PROFISSIONAIS_HERO_TITULO = "profissionais_hero_titulo";
+export const CONFIG_PROFISSIONAIS_HERO_SUBTITULO = "profissionais_hero_subtitulo";
+export const CONFIG_EMPRESAS_HERO_BG = "empresas_hero_bg";
+export const CONFIG_EMPRESAS_HERO_IMAGEM = "empresas_hero_imagem";
+export const CONFIG_EMPRESAS_HERO_TITULO = "empresas_hero_titulo";
+export const CONFIG_EMPRESAS_HERO_SUBTITULO = "empresas_hero_subtitulo";
 
 const FALLBACKS: Record<string, string> = {
   [CONFIG_COMO_FUNCIONA_BG]: "/sitio-festa-infantil.webp",
@@ -25,6 +33,14 @@ const FALLBACKS: Record<string, string> = {
   [CONFIG_CONTATO_EMAIL]: "contato@getfesta.com.br",
   [CONFIG_POLITICA_PRIVACIDADE]: POLITICA_PRIVACIDADE_PADRAO,
   [CONFIG_TERMOS_USO]: TERMOS_USO_PADRAO,
+  [CONFIG_PROFISSIONAIS_HERO_BG]: "#1f2933",
+  [CONFIG_PROFISSIONAIS_HERO_TITULO]: "Sua agenda cheia e seu talento em destaque.",
+  [CONFIG_PROFISSIONAIS_HERO_SUBTITULO]:
+    "Conecte-se com empresas que precisam do seu trabalho pontual. Gerencie seus dias livres numa única plataforma.",
+  [CONFIG_EMPRESAS_HERO_BG]: "#1f2933",
+  [CONFIG_EMPRESAS_HERO_IMAGEM]: "/festa-heroi.webp",
+  [CONFIG_EMPRESAS_HERO_TITULO]: "Clientes da sua região estão procurando os seus serviços agora.",
+  [CONFIG_EMPRESAS_HERO_SUBTITULO]: "Receba pedidos qualificados e negocie direto pelo WhatsApp. Sem comissão por festa fechada.",
 };
 
 /** Le todas as configuracoes editaveis pelo admin de uma vez (imagens de
@@ -43,6 +59,7 @@ export async function getConfiguracoesSite(): Promise<Record<string, string>> {
     [CONFIG_GOOGLE_ADS_CLIENT]: "",
     [CONFIG_GOOGLE_ADS_SLOT]: "",
     [CONFIG_CLARITY_PROJECT_ID]: "",
+    [CONFIG_PROFISSIONAIS_HERO_IMAGEM]: "",
     ...FALLBACKS,
     ...porChave,
   };

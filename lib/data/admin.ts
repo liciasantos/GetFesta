@@ -27,6 +27,19 @@ export async function listBannersAdmin(): Promise<BannerAdmin[]> {
   );
 }
 
+export async function getBannerAdmin(id: string): Promise<BannerAdmin | null> {
+  const rows = await query<BannerAdmin>(
+    `SELECT b.id, b.categoria_id, c.nome AS categoria_nome, b.empresa_id, e.nome_fantasia,
+            b.inicio_em, b.fim_em, b.valor_pago, b.ativo, b.ordem
+     FROM banners_categoria b
+     JOIN categorias c ON c.id = b.categoria_id
+     JOIN empresas e ON e.usuario_id = b.empresa_id
+     WHERE b.id = $1`,
+    [id]
+  );
+  return rows[0] ?? null;
+}
+
 export type EmpresaOption = { usuario_id: string; slug: string; nome_fantasia: string };
 
 export async function listEmpresasParaSelect(): Promise<EmpresaOption[]> {
@@ -39,6 +52,8 @@ export type HeroBannerAdmin = {
   texto: string | null;
   botao_label: string | null;
   botao_url: string | null;
+  botao2_label: string | null;
+  botao2_url: string | null;
   imagem_fundo: string;
   imagem_fundo_mobile: string | null;
   regiao_alvo: string | null;
@@ -48,14 +63,14 @@ export type HeroBannerAdmin = {
 
 export async function listHeroBannersAdmin(): Promise<HeroBannerAdmin[]> {
   return query<HeroBannerAdmin>(
-    `SELECT id, titulo, texto, botao_label, botao_url, imagem_fundo, imagem_fundo_mobile, regiao_alvo, ativo, ordem
+    `SELECT id, titulo, texto, botao_label, botao_url, botao2_label, botao2_url, imagem_fundo, imagem_fundo_mobile, regiao_alvo, ativo, ordem
      FROM banners_hero ORDER BY ordem ASC, id ASC`
   );
 }
 
 export async function getHeroBannerAdmin(id: string): Promise<HeroBannerAdmin | null> {
   const rows = await query<HeroBannerAdmin>(
-    `SELECT id, titulo, texto, botao_label, botao_url, imagem_fundo, imagem_fundo_mobile, regiao_alvo, ativo, ordem
+    `SELECT id, titulo, texto, botao_label, botao_url, botao2_label, botao2_url, imagem_fundo, imagem_fundo_mobile, regiao_alvo, ativo, ordem
      FROM banners_hero WHERE id = $1`,
     [id]
   );

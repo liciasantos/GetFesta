@@ -98,6 +98,28 @@ export default function HeroBannerForm({
         </Field>
       </div>
 
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Texto do 2º botão (opcional)">
+          <input
+            name="botao2Label"
+            maxLength={60}
+            placeholder="Ex: Cadastrar empresa"
+            defaultValue={banner?.botao2_label ?? ""}
+            className="rounded-md border border-border px-3 py-2.5 text-sm"
+          />
+        </Field>
+        <Field label="Link do 2º botão (opcional)">
+          <input
+            name="botao2Url"
+            maxLength={500}
+            placeholder="/cadastro/empresa"
+            defaultValue={banner?.botao2_url ?? ""}
+            className="rounded-md border border-border px-3 py-2.5 text-sm"
+          />
+        </Field>
+      </div>
+      <p className="-mt-1.5 text-[10.5px] text-muted-2">Se preenchido, os dois botões aparecem lado a lado no banner.</p>
+
       <Field label="Região que vê esse banner">
         <select name="regiaoAlvo" defaultValue={banner?.regiao_alvo ?? ""} className="rounded-md border border-border px-3 py-2.5 text-sm">
           <option value="">Todas as regiões (padrão/fallback)</option>

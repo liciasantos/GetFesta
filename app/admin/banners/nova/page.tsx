@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { listCategorias } from "@/lib/data/geo";
 import { listEmpresasParaSelect } from "@/lib/data/admin";
-import NovoBannerForm from "./NovoBannerForm";
+import BannerForm from "@/components/admin/BannerForm";
 
 export const dynamic = "force-dynamic";
 
@@ -20,11 +20,11 @@ export default async function NovoBannerPage() {
       </Link>
       <h1 className="mt-3 text-xl font-extrabold">Incluir anúncio</h1>
       <p className="mt-1 text-sm text-muted">
-        Aparece no carrossel do banner principal da home e na seção "Destaques da semana".
+        Aparece no carrossel do banner principal da home e na seção &quot;Destaques da semana&quot;.
       </p>
 
       <div className="mt-6 rounded-xl border border-border bg-surface p-5">
-        <NovoBannerForm categorias={categorias} empresas={empresas} />
+        <BannerForm mode="criar" categorias={categorias} empresas={empresas} />
       </div>
     </div>
   );

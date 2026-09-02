@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { listPlanosEmpresa } from "@/lib/data/painel";
-import { getConfiguracoesSite, CONFIG_CTA_FORNECEDOR_BG, CONFIG_CTA_FORNECEDOR_COR } from "@/lib/data/config";
+import {
+  getConfiguracoesSite,
+  CONFIG_EMPRESAS_HERO_BG,
+  CONFIG_EMPRESAS_HERO_IMAGEM,
+  CONFIG_EMPRESAS_HERO_TITULO,
+  CONFIG_EMPRESAS_HERO_SUBTITULO,
+} from "@/lib/data/config";
 import { PLANOS_BENEFICIOS, formatPrecoPlano } from "@/lib/planos-beneficios";
 import { buttonClass, Badge } from "@/components/ui";
 import { hexToRgba } from "@/lib/color";
@@ -15,16 +21,18 @@ export default async function EmpresasPage() {
     <div>
       {/* HERO */}
       <section className="relative overflow-hidden">
-        <BgImage src={config[CONFIG_CTA_FORNECEDOR_BG]} className="object-cover" priority sizes="100vw" />
-        <div className="absolute inset-0" style={{ backgroundColor: hexToRgba(config[CONFIG_CTA_FORNECEDOR_COR], 0.82) }} />
+        {config[CONFIG_EMPRESAS_HERO_IMAGEM] && (
+          <BgImage src={config[CONFIG_EMPRESAS_HERO_IMAGEM]} className="object-cover" priority sizes="100vw" />
+        )}
+        <div className="absolute inset-0" style={{ backgroundColor: hexToRgba(config[CONFIG_EMPRESAS_HERO_BG], 0.82) }} />
 
         <div className="relative mx-auto max-w-4xl px-6 pt-20 pb-16 text-center sm:pt-28 sm:pb-24">
           <h2 className="section-kicker justify-center">Para empresas</h2>
           <h1 className="mt-4 font-display text-[30px] font-extrabold leading-[1.15] text-white sm:text-[42px]">
-            Clientes da sua região estão procurando os seus serviços agora.
+            {config[CONFIG_EMPRESAS_HERO_TITULO]}
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-[15.5px] leading-relaxed text-white/85 sm:text-[17px]">
-            Receba pedidos qualificados e negocie direto pelo WhatsApp. Sem comissão por festa fechada.
+            {config[CONFIG_EMPRESAS_HERO_SUBTITULO]}
           </p>
           <div className="mt-7">
             <Link href={empresaLogada ? "/painel" : "/cadastro/empresa"} className={buttonClass("primary", "lg")}>

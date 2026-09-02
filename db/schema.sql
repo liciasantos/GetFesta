@@ -248,7 +248,7 @@ CREATE TABLE profissionais (
     disponibilidade_status       status_disponibilidade NOT NULL DEFAULT 'nao_informado',
     consentimento_dados_em       TIMESTAMPTZ,           -- aceite do termo especifico LGPD
     aprovada_para_destaque       BOOLEAN NOT NULL DEFAULT FALSE, -- curadoria manual do admin (anuncio pago), mesmo padrao de empresas.aprovada_para_destaque
-    -- bonus de lancamento: pros 30 primeiros profissionais cadastrados
+    -- bonus de lancamento: pros 20 primeiros profissionais cadastrados
     -- (marcado uma unica vez no cadastro, nao recalculado depois - ver
     -- registrarProfissional em lib/actions/auth.ts), da direito aos limites
     -- do plano Light (6 fotos + PDF) de graca por 1 ano a partir do cadastro
@@ -608,6 +608,8 @@ CREATE TABLE banners_hero (
     texto        VARCHAR(300),
     botao_label  VARCHAR(60),
     botao_url    VARCHAR(500),
+    botao2_label VARCHAR(60),            -- segundo botao opcional, exibido lado a lado com o primeiro
+    botao2_url   VARCHAR(500),
     imagem_fundo TEXT NOT NULL,          -- data URI, mesmo padrao de logo/galeria (sem storage externo)
     imagem_fundo_mobile TEXT,            -- opcional: NULL = reusa a imagem desktop
     -- alvo regional: NULL = aparece pra qualquer visitante (padrao/fallback).

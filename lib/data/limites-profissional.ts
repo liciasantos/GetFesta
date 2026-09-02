@@ -44,7 +44,7 @@ const PREMIUM: Omit<LimitesProfissional, "viaBonusLancamento" | "bonusExpiraEm">
  *  1. assinatura ativa (gratis/light/premium) definida manualmente pelo
  *     admin em /admin/profissionais tem prioridade - inclusive pra rebaixar
  *     alguem pra gratis de proposito, sem cair no bonus de lancamento;
- *  2. sem assinatura explicita, mas com o bonus de lancamento (30 primeiros
+ *  2. sem assinatura explicita, mas com o bonus de lancamento (20 primeiros
  *     cadastrados) ainda dentro de 1 ano do cadastro -> limites do Light;
  *  3. senao, gratis. */
 export async function getLimitesProfissional(profissionalId: string): Promise<LimitesProfissional> {

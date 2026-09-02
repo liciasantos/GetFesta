@@ -1,24 +1,38 @@
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { buttonClass, Badge } from "@/components/ui";
+import {
+  getConfiguracoesSite,
+  CONFIG_PROFISSIONAIS_HERO_BG,
+  CONFIG_PROFISSIONAIS_HERO_IMAGEM,
+  CONFIG_PROFISSIONAIS_HERO_TITULO,
+  CONFIG_PROFISSIONAIS_HERO_SUBTITULO,
+} from "@/lib/data/config";
+import BgImage from "@/components/BgImage";
 
 export default async function ProfissionaisPage() {
-  const session = await getSession();
+  const [session, config] = await Promise.all([getSession(), getConfiguracoesSite()]);
   const profissionalLogado = session?.tipo === "profissional";
+  const heroImagem = config[CONFIG_PROFISSIONAIS_HERO_IMAGEM];
 
   return (
     <div>
       {/* HERO */}
-      <section className="relative overflow-hidden bg-text">
+      <section className="relative overflow-hidden" style={{ backgroundColor: config[CONFIG_PROFISSIONAIS_HERO_BG] }}>
+        {heroImagem && (
+          <>
+            <BgImage src={heroImagem} className="object-cover opacity-40" sizes="100vw" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+          </>
+        )}
         <div className="absolute inset-0 bg-gradient-to-br from-accent/25 via-transparent to-transparent" />
         <div className="relative mx-auto max-w-4xl px-6 pt-20 pb-16 text-center sm:pt-28 sm:pb-24">
           <h2 className="section-kicker justify-center">Para profissionais</h2>
           <h1 className="mt-4 font-display text-[30px] font-extrabold leading-[1.15] text-white sm:text-[42px]">
-            Sua agenda cheia e seu talento em destaque.
+            {config[CONFIG_PROFISSIONAIS_HERO_TITULO]}
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-[15.5px] leading-relaxed text-white/85 sm:text-[17px]">
-            Conecte-se com empresas que precisam do seu trabalho pontual. Gerencie seus dias livres numa única
-            plataforma.
+            {config[CONFIG_PROFISSIONAIS_HERO_SUBTITULO]}
           </p>
           <div className="mt-7">
             <Link href={profissionalLogado ? "/perfil-profissional" : "/cadastro/profissional"} className={buttonClass("primary", "lg")}>
@@ -33,9 +47,8 @@ export default async function ProfissionaisPage() {
         <div className="mx-auto flex max-w-4xl flex-col items-center gap-2 text-center">
           <Badge tone="ad">✨ Vantagem para os pioneiros</Badge>
           <p className="max-w-2xl text-[14.5px] font-semibold leading-relaxed text-[#5c4a10]">
-            Seja um dos 30 primeiros profissionais a criar um perfil e ganhamos de graça, por 1 ano, os benefícios do
-            plano Light: 6 fotos no catálogo e portfólio em PDF — recursos normalmente exclusivos de quem assina um
-            plano pago.
+            Garanta 1 ano de plano Light grátis! Os 20 primeiros profissionais a criarem um perfil liberam recursos
+            premium sem custo, incluindo 6 fotos no catálogo e envio de portfólio em PDF.
           </p>
         </div>
       </section>

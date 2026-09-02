@@ -341,6 +341,49 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* PRECISA DE AJUDA — atalhos rapidos pros 3 perfis, cada um com uma
+          descricao curta e os links mais uteis (mesmos links do rodape,
+          organizados aqui de um jeito mais visual/facil de escanear). */}
+      <section className="border-b border-border px-6 py-16 sm:py-20">
+        <div className="mx-auto max-w-6xl text-center">
+          <span className="section-kicker justify-center">{banners.length > 0 ? "07" : "06"} — Precisa de ajuda?</span>
+          <h2 className="mt-3 text-2xl font-extrabold sm:text-[26px]">Encontre o caminho certo pra você</h2>
+
+          <div className="mt-9 grid grid-cols-1 gap-5 text-left sm:grid-cols-3">
+            <HelpColumn
+              emoji="🎉"
+              titulo="Sou cliente"
+              texto="Está organizando uma festa e precisa de fornecedores de confiança?"
+              links={[
+                { label: "Como funciona", href: "/#como-funciona" },
+                { label: "Buscar fornecedores", href: "/busca" },
+                { label: "Publicar pedido grátis", href: "/publicar-pedido" },
+              ]}
+            />
+            <HelpColumn
+              emoji="🏪"
+              titulo="Sou empresa"
+              texto="Ofereça seus serviços e receba pedidos qualificados de clientes da sua região."
+              links={[
+                { label: "Saiba mais", href: "/empresas" },
+                { label: "Cadastrar minha empresa", href: "/cadastro/empresa" },
+                { label: "Entrar no painel", href: "/entrar?tipo=empresa" },
+              ]}
+            />
+            <HelpColumn
+              emoji="🎭"
+              titulo="Sou profissional"
+              texto="Ofereça seu talento pontual pra eventos e organize sua agenda num só lugar."
+              links={[
+                { label: "Saiba mais", href: "/profissionais" },
+                { label: "Criar catálogo profissional", href: "/cadastro/profissional" },
+                { label: "Entrar", href: "/entrar?tipo=profissional" },
+              ]}
+            />
+          </div>
+        </div>
+      </section>
+
       {/* CTA FORNECEDOR — full banner de fundo por trás do box (nao mais dentro
           dele), afastado da seção de planos com uma margem extra pra respirar. */}
       <section className="relative mt-11 overflow-hidden border-b border-border px-6 py-16 sm:py-20">
@@ -361,6 +404,35 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+    </div>
+  );
+}
+
+function HelpColumn({
+  emoji,
+  titulo,
+  texto,
+  links,
+}: {
+  emoji: string;
+  titulo: string;
+  texto: string;
+  links: { label: string; href: string }[];
+}) {
+  return (
+    <div className="rounded-2xl border border-border bg-surface p-6">
+      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-accent-soft text-xl">{emoji}</span>
+      <h3 className="mt-4 text-xs font-bold uppercase tracking-wide text-muted-2">{titulo}</h3>
+      <p className="mt-2 text-[13px] leading-relaxed text-muted">{texto}</p>
+      <ul className="mt-4 flex flex-col gap-2">
+        {links.map((l) => (
+          <li key={l.href}>
+            <Link href={l.href} className="text-[13px] font-bold text-accent-dark hover:underline">
+              {l.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

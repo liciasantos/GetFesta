@@ -168,11 +168,24 @@ export const criarBannerSchema = z
   })
   .refine((v) => v.fimEm >= v.inicioEm, { message: "Data de término precisa ser depois do início", path: ["fimEm"] });
 
+export const atualizarBannerSchema = z
+  .object({
+    id: z.string().uuid(),
+    categoriaId: z.coerce.number({ message: "Selecione a categoria" }),
+    empresaId: z.string().uuid("Selecione a empresa"),
+    inicioEm: z.string().min(8, "Informe a data de início"),
+    fimEm: z.string().min(8, "Informe a data de término"),
+    valorPago: z.coerce.number().min(0, "Informe o valor pago"),
+  })
+  .refine((v) => v.fimEm >= v.inicioEm, { message: "Data de término precisa ser depois do início", path: ["fimEm"] });
+
 export const criarBannerHeroSchema = z.object({
   titulo: z.string().min(2, "Informe um título").max(160),
   texto: z.string().max(300).optional(),
   botaoLabel: z.string().max(60).optional(),
   botaoUrl: z.string().max(500).optional(),
+  botao2Label: z.string().max(60).optional(),
+  botao2Url: z.string().max(500).optional(),
   imagemFundo: z.string().min(4, "Escolha uma imagem de fundo (desktop)"),
   imagemFundoMobile: z.string().optional(),
   regiaoAlvo: z.enum(["RJ", "SP", "MG"]).optional(),
@@ -184,6 +197,8 @@ export const atualizarBannerHeroSchema = z.object({
   texto: z.string().max(300).optional(),
   botaoLabel: z.string().max(60).optional(),
   botaoUrl: z.string().max(500).optional(),
+  botao2Label: z.string().max(60).optional(),
+  botao2Url: z.string().max(500).optional(),
   imagemFundo: z.string().min(4, "Escolha uma imagem de fundo (desktop)"),
   imagemFundoMobile: z.string().optional(),
   regiaoAlvo: z.enum(["RJ", "SP", "MG"]).optional(),
