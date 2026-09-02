@@ -1,3 +1,5 @@
+import { getAppUrl } from "@/lib/google-oauth";
+
 // Envio de email via API REST do Resend (sem SDK - evita depender de um pacote
 // novo so pra isso). Se RESEND_API_KEY nao estiver configurada, falha em
 // silencio (log de aviso) pra nunca travar um cadastro por causa do email.
@@ -36,48 +38,89 @@ export async function sendEmail({ to, subject, html }: { to: string; subject: st
   }
 }
 
+/** Moldura visual comum a todo email transacional (logo, cartao branco,
+ * rodape) - HTML com tabelas e estilo inline, do jeito exigido pra renderizar
+ * de forma consistente em clientes de email (Gmail, Outlook etc, que ignoram
+ * <style> e boa parte do CSS moderno). */
+function emailShell({
+  preheader,
+  heading,
+  bodyHtml,
+  ctaLabel,
+  ctaUrl,
+  footerNote,
+}: {
+  preheader: string;
+  heading: string;
+  bodyHtml: string;
+  ctaLabel: string;
+  ctaUrl: string;
+  footerNote: string;
+}): string {
+  const logoUrl = `${getAppUrl()}/logo-getfesta-email.png`;
+  const ano = new Date().getFullYear();
+
+  return `
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${preheader}</div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fbf9f6;padding:32px 16px;font-family:Arial,Helvetica,sans-serif;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;background:#ffffff;border-radius:16px;border:1px solid #e8e1d5;">
+            <tr>
+              <td style="padding:32px 32px 8px;text-align:center;">
+                <img src="${logoUrl}" width="180" alt="GetFesta" style="display:block;margin:0 auto;border:0;max-width:180px;" />
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:16px 32px 0;">
+                <h1 style="margin:0 0 12px;font-size:20px;color:#1f2933;">${heading}</h1>
+                <div style="font-size:14px;line-height:1.6;color:#1f2933;">${bodyHtml}</div>
+                <table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0;">
+                  <tr>
+                    <td style="border-radius:8px;background:#ff6b4a;">
+                      <a href="${ctaUrl}" style="display:inline-block;padding:12px 28px;font-size:14px;font-weight:bold;color:#ffffff;text-decoration:none;">${ctaLabel}</a>
+                    </td>
+                  </tr>
+                </table>
+                <p style="margin:0 0 24px;font-size:12px;color:#6b7684;line-height:1.6;">${footerNote}</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:16px 32px 28px;border-top:1px solid #e8e1d5;">
+                <p style="margin:16px 0 0;font-size:11px;color:#98a0ac;text-align:center;">© ${ano} GetFesta — quem faz sua festa acontecer</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  `;
+}
+
 export function buildResetSenhaEmail(nome: string, linkReset: string): { subject: string; html: string } {
   return {
     subject: "Redefinir sua senha na GetFesta",
-    html: `
-      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; color: #1f2933;">
-        <h1 style="color: #e14f30; font-size: 20px;">Olá, ${nome}</h1>
-        <p style="font-size: 14px; line-height: 1.6;">
-          Recebemos um pedido para redefinir a senha da sua conta na GetFesta. Clique no botão abaixo pra escolher
-          uma nova senha:
-        </p>
-        <p style="margin: 24px 0;">
-          <a href="${linkReset}" style="background: #ff6b4a; color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">
-            Redefinir minha senha
-          </a>
-        </p>
-        <p style="font-size: 12px; color: #6b7684;">
-          Esse link vale por 1 hora. Se você não pediu essa redefinição, pode ignorar este e-mail — sua senha
-          continua a mesma.
-        </p>
-      </div>
-    `,
+    html: emailShell({
+      preheader: "Clique no link pra escolher uma nova senha.",
+      heading: `Olá, ${nome}`,
+      bodyHtml: `<p style="margin:0 0 20px;">Recebemos um pedido para redefinir a senha da sua conta na GetFesta. Clique no botão abaixo pra escolher uma nova senha:</p>`,
+      ctaLabel: "Redefinir minha senha",
+      ctaUrl: linkReset,
+      footerNote: "Esse link vale por 1 hora. Se você não pediu essa redefinição, pode ignorar este e-mail — sua senha continua a mesma.",
+    }),
   };
 }
 
 export function buildConfirmacaoCadastroEmail(nome: string, linkConfirmacao: string): { subject: string; html: string } {
   return {
     subject: "Confirme seu cadastro na GetFesta",
-    html: `
-      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; color: #1f2933;">
-        <h1 style="color: #e14f30; font-size: 20px;">Bem-vindo(a) à GetFesta, ${nome}!</h1>
-        <p style="font-size: 14px; line-height: 1.6;">
-          Seu cadastro foi criado com sucesso. Clique no botão abaixo para confirmar seu e-mail:
-        </p>
-        <p style="margin: 24px 0;">
-          <a href="${linkConfirmacao}" style="background: #ff6b4a; color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">
-            Confirmar meu e-mail
-          </a>
-        </p>
-        <p style="font-size: 12px; color: #6b7684;">
-          Se você não fez esse cadastro, pode ignorar este e-mail.
-        </p>
-      </div>
-    `,
+    html: emailShell({
+      preheader: "Confirme seu email pra ativar seu cadastro na GetFesta.",
+      heading: `Bem-vindo(a) à GetFesta, ${nome}!`,
+      bodyHtml: `<p style="margin:0 0 20px;">Seu cadastro foi criado com sucesso. Clique no botão abaixo para confirmar seu e-mail:</p>`,
+      ctaLabel: "Confirmar meu e-mail",
+      ctaUrl: linkConfirmacao,
+      footerNote: "Se você não fez esse cadastro, pode ignorar este e-mail.",
+    }),
   };
 }
