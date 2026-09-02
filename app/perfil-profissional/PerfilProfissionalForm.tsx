@@ -172,6 +172,20 @@ export default function PerfilProfissionalForm({
         </div>
       </Field>
 
+      <Field label="Tempo de experiência (anos)">
+        <input
+          name="tempoExperienciaAnos"
+          type="number"
+          min={0}
+          max={80}
+          step={1}
+          placeholder="Ex: 3"
+          defaultValue={perfil.tempo_experiencia_meses !== null ? Math.round(perfil.tempo_experiencia_meses / 12) : ""}
+          className="rounded-md border border-border px-3 py-2.5 text-sm"
+        />
+        <p className="mt-1 text-[10.5px] text-muted-2">Há quanto tempo você atua nas suas funções — ajuda a empresa a avaliar sua experiência.</p>
+      </Field>
+
       <div className="rounded-md border border-border p-2.5">
         <label className="flex items-center gap-1.5 text-[12.5px] font-semibold">
           <input

@@ -80,16 +80,22 @@ export async function atualizarPerfilProfissional(
     manequim: formData.get("manequim") || undefined,
     calcado: formData.get("calcado") || undefined,
     temTatuagem: formData.get("temTatuagem") || undefined,
+    tempoExperienciaAnos: formData.get("tempoExperienciaAnos") || undefined,
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
 
   const medidasHabilitadas = parsed.data.medidasHabilitadas === "on";
+  const tempoExperienciaMeses =
+    parsed.data.tempoExperienciaAnos !== null && parsed.data.tempoExperienciaAnos !== undefined
+      ? Math.round(parsed.data.tempoExperienciaAnos * 12)
+      : null;
 
   await query(
     `UPDATE profissionais
      SET nome = $1, bairro_id = $2, disponibilidade_status = $3, sexo = $4, medidas_habilitadas = $5,
-         altura_cm = $6, peso_kg = $7, cintura_cm = $8, manequim = $9, calcado = $10, tem_tatuagem = $11
-     WHERE usuario_id = $12`,
+         altura_cm = $6, peso_kg = $7, cintura_cm = $8, manequim = $9, calcado = $10, tem_tatuagem = $11,
+         tempo_experiencia_meses = $12
+     WHERE usuario_id = $13`,
     [
       parsed.data.nome,
       parsed.data.bairroId ?? null,
@@ -102,6 +108,7 @@ export async function atualizarPerfilProfissional(
       medidasHabilitadas ? parsed.data.manequim ?? null : null,
       medidasHabilitadas ? parsed.data.calcado ?? null : null,
       medidasHabilitadas ? parsed.data.temTatuagem ?? null : null,
+      tempoExperienciaMeses,
       session.usuarioId,
     ]
   );

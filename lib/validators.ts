@@ -113,6 +113,7 @@ export const atualizarPerfilProfissionalSchema = z.object({
   manequim: z.string().max(10).optional(),
   calcado: z.string().max(10).optional(),
   temTatuagem: z.enum(["sim", "nao"]).optional().nullable(),
+  tempoExperienciaAnos: z.coerce.number().min(0, "Não pode ser negativo").max(80, "Verifique o valor").optional().nullable(),
 });
 
 export const ORCAMENTO_FAIXAS = ["ate_700", "700_3000", "3000_8000", "acima_8000"] as const;

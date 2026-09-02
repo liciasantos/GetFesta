@@ -5,6 +5,7 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { alterarPlanoEmpresa } from "@/lib/actions/perfil";
 import { buttonClass } from "@/components/ui";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
+import { buildContratarPlanoMailto } from "@/lib/mailto";
 import type { PlanoEmpresa, PlanoPeriodoEmpresa } from "@/lib/data/painel";
 
 function formatBRL(n: number): string {
@@ -47,6 +48,7 @@ export default function PlanoSelector({
     const plano = planos.find((p) => p.id === Number(planoParam));
     router.replace(pathname, { scroll: false });
     if (!plano || plano.id === planoAtualId) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- prefill unico a partir do ?plano= da URL no mount, nao reage a mudanca de estado do componente
     setOpen(true);
     if (Number(plano.valor_mensal) === 0) {
       setPlanoEscolhido(plano);
@@ -257,23 +259,34 @@ export default function PlanoSelector({
             {step === "sucesso" && planoEscolhido && periodoEscolhido && (
               <div className="p-2">
                 <p className="text-[12.5px] font-semibold">Solicitação registrada ✓</p>
-                <p className="mt-1 text-[11px] text-muted">
-                  Fale com a gente pelo WhatsApp pra finalizar o pagamento — assim que confirmarmos, o plano{" "}
-                  <b>{planoEscolhido.nome}</b> é ativado.
-                </p>
                 {whatsapp ? (
-                  <a
-                    href={buildWhatsAppLink(whatsapp, mensagemWhatsApp)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`${buttonClass("primary", "sm")} mt-3 block w-full text-center`}
-                  >
-                    Falar no WhatsApp
-                  </a>
+                  <>
+                    <p className="mt-1 text-[11px] text-muted">
+                      Fale com a gente pelo WhatsApp pra finalizar o pagamento — assim que confirmarmos, o plano{" "}
+                      <b>{planoEscolhido.nome}</b> é ativado.
+                    </p>
+                    <a
+                      href={buildWhatsAppLink(whatsapp, mensagemWhatsApp)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`${buttonClass("primary", "sm")} mt-3 block w-full text-center`}
+                    >
+                      Falar no WhatsApp
+                    </a>
+                  </>
                 ) : (
-                  <p className="mt-3 text-[11px] font-semibold text-accent-dark">
-                    WhatsApp de suporte ainda não configurado — fale com a gente por e-mail.
-                  </p>
+                  <>
+                    <p className="mt-1 text-[11px] text-muted">
+                      Fale com a gente por e-mail pra finalizar o pagamento — assim que confirmarmos, o plano{" "}
+                      <b>{planoEscolhido.nome}</b> é ativado.
+                    </p>
+                    <a
+                      href={buildContratarPlanoMailto(nomeFantasia, planoEscolhido.nome, periodoEscolhido.meses)}
+                      className={`${buttonClass("primary", "sm")} mt-3 block w-full text-center`}
+                    >
+                      Enviar e-mail
+                    </a>
+                  </>
                 )}
                 <button
                   type="button"

@@ -89,6 +89,9 @@ export default async function PerfilProfissionalParaEmpresaPage({ params }: { pa
           {DISPONIBILIDADE_LABEL[perfil.disponibilidade_status]}
         </Badge>
         {perfil.sexo && <Badge tone="muted">{SEXO_LABEL[perfil.sexo] ?? perfil.sexo}</Badge>}
+        {perfil.tempo_experiencia_meses !== null && (
+          <Badge tone="muted">🕓 {formatTempoExperiencia(perfil.tempo_experiencia_meses)} de experiência</Badge>
+        )}
         {perfil.nota_media !== null && (
           <Badge tone="ad">
             ⭐ {Number(perfil.nota_media).toFixed(1)} ({perfil.total_avaliacoes})
@@ -173,6 +176,12 @@ export default async function PerfilProfissionalParaEmpresaPage({ params }: { pa
       </div>
     </div>
   );
+}
+
+function formatTempoExperiencia(meses: number): string {
+  if (meses < 12) return meses === 1 ? "1 mês" : `${meses} meses`;
+  const anos = Math.round(meses / 12);
+  return anos === 1 ? "1 ano" : `${anos} anos`;
 }
 
 function Medida({ label, value }: { label: string; value: string | null }) {
