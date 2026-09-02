@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { useActionState } from "react";
 import { registrarEmpresa, type ActionState } from "@/lib/actions/auth";
 import { buttonClass } from "@/components/ui";
 import AceiteTermosCheckbox from "@/components/AceiteTermosCheckbox";
 import AceiteLgpdImagensCheckbox from "@/components/AceiteLgpdImagensCheckbox";
 import type { Cidade, Categoria } from "@/lib/data/geo";
+import { ESTADOS } from "@/lib/estados";
 
 export default function RegistroEmpresaForm({
   cidades,
@@ -19,6 +21,9 @@ export default function RegistroEmpresaForm({
   mesesIntencao?: number;
 }) {
   const [state, formAction, pending] = useActionState<ActionState, FormData>(registrarEmpresa, undefined);
+  const [estado, setEstado] = useState("");
+  const [cidadeId, setCidadeId] = useState("");
+  const cidadesDoEstado = cidades.filter((c) => c.estado === estado);
 
   return (
     <form action={formAction} className="flex flex-col gap-3">
@@ -45,12 +50,39 @@ export default function RegistroEmpresaForm({
       <Field label="Instagram (opcional)">
         <input name="instagram" placeholder="@suaempresa" className="rounded-md border border-border px-3 py-2.5 text-sm" />
       </Field>
-      <Field label="Cidade principal de atuação">
-        <select name="cidadeId" required defaultValue="" className="rounded-md border border-border px-3 py-2.5 text-sm">
+      <Field label="Estado de atuação">
+        <select
+          value={estado}
+          onChange={(e) => {
+            setEstado(e.target.value);
+            setCidadeId("");
+          }}
+          required
+          className="rounded-md border border-border px-3 py-2.5 text-sm"
+        >
           <option value="" disabled>
             Selecione
           </option>
-          {cidades.map((c) => (
+          {ESTADOS.map((e) => (
+            <option key={e.sigla} value={e.sigla}>
+              {e.nome}
+            </option>
+          ))}
+        </select>
+      </Field>
+      <Field label="Cidade principal de atuação">
+        <select
+          name="cidadeId"
+          value={cidadeId}
+          onChange={(e) => setCidadeId(e.target.value)}
+          required
+          disabled={!estado}
+          className="rounded-md border border-border px-3 py-2.5 text-sm disabled:opacity-50"
+        >
+          <option value="" disabled>
+            {estado ? "Selecione" : "Escolha o estado primeiro"}
+          </option>
+          {cidadesDoEstado.map((c) => (
             <option key={c.id} value={c.id}>
               {c.nome}
             </option>

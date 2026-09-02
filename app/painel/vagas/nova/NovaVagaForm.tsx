@@ -5,22 +5,32 @@ import { criarVaga, type VagaActionState } from "@/lib/actions/vagas";
 import { getBairrosAction, criarBairroCustomAction } from "@/lib/actions/geo";
 import { buttonClass } from "@/components/ui";
 import type { Cidade, Bairro } from "@/lib/data/geo";
+import { ESTADOS } from "@/lib/estados";
 import type { CategoriaProfissional } from "@/lib/data/profissionais";
 
 const BAIRRO_OUTRO = "outro";
 
 export default function NovaVagaForm({ cidades, categorias }: { cidades: Cidade[]; categorias: CategoriaProfissional[] }) {
   const [state, formAction, pending] = useActionState<VagaActionState, FormData>(criarVaga, undefined);
+  const [estado, setEstado] = useState("");
   const [cidadeId, setCidadeId] = useState<number | "">("");
   const [bairros, setBairros] = useState<Bairro[]>([]);
   const [bairroSel, setBairroSel] = useState<number | "" | typeof BAIRRO_OUTRO>("");
   const [bairroCustomNome, setBairroCustomNome] = useState("");
   const [, startTransition] = useTransition();
+  const cidadesDoEstado = cidades.filter((c) => c.estado === estado);
 
   useEffect(() => {
     if (!cidadeId) return;
     getBairrosAction(Number(cidadeId)).then(setBairros);
   }, [cidadeId]);
+
+  function handleEstadoChange(value: string) {
+    setEstado(value);
+    setCidadeId("");
+    setBairros([]);
+    setBairroSel("");
+  }
 
   function handleCidadeChange(value: string) {
     setCidadeId(value ? Number(value) : "");
@@ -52,15 +62,30 @@ export default function NovaVagaForm({ cidades, categorias }: { cidades: Cidade[
         </select>
       </Field>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <Field label="Estado">
+          <select
+            value={estado}
+            onChange={(e) => handleEstadoChange(e.target.value)}
+            className="rounded-md border border-border px-3 py-2.5 text-sm"
+          >
+            <option value="">Selecione</option>
+            {ESTADOS.map((e) => (
+              <option key={e.sigla} value={e.sigla}>
+                {e.nome}
+              </option>
+            ))}
+          </select>
+        </Field>
         <Field label="Cidade do evento">
           <select
             value={cidadeId}
             onChange={(e) => handleCidadeChange(e.target.value)}
-            className="rounded-md border border-border px-3 py-2.5 text-sm"
+            disabled={!estado}
+            className="rounded-md border border-border px-3 py-2.5 text-sm disabled:opacity-50"
           >
-            <option value="">Selecione</option>
-            {cidades.map((c) => (
+            <option value="">{estado ? "Selecione" : "Escolha o estado primeiro"}</option>
+            {cidadesDoEstado.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.nome}
               </option>

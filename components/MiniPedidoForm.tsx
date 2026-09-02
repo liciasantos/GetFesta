@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { buttonClass } from "@/components/ui";
 import type { Cidade } from "@/lib/data/geo";
+import { ESTADOS } from "@/lib/estados";
 
 const TIPOS_EVENTO = [
   "Aniversário infantil",
@@ -57,11 +58,22 @@ export default function MiniPedidoForm({ cidades, compact = false }: { cidades: 
       <div className={fieldWrapClass}>
         <label className="text-[10.5px] font-bold uppercase tracking-wide text-muted-2">Cidade</label>
         <select value={cidadeId} onChange={(e) => setCidadeId(e.target.value)} className={fieldClass}>
-          {cidades.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.nome}
-            </option>
-          ))}
+          {/* agrupado por estado (RJ/SP/MG) pra ficar organizado, mas continua
+              sendo uma unica escolha - esse form e o atalho rapido da home,
+              o fluxo completo Estado > Cidade > Bairro fica no wizard de /publicar-pedido */}
+          {ESTADOS.map((estado) => {
+            const cidadesDoEstado = cidades.filter((c) => c.estado === estado.sigla);
+            if (cidadesDoEstado.length === 0) return null;
+            return (
+              <optgroup key={estado.sigla} label={estado.nome}>
+                {cidadesDoEstado.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nome}
+                  </option>
+                ))}
+              </optgroup>
+            );
+          })}
         </select>
       </div>
       <div className={compact ? "flex flex-col gap-1.5 border-b border-border pb-2.5" : "flex flex-col gap-1.5 pb-1 sm:pb-0"}>

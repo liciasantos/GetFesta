@@ -57,6 +57,10 @@ async function main() {
     ["RJ", "Rio das Ostras"],
     ["RJ", "Casimiro de Abreu"],
     ["RJ", "Saquarema"],
+    // Minas Gerais
+    ["MG", "Belo Horizonte"],
+    ["MG", "Uberlândia"],
+    ["MG", "Juiz de Fora"],
   ]) {
     const { rows } = await pool.query<{ id: number }>(
       `INSERT INTO cidades (estado, nome) VALUES ($1, $2) RETURNING id`,

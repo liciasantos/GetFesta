@@ -4,6 +4,7 @@ import { useActionState, useEffect, useMemo, useState, useTransition } from "rea
 import Link from "next/link";
 import { buttonClass } from "@/components/ui";
 import type { Cidade, Bairro, Categoria } from "@/lib/data/geo";
+import { ESTADOS } from "@/lib/estados";
 import { getBairrosAction, criarBairroCustomAction } from "@/lib/actions/geo";
 import { criarPedido } from "@/lib/actions/pedidos";
 import { registrarCliente, type ActionState } from "@/lib/actions/auth";
@@ -49,6 +50,9 @@ export default function PublicarPedidoWizard({
 }) {
   const [step, setStep] = useState(0);
   const [tipoEvento, setTipoEvento] = useState(prefill.tipoEvento && TIPOS_EVENTO.includes(prefill.tipoEvento) ? prefill.tipoEvento : TIPOS_EVENTO[0]);
+  const [estado, setEstado] = useState(
+    () => cidades.find((c) => c.id === (prefill.cidadeId ? Number(prefill.cidadeId) : undefined))?.estado ?? ""
+  );
   const [cidadeId, setCidadeId] = useState<number | "">(prefill.cidadeId ? Number(prefill.cidadeId) : "");
   const [bairroId, setBairroId] = useState<number | "" | typeof BAIRRO_OUTRO>("");
   const [bairroCustomNome, setBairroCustomNome] = useState("");
@@ -68,25 +72,37 @@ export default function PublicarPedidoWizard({
 
   // busca bairros quando a cidade muda
   useEffect(() => {
-    setBairroId("");
-    if (!cidadeId) {
-      setBairros([]);
-      return;
-    }
+    if (!cidadeId) return;
     getBairrosAction(Number(cidadeId)).then(setBairros);
   }, [cidadeId]);
 
+  function handleCidadeChange(value: string) {
+    setCidadeId(value ? Number(value) : "");
+    setBairroId("");
+    setBairros([]);
+  }
+
   // sugere categorias automaticamente conforme o tipo de evento (so uma vez, o
-  // usuario pode ajustar livremente depois)
+  // usuario pode ajustar livremente depois) - fica como effect (nao vira um
+  // handler unico) porque precisa rodar tanto no valor inicial/prefill quanto
+  // em cliques subsequentes no OptionCard.
   useEffect(() => {
     if (categoriasAutoAplicadas || categorias.length === 0) return;
     const slugs = SUGESTOES_POR_TIPO[tipoEvento] ?? [];
     const ids = categorias.filter((c) => slugs.includes(c.slug)).map((c) => c.id);
     if (ids.length > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCategoriaIds(ids);
       setCategoriasAutoAplicadas(true);
     }
   }, [tipoEvento, categorias, categoriasAutoAplicadas]);
+
+  const cidadesDoEstado = useMemo(() => cidades.filter((c) => c.estado === estado), [cidades, estado]);
+
+  function handleEstadoChange(value: string) {
+    setEstado(value);
+    setCidadeId("");
+  }
 
   const leak = useMemo(() => (descricao.length > 5 ? detectContactLeak(descricao) : { blocked: false, motivos: [] }), [descricao]);
   const categoriaOutrosId = useMemo(() => categorias.find((c) => c.slug === "outros")?.id, [categorias]);
@@ -101,7 +117,7 @@ export default function PublicarPedidoWizard({
       case 0:
         return !!tipoEvento;
       case 1:
-        return !!cidadeId && (bairroId !== BAIRRO_OUTRO || bairroCustomNome.trim().length >= 2);
+        return !!estado && !!cidadeId && (bairroId !== BAIRRO_OUTRO || bairroCustomNome.trim().length >= 2);
       case 2:
         return !!dataEvento;
       case 3:
@@ -194,12 +210,25 @@ export default function PublicarPedidoWizard({
           <StepBlock title="Onde vai ser a festa?">
             <div className="flex flex-col gap-3">
               <select
-                value={cidadeId}
-                onChange={(e) => setCidadeId(e.target.value ? Number(e.target.value) : "")}
+                value={estado}
+                onChange={(e) => handleEstadoChange(e.target.value)}
                 className="rounded-md border border-border px-3 py-2.5 text-sm"
               >
-                <option value="">Selecione a cidade</option>
-                {cidades.map((c) => (
+                <option value="">Selecione o estado</option>
+                {ESTADOS.map((e) => (
+                  <option key={e.sigla} value={e.sigla}>
+                    {e.nome}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={cidadeId}
+                onChange={(e) => handleCidadeChange(e.target.value)}
+                disabled={!estado}
+                className="rounded-md border border-border px-3 py-2.5 text-sm disabled:opacity-50"
+              >
+                <option value="">{estado ? "Selecione a cidade" : "Escolha o estado primeiro"}</option>
+                {cidadesDoEstado.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.nome}
                   </option>
@@ -256,7 +285,7 @@ export default function PublicarPedidoWizard({
             </div>
             {outrosSelecionado && (
               <div className="mt-3">
-                <label className="text-[11px] font-bold uppercase text-muted-2">Detalhe o serviço "Outros"</label>
+                <label className="text-[11px] font-bold uppercase text-muted-2">Detalhe o serviço &quot;Outros&quot;</label>
                 <textarea
                   value={detalheOutros}
                   onChange={(e) => setDetalheOutros(e.target.value)}

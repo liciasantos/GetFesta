@@ -40,13 +40,14 @@ const HERO_BANNER_CAMPOS = "id, titulo, texto, botao_label, botao_url, imagem_fu
 /** Banner principal (topo da home) - 100% administrado, independente de
  * empresa (ver /admin/hero e banners_hero). `regiaoVisitante` vem da
  * geolocalizacao por IP (header x-vercel-ip-country-region, so existe em
- * producao na Vercel - ver app/page.tsx): se detectou SP e existe banner
- * ativo com regiao_alvo='SP', mostra só esses; senão cai pros de RJ ou sem
+ * producao na Vercel - ver app/page.tsx): se detectou SP ou MG e existe
+ * banner ativo pra essa regiao, mostra só esses; senão cai pros de RJ ou sem
  * regiao definida (fallback padrão, cobre local/outros estados/sem match). */
 export async function listHeroBannersAtivos(regiaoVisitante?: string | null): Promise<HeroBanner[]> {
-  if (regiaoVisitante === "SP") {
+  if (regiaoVisitante === "SP" || regiaoVisitante === "MG") {
     const doEstado = await query<HeroBanner>(
-      `SELECT ${HERO_BANNER_CAMPOS} FROM banners_hero WHERE ativo = true AND regiao_alvo = 'SP' ORDER BY ordem ASC, id ASC`
+      `SELECT ${HERO_BANNER_CAMPOS} FROM banners_hero WHERE ativo = true AND regiao_alvo = $1 ORDER BY ordem ASC, id ASC`,
+      [regiaoVisitante]
     );
     if (doEstado.length > 0) return doEstado;
   }

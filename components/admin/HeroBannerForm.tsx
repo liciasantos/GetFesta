@@ -103,10 +103,11 @@ export default function HeroBannerForm({
           <option value="">Todas as regiões (padrão/fallback)</option>
           <option value="RJ">Só Rio de Janeiro</option>
           <option value="SP">Só São Paulo</option>
+          <option value="MG">Só Minas Gerais</option>
         </select>
         <p className="mt-1 text-[10.5px] text-muted-2">
-          Detectamos a região do visitante pelo IP. Quem estiver em SP vê banners de SP (se existir algum ativo);
-          todo o resto (RJ, outros estados, local) vê os banners de RJ ou sem região definida.
+          Detectamos a região do visitante pelo IP. Quem estiver em SP ou MG vê banners da própria região (se existir
+          algum ativo); todo o resto (RJ, outros estados, local) vê os banners de RJ ou sem região definida.
         </p>
       </Field>
 

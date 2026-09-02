@@ -5,6 +5,7 @@ import { atualizarPerfilProfissional, type PerfilActionState } from "@/lib/actio
 import { getBairrosAction, criarBairroCustomAction } from "@/lib/actions/geo";
 import { buttonClass } from "@/components/ui";
 import type { Cidade, Bairro } from "@/lib/data/geo";
+import { ESTADOS } from "@/lib/estados";
 import type { CategoriaProfissional, PerfilProfissional } from "@/lib/data/profissionais";
 
 const DISPONIBILIDADE_OPCOES: Array<{ value: "disponivel" | "indisponivel" | "nao_informado"; label: string }> = [
@@ -32,6 +33,7 @@ export default function PerfilProfissionalForm({
   cidades: Cidade[];
 }) {
   const [state, formAction, pending] = useActionState<PerfilActionState, FormData>(atualizarPerfilProfissional, undefined);
+  const [estado, setEstado] = useState(() => cidades.find((c) => c.id === perfil.cidade_id)?.estado ?? "");
   const [cidadeId, setCidadeId] = useState<number | "">(perfil.cidade_id ?? "");
   const [bairros, setBairros] = useState<Bairro[]>([]);
   const [bairroSel, setBairroSel] = useState<number | "" | typeof BAIRRO_OUTRO>(perfil.bairro_id ?? "");
@@ -39,11 +41,19 @@ export default function PerfilProfissionalForm({
   const [medidasHabilitadas, setMedidasHabilitadas] = useState(perfil.medidas_habilitadas);
   const [, startTransition] = useTransition();
   const categoriasSelecionadas = new Set(perfil.categorias.map((c) => c.id));
+  const cidadesDoEstado = cidades.filter((c) => c.estado === estado);
 
   useEffect(() => {
     if (!cidadeId) return;
     getBairrosAction(Number(cidadeId)).then(setBairros);
   }, [cidadeId]);
+
+  function handleEstadoChange(value: string) {
+    setEstado(value);
+    setCidadeId("");
+    setBairros([]);
+    setBairroSel("");
+  }
 
   function handleCidadeChange(value: string) {
     setCidadeId(value ? Number(value) : "");
@@ -78,14 +88,29 @@ export default function PerfilProfissionalForm({
         </select>
       </Field>
 
+      <Field label="Estado">
+        <select
+          value={estado}
+          onChange={(e) => handleEstadoChange(e.target.value)}
+          className="rounded-md border border-border px-3 py-2.5 text-sm"
+        >
+          <option value="">Selecione</option>
+          {ESTADOS.map((e) => (
+            <option key={e.sigla} value={e.sigla}>
+              {e.nome}
+            </option>
+          ))}
+        </select>
+      </Field>
       <Field label="Cidade">
         <select
           value={cidadeId}
           onChange={(e) => handleCidadeChange(e.target.value)}
-          className="rounded-md border border-border px-3 py-2.5 text-sm"
+          disabled={!estado}
+          className="rounded-md border border-border px-3 py-2.5 text-sm disabled:opacity-50"
         >
-          <option value="">Selecione</option>
-          {cidades.map((c) => (
+          <option value="">{estado ? "Selecione" : "Escolha o estado primeiro"}</option>
+          {cidadesDoEstado.map((c) => (
             <option key={c.id} value={c.id}>
               {c.nome}
             </option>

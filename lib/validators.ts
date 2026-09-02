@@ -175,7 +175,7 @@ export const criarBannerHeroSchema = z.object({
   botaoUrl: z.string().max(500).optional(),
   imagemFundo: z.string().min(4, "Escolha uma imagem de fundo (desktop)"),
   imagemFundoMobile: z.string().optional(),
-  regiaoAlvo: z.enum(["RJ", "SP"]).optional(),
+  regiaoAlvo: z.enum(["RJ", "SP", "MG"]).optional(),
 });
 
 export const atualizarBannerHeroSchema = z.object({
@@ -186,7 +186,7 @@ export const atualizarBannerHeroSchema = z.object({
   botaoUrl: z.string().max(500).optional(),
   imagemFundo: z.string().min(4, "Escolha uma imagem de fundo (desktop)"),
   imagemFundoMobile: z.string().optional(),
-  regiaoAlvo: z.enum(["RJ", "SP"]).optional(),
+  regiaoAlvo: z.enum(["RJ", "SP", "MG"]).optional(),
 });
 
 export const criarPlanoPeriodoSchema = z.object({

@@ -6,6 +6,7 @@ import { getBairrosAction, criarBairroCustomAction } from "@/lib/actions/geo";
 import { buttonClass } from "@/components/ui";
 import AceiteTermosCheckbox from "@/components/AceiteTermosCheckbox";
 import type { Cidade, Bairro } from "@/lib/data/geo";
+import { ESTADOS } from "@/lib/estados";
 import type { CategoriaProfissional } from "@/lib/data/profissionais";
 
 const BAIRRO_OUTRO = "outro";
@@ -18,19 +19,30 @@ export default function RegistroProfissionalForm({
   categorias: CategoriaProfissional[];
 }) {
   const [state, formAction, pending] = useActionState<ActionState, FormData>(registrarProfissional, undefined);
+  const [estado, setEstado] = useState("");
   const [cidadeId, setCidadeId] = useState<number | "">("");
   const [bairros, setBairros] = useState<Bairro[]>([]);
   const [bairroSel, setBairroSel] = useState<number | "" | typeof BAIRRO_OUTRO>("");
   const [bairroCustomNome, setBairroCustomNome] = useState("");
   const [, startTransition] = useTransition();
+  const cidadesDoEstado = cidades.filter((c) => c.estado === estado);
+
+  function handleEstadoChange(value: string) {
+    setEstado(value);
+    setCidadeId("");
+    setBairros([]);
+    setBairroSel("");
+  }
 
   useEffect(() => {
-    if (!cidadeId) {
-      setBairros([]);
-      return;
-    }
+    if (!cidadeId) return;
     getBairrosAction(Number(cidadeId)).then(setBairros);
   }, [cidadeId]);
+
+  function handleCidadeChange(value: string) {
+    setCidadeId(value ? Number(value) : "");
+    setBairros([]);
+  }
 
   async function handleSubmit(formData: FormData) {
     if (bairroSel === BAIRRO_OUTRO && cidadeId && bairroCustomNome.trim().length >= 2) {
@@ -54,14 +66,29 @@ export default function RegistroProfissionalForm({
         <input name="telefone" required placeholder="(21) 99999-9999" className="rounded-md border border-border px-3 py-2.5 text-sm" />
       </Field>
 
-      <Field label="Cidade">
+      <Field label="Estado">
         <select
-          value={cidadeId}
-          onChange={(e) => setCidadeId(e.target.value ? Number(e.target.value) : "")}
+          value={estado}
+          onChange={(e) => handleEstadoChange(e.target.value)}
           className="rounded-md border border-border px-3 py-2.5 text-sm"
         >
           <option value="">Selecione</option>
-          {cidades.map((c) => (
+          {ESTADOS.map((e) => (
+            <option key={e.sigla} value={e.sigla}>
+              {e.nome}
+            </option>
+          ))}
+        </select>
+      </Field>
+      <Field label="Cidade">
+        <select
+          value={cidadeId}
+          onChange={(e) => handleCidadeChange(e.target.value)}
+          disabled={!estado}
+          className="rounded-md border border-border px-3 py-2.5 text-sm disabled:opacity-50"
+        >
+          <option value="">{estado ? "Selecione" : "Escolha o estado primeiro"}</option>
+          {cidadesDoEstado.map((c) => (
             <option key={c.id} value={c.id}>
               {c.nome}
             </option>
