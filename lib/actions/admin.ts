@@ -239,32 +239,22 @@ export async function alternarAprovadaDestaqueProfissional(profissionalId: strin
   return { ok: true };
 }
 
-/** Concede/revoga manualmente o plano premium do profissional (libera o
- * portfolio em PDF pra quem nao esta entre os 30 primeiros) - ate o Mercado
- * Pago estar integrado, essa e a unica forma de ativar o plano pago. Sem
+/** Troca manualmente o plano do profissional (Grátis/Light/Premium) - ate o
+ * Mercado Pago estar integrado, essa e a unica forma de ativar um plano
+ * pago. Mesma logica de trocarPlanoManualAdmin (generica, so muda o usuario_id
+ * apontado), so com os revalidatePath certos pro lado do profissional. Sem
  * fim_em (indefinido) porque o admin controla manualmente quando revogar. */
-export async function alternarPremiumProfissional(profissionalId: string): Promise<SimpleActionResult> {
+export async function trocarPlanoProfissionalAdmin(profissionalId: string, planoId: number): Promise<SimpleActionResult> {
   const session = await requireAdmin();
   if (!session) return { error: "Sessão inválida." };
 
-  const ativa = await queryOne<{ id: string }>(
-    `SELECT a.id FROM assinaturas a JOIN planos p ON p.id = a.plano_id
-     WHERE a.usuario_id = $1 AND p.tipo = 'profissional' AND a.status = 'ativa'
-       AND (a.fim_em IS NULL OR a.fim_em > now())
-     ORDER BY a.criado_em DESC LIMIT 1`,
-    [profissionalId]
-  );
+  const parsed = trocarPlanoManualSchema.safeParse({ empresaId: profissionalId, planoId });
+  if (!parsed.success) return { error: "Dados inválidos." };
 
-  if (ativa) {
-    await query(`UPDATE assinaturas SET status = 'cancelada' WHERE id = $1`, [ativa.id]);
-  } else {
-    const plano = await queryOne<{ id: number }>(`SELECT id FROM planos WHERE tipo = 'profissional' LIMIT 1`);
-    if (!plano) return { error: "Plano do profissional não encontrado." };
-    await query(`INSERT INTO assinaturas (usuario_id, plano_id, status) VALUES ($1, $2, 'ativa')`, [
-      profissionalId,
-      plano.id,
-    ]);
-  }
+  await query(`INSERT INTO assinaturas (usuario_id, plano_id, status) VALUES ($1, $2, 'ativa')`, [
+    parsed.data.empresaId,
+    parsed.data.planoId,
+  ]);
 
   revalidatePath("/admin/profissionais");
   revalidatePath("/perfil-profissional");
@@ -275,9 +265,8 @@ export async function alternarPremiumProfissional(profissionalId: string): Promi
  * (categorias, galeria, avaliacoes, vinculo, google agenda, disponibilidade,
  * candidaturas) referencia profissionais com ON DELETE CASCADE, mas
  * vagas_profissionais.profissional_selecionado_id, conversas.profissional_id
- * e assinaturas.usuario_id (todo profissional ganha uma assinatura trial no
- * cadastro) nao tem cascade - precisa limpar essas antes do DELETE FROM
- * usuarios. */
+ * e assinaturas.usuario_id (plano manual concedido pelo admin, se houver) nao
+ * tem cascade - precisa limpar essas antes do DELETE FROM usuarios. */
 export async function removerProfissional(profissionalId: string): Promise<SimpleActionResult> {
   return removerProfissionaisEmLote([profissionalId]);
 }

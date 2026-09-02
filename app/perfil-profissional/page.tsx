@@ -11,12 +11,15 @@ import DisponibilidadeCalendar from "@/components/DisponibilidadeCalendar";
 import CandidatarVagaButton from "@/components/CandidatarVagaButton";
 import AlterarSenhaForm from "@/components/AlterarSenhaForm";
 import PortfolioPdfUpload from "@/components/PortfolioPdfUpload";
+import VideoLinkManager from "@/components/VideoLinkManager";
 import {
   adicionarFotoGaleriaProfissional,
+  adicionarVideoLinkProfissional,
   atualizarFotoProfissional,
   removerFotoGaleriaProfissional,
-  verificarElegibilidadePortfolio,
+  removerVideoLinkProfissional,
 } from "@/lib/actions/perfil";
+import { getLimitesProfissional } from "@/lib/data/limites-profissional";
 import { Badge, buttonClass } from "@/components/ui";
 import { formatCurrencyBRL, formatDateBR } from "@/lib/format";
 import PerfilProfissionalForm from "./PerfilProfissionalForm";
@@ -33,14 +36,14 @@ export default async function PerfilProfissionalPage() {
   const session = await getSession();
   if (!session || session.tipo !== "profissional") redirect("/entrar");
 
-  const [perfil, categorias, cidades, vagas, bloqueiosDisponibilidade, config, portfolioElegivel] = await Promise.all([
+  const [perfil, categorias, cidades, vagas, bloqueiosDisponibilidade, config, limites] = await Promise.all([
     getMeuPerfilProfissional(session.usuarioId),
     listCategoriasProfissionais(),
     listCidades(),
     listVagasCompativeis(session.usuarioId),
     listBloqueiosIndisponibilidade(session.usuarioId),
     getConfiguracoesSite(),
-    verificarElegibilidadePortfolio(session.usuarioId),
+    getLimitesProfissional(session.usuarioId),
   ]);
   if (!perfil) redirect("/entrar");
 
@@ -77,10 +80,25 @@ export default async function PerfilProfissionalPage() {
 
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-accent bg-accent-soft p-5">
         <div>
-          <h2 className="text-[14px] font-bold text-accent-dark">✨ Torne-se premium e se destaque</h2>
+          <h2 className="text-[14px] font-bold text-accent-dark">
+            {limites.planoTipo === "premium"
+              ? "✨ Você está no plano Premium"
+              : limites.planoTipo === "light"
+                ? "✨ Você está no plano Light — quer mais?"
+                : "✨ Torne-se Light ou Premium e se destaque"}
+          </h2>
           <p className="mt-1 text-[12.5px] text-accent-dark">
-            Perfis em destaque aparecem primeiro pras empresas que buscam por sua função. Fale com a gente pra
-            contratar essa área.
+            {limites.planoTipo === "premium"
+              ? "Você tem direito a 10 fotos, 1 PDF, 3 vídeos e pode entrar em contato com as empresas pelo WhatsApp."
+              : limites.planoTipo === "light"
+                ? "Você tem direito a 6 fotos e 1 PDF. No Premium (R$18/mês) são 10 fotos, 3 vídeos e contato direto com empresas via WhatsApp."
+                : "Plano Light (R$9,90/mês): 6 fotos + 1 PDF. Plano Premium (R$18/mês): 10 fotos, 1 PDF, 3 vídeos e contato direto com empresas via WhatsApp."}
+            {limites.viaBonusLancamento && limites.bonusExpiraEm && (
+              <>
+                {" "}
+                Você está no bônus de lançamento (Light grátis) até {formatDateBR(limites.bonusExpiraEm)}.
+              </>
+            )}
           </p>
         </div>
         <a
@@ -120,18 +138,28 @@ export default async function PerfilProfissionalPage() {
       </div>
 
       <div className="mt-5 rounded-xl border border-border bg-surface p-5">
-        <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Fotos (até 4)</h2>
+        <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Fotos (até {limites.maxFotos})</h2>
         <GaleriaManager
           fotos={perfil.galeria}
           onAdd={adicionarFotoGaleriaProfissional}
           onRemove={removerFotoGaleriaProfissional}
-          limite={4}
+          limite={limites.maxFotos}
         />
       </div>
 
       <div className="mt-5 rounded-xl border border-border bg-surface p-5">
         <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Portfólio/currículo (PDF)</h2>
-        <PortfolioPdfUpload nomeAtual={perfil.portfolio_pdf_nome} elegivel={portfolioElegivel} />
+        <PortfolioPdfUpload nomeAtual={perfil.portfolio_pdf_nome} elegivel={limites.podePdf} />
+      </div>
+
+      <div className="mt-5 rounded-xl border border-border bg-surface p-5">
+        <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Vídeos de performance (Premium)</h2>
+        <VideoLinkManager
+          videos={perfil.videoLinks}
+          limite={limites.maxVideos}
+          onAdd={adicionarVideoLinkProfissional}
+          onRemove={removerVideoLinkProfissional}
+        />
       </div>
 
       <div className="mt-5 rounded-xl border border-border bg-surface p-5">

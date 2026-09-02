@@ -7,9 +7,15 @@ import { removerProfissionaisEmLote } from "@/lib/actions/admin";
 import ProfissionalRowActions from "@/components/admin/ProfissionalRowActions";
 import BulkToolbar from "@/components/admin/BulkToolbar";
 import { Badge } from "@/components/ui";
-import type { ProfissionalAdmin } from "@/lib/data/admin";
+import type { ProfissionalAdmin, PlanoParaSelect } from "@/lib/data/admin";
 
-export default function ProfissionaisAdminList({ profissionais }: { profissionais: ProfissionalAdmin[] }) {
+export default function ProfissionaisAdminList({
+  profissionais,
+  planos,
+}: {
+  profissionais: ProfissionalAdmin[];
+  planos: PlanoParaSelect[];
+}) {
   const router = useRouter();
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
   const [isPending, startTransition] = useTransition();
@@ -65,8 +71,11 @@ export default function ProfissionaisAdminList({ profissionais }: { profissionai
                       ⭐ {Number(p.nota_media).toFixed(1)} ({p.total_avaliacoes})
                     </span>
                   )}
-                  {p.premium_ativo && <Badge tone="ad">Premium</Badge>}
-                  {p.portfolio_liberado_gratis && !p.premium_ativo && <Badge tone="ok">Portfólio grátis (30 primeiros)</Badge>}
+                  {p.plano_atual_tipo === "profissional_premium" && <Badge tone="ad">Premium</Badge>}
+                  {p.plano_atual_tipo === "profissional_light" && <Badge tone="ok">Light</Badge>}
+                  {p.portfolio_liberado_gratis && p.plano_atual_tipo !== "profissional_premium" && p.plano_atual_tipo !== "profissional_light" && (
+                    <Badge tone="ok">Portfólio grátis (30 primeiros)</Badge>
+                  )}
                 </div>
                 <p className="mt-1 text-[12px] text-muted">
                   {p.email ?? "sem e-mail"} · {p.categorias.join(", ") || "sem categoria"} · desde{" "}
@@ -78,7 +87,8 @@ export default function ProfissionaisAdminList({ profissionais }: { profissionai
               profissionalId={p.usuario_id}
               nome={p.nome}
               aprovadaParaDestaque={p.aprovada_para_destaque}
-              premiumAtivo={p.premium_ativo}
+              planoAtualId={p.plano_atual_id}
+              planos={planos}
             />
           </div>
         ))}

@@ -11,6 +11,7 @@ import {
   avaliacaoGoogleSchema,
 } from "@/lib/validators";
 import { detectContactLeak } from "@/lib/contact-filter";
+import { getLimitesProfissional } from "@/lib/data/limites-profissional";
 
 // tamanho maximo aproximado de um avatar em base64 (~600KB) - protege o banco
 // de uploads gigantes, ja que a foto e guardada como data URI (sem storage
@@ -19,9 +20,6 @@ const MAX_AVATAR_DATA_URL_LENGTH = 800_000;
 // limite de fotos na galeria por enquanto (secao 4 do plano fala em limite por
 // plano - aqui aplicamos um teto simples, ate a logica por plano ser feita).
 const MAX_FOTOS_GALERIA = 12;
-// profissional_galeria.tipo='foto': secao 6 do schema fala em 1-2 fotos no modo
-// limitado; o pedido do usuario foi "area para incluir 4 fotos" no catalogo.
-const MAX_FOTOS_GALERIA_PROFISSIONAL = 4;
 // portfolio/curriculo em PDF - guardado como data URI (mesmo esquema de foto,
 // sem storage externo). ~6MB em base64 = ~4.5MB de arquivo real, o bastante
 // pra um PDF de portfolio sem pesar demais no banco.
@@ -130,38 +128,20 @@ export async function atualizarFotoProfissional(dataUrl: string): Promise<Upload
   return { ok: true };
 }
 
-export async function verificarElegibilidadePortfolio(profissionalId: string): Promise<boolean> {
-  const resultado = await queryOne<{ elegivel: boolean }>(
-    `SELECT (
-       (SELECT portfolio_liberado_gratis FROM profissionais WHERE usuario_id = $1)
-       OR EXISTS (
-         SELECT 1 FROM assinaturas a JOIN planos p ON p.id = a.plano_id
-         WHERE a.usuario_id = $1 AND p.tipo = 'profissional' AND a.status = 'ativa'
-           AND (a.fim_em IS NULL OR a.fim_em > now())
-       )
-     ) AS elegivel`,
-    [profissionalId]
-  );
-  return resultado?.elegivel ?? false;
-}
-
 /** Portfolio/curriculo em PDF - visivel so pra empresa autenticada visitando o
- * perfil (mesma regra do resto do catalogo de profissional). Liberado de
- * graca so pros 30 primeiros profissionais (portfolio_liberado_gratis,
- * marcado no cadastro); depois disso exige assinatura ativa do plano
- * 'profissional' (concedida manualmente pelo admin em /admin/profissionais
- * ate o Mercado Pago estar integrado - ver trocarPlanoManualAdmin). */
+ * perfil (mesma regra do resto do catalogo de profissional). Exige plano
+ * Light ou Premium (ou o bonus de lancamento ainda dentro de 1 ano) - ver
+ * lib/data/limites-profissional.ts. */
 export async function atualizarPortfolioPdfProfissional(dataUrl: string, nomeArquivo: string): Promise<UploadResult> {
   const session = await getSession();
   if (!session || session.tipo !== "profissional") return { error: "Sessão inválida." };
   if (!dataUrl.startsWith("data:application/pdf")) return { error: "Escolha um arquivo PDF." };
   if (dataUrl.length > MAX_PDF_DATA_URL_LENGTH) return { error: "PDF muito grande - escolha um arquivo menor." };
 
-  const elegivel = await verificarElegibilidadePortfolio(session.usuarioId);
-  if (!elegivel) {
+  const limites = await getLimitesProfissional(session.usuarioId);
+  if (!limites.podePdf) {
     return {
-      error:
-        "O portfólio em PDF é gratuito só pros 30 primeiros profissionais cadastrados. Fale com a gente pra contratar o plano premium.",
+      error: "O portfólio em PDF exige o plano Light ou Premium. Fale com a gente pra contratar.",
     };
   }
 
@@ -179,6 +159,57 @@ export async function removerPortfolioPdfProfissional(): Promise<UploadResult> {
   if (!session || session.tipo !== "profissional") return { error: "Sessão inválida." };
 
   await query(`UPDATE profissionais SET portfolio_pdf_url = NULL, portfolio_pdf_nome = NULL WHERE usuario_id = $1`, [
+    session.usuarioId,
+  ]);
+  revalidatePath("/perfil-profissional");
+  return { ok: true };
+}
+
+const VIDEO_URL_REGEX = /^https:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)[\w-]+/i;
+
+/** Link de video externo (YouTube), exclusivo do plano Premium - ate 3 links,
+ * embutidos no perfil publico pra empresa avaliar a performance do
+ * profissional sem precisar sair do site (ver componente VideoEmbed). */
+export async function adicionarVideoLinkProfissional(url: string): Promise<UploadResult> {
+  const session = await getSession();
+  if (!session || session.tipo !== "profissional") return { error: "Sessão inválida." };
+  if (!VIDEO_URL_REGEX.test(url.trim())) {
+    return { error: "Cole um link do YouTube (youtube.com/watch?v=... ou youtu.be/...)." };
+  }
+
+  const limites = await getLimitesProfissional(session.usuarioId);
+  if (limites.maxVideos === 0) {
+    return { error: "Links de vídeo são exclusivos do plano Premium. Fale com a gente pra contratar." };
+  }
+
+  const atual = await queryOne<{ count: string }>(
+    `SELECT count(*) FROM profissional_galeria WHERE profissional_id = $1 AND tipo = 'video_link'`,
+    [session.usuarioId]
+  );
+  if (Number(atual?.count ?? 0) >= limites.maxVideos) {
+    return { error: `Limite de ${limites.maxVideos} vídeos atingido.` };
+  }
+
+  const proximaOrdem = await queryOne<{ max: number | null }>(
+    `SELECT max(ordem) FROM profissional_galeria WHERE profissional_id = $1 AND tipo = 'video_link'`,
+    [session.usuarioId]
+  );
+  await query(`INSERT INTO profissional_galeria (profissional_id, tipo, url, ordem) VALUES ($1,'video_link',$2,$3)`, [
+    session.usuarioId,
+    url.trim(),
+    (proximaOrdem?.max ?? -1) + 1,
+  ]);
+
+  revalidatePath("/perfil-profissional");
+  return { ok: true };
+}
+
+export async function removerVideoLinkProfissional(id: string): Promise<UploadResult> {
+  const session = await getSession();
+  if (!session || session.tipo !== "profissional") return { error: "Sessão inválida." };
+
+  await query(`DELETE FROM profissional_galeria WHERE id = $1 AND profissional_id = $2 AND tipo = 'video_link'`, [
+    id,
     session.usuarioId,
   ]);
   revalidatePath("/perfil-profissional");
@@ -280,12 +311,15 @@ export async function adicionarFotoGaleriaProfissional(dataUrl: string): Promise
   if (!session || session.tipo !== "profissional") return { error: "Sessão inválida." };
   if (dataUrl.length > MAX_AVATAR_DATA_URL_LENGTH) return { error: "Imagem muito grande, escolha uma foto menor." };
 
+  const limites = await getLimitesProfissional(session.usuarioId);
   const atual = await queryOne<{ count: string }>(
     `SELECT count(*) FROM profissional_galeria WHERE profissional_id = $1 AND tipo = 'foto'`,
     [session.usuarioId]
   );
-  if (Number(atual?.count ?? 0) >= MAX_FOTOS_GALERIA_PROFISSIONAL) {
-    return { error: `Limite de ${MAX_FOTOS_GALERIA_PROFISSIONAL} fotos atingido.` };
+  if (Number(atual?.count ?? 0) >= limites.maxFotos) {
+    return {
+      error: `Limite de ${limites.maxFotos} fotos do plano ${limites.planoNome} atingido. Fale com a gente pra fazer upgrade.`,
+    };
   }
 
   const proximaOrdem = await queryOne<{ max: number | null }>(

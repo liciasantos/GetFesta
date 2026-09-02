@@ -2,18 +2,21 @@
 
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { alternarAprovadaDestaqueProfissional, alternarPremiumProfissional, removerProfissional } from "@/lib/actions/admin";
+import { alternarAprovadaDestaqueProfissional, removerProfissional, trocarPlanoProfissionalAdmin } from "@/lib/actions/admin";
+import type { PlanoParaSelect } from "@/lib/data/admin";
 
 export default function ProfissionalRowActions({
   profissionalId,
   nome,
   aprovadaParaDestaque,
-  premiumAtivo,
+  planoAtualId,
+  planos,
 }: {
   profissionalId: string;
   nome: string;
   aprovadaParaDestaque: boolean;
-  premiumAtivo: boolean;
+  planoAtualId: number | null;
+  planos: PlanoParaSelect[];
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -38,16 +41,24 @@ export default function ProfissionalRowActions({
       >
         {aprovadaParaDestaque ? "✓ Em destaque" : "Aprovar p/ destaque"}
       </button>
-      <button
-        type="button"
+      <select
+        value={planoAtualId ?? ""}
         disabled={isPending}
-        onClick={() => run(() => alternarPremiumProfissional(profissionalId))}
-        className={`rounded-md border px-2.5 py-1 text-[11.5px] font-bold disabled:opacity-50 ${
-          premiumAtivo ? "border-gold bg-gold-soft text-[#8a6300]" : "border-border-strong hover:bg-surface-alt"
-        }`}
+        onChange={(e) => {
+          const planoId = Number(e.target.value);
+          if (planoId) run(() => trocarPlanoProfissionalAdmin(profissionalId, planoId));
+        }}
+        className="rounded-md border border-border-strong px-2.5 py-1 text-[11.5px] font-bold disabled:opacity-50"
       >
-        {premiumAtivo ? "✓ Premium concedido" : "Conceder premium"}
-      </button>
+        <option value="" disabled>
+          Plano...
+        </option>
+        {planos.map((p) => (
+          <option key={p.id} value={p.id}>
+            {p.nome}
+          </option>
+        ))}
+      </select>
       <button
         type="button"
         disabled={isPending}

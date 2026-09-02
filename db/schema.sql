@@ -29,7 +29,10 @@ CREATE TYPE status_vinculo AS ENUM ('pendente', 'aceito', 'recusado', 'desvincul
 CREATE TYPE status_vaga AS ENUM ('aberta', 'preenchida', 'cancelada');
 CREATE TYPE status_candidatura AS ENUM ('candidatado', 'selecionado', 'recusado');
 CREATE TYPE status_assinatura AS ENUM ('trial', 'ativa', 'atrasada', 'cancelada', 'expirada');
-CREATE TYPE tipo_plano AS ENUM ('empresa_gratis', 'empresa_leads', 'empresa_completo', 'profissional');
+CREATE TYPE tipo_plano AS ENUM (
+    'empresa_gratis', 'empresa_leads', 'empresa_completo',
+    'profissional_gratis', 'profissional_light', 'profissional_premium'
+);
 CREATE TYPE status_disponibilidade AS ENUM ('disponivel', 'indisponivel', 'nao_informado');
 CREATE TYPE contexto_conversa AS ENUM ('pedido_cliente_empresa', 'empresa_profissional');
 CREATE TYPE tipo_denuncia_alvo AS ENUM ('usuario', 'pedido', 'avaliacao', 'mensagem');
@@ -245,10 +248,13 @@ CREATE TABLE profissionais (
     disponibilidade_status       status_disponibilidade NOT NULL DEFAULT 'nao_informado',
     consentimento_dados_em       TIMESTAMPTZ,           -- aceite do termo especifico LGPD
     aprovada_para_destaque       BOOLEAN NOT NULL DEFAULT FALSE, -- curadoria manual do admin (anuncio pago), mesmo padrao de empresas.aprovada_para_destaque
-    -- portfolio em PDF liberado de graca pros 30 primeiros profissionais
-    -- cadastrados (marcado uma unica vez no cadastro, nao recalculado depois -
-    -- ver registrarProfissional em lib/actions/auth.ts); a partir do 31o,
-    -- só quem tem assinatura ativa do plano 'profissional' pode subir PDF.
+    -- bonus de lancamento: pros 30 primeiros profissionais cadastrados
+    -- (marcado uma unica vez no cadastro, nao recalculado depois - ver
+    -- registrarProfissional em lib/actions/auth.ts), da direito aos limites
+    -- do plano Light (6 fotos + PDF) de graca por 1 ano a partir do cadastro
+    -- (ver lib/data/limites-profissional.ts:getLimitesProfissional). Depois
+    -- de 1 ano, ou pra quem nao pegou o bonus, precisa de assinatura ativa
+    -- dos planos 'profissional_light'/'profissional_premium'.
     portfolio_liberado_gratis    BOOLEAN NOT NULL DEFAULT FALSE,
     criado_em                    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -520,10 +526,12 @@ CREATE TABLE planos (
     -- (empresas.aprovada_para_destaque), como o resto do destaque pago.
     meses_destaque_incluidos SMALLINT NOT NULL DEFAULT 0,
     -- seed:
-    -- ('empresa_gratis',   'Grátis',   0.00,  0, limite 6,    0 meses destaque)
-    -- ('empresa_leads',    'Light',   25.90,  5, limite 30,   0 meses destaque)
-    -- ('empresa_completo', 'Completo',60.00,  5, sem limite,  3 meses destaque)
-    -- ('profissional',     'Profissional', 2.50, 0, sem limite, 0)
+    -- ('empresa_gratis',        'Grátis',   0.00,  0, limite 6,    0 meses destaque)
+    -- ('empresa_leads',         'Light',   25.90,  5, limite 30,   0 meses destaque)
+    -- ('empresa_completo',      'Completo',60.00,  5, sem limite,  3 meses destaque)
+    -- ('profissional_gratis',   'Grátis',   0.00,  0, sem limite, 0) -- 4 fotos, sem PDF/video/whatsapp (ver getLimitesProfissional)
+    -- ('profissional_light',    'Light',    9.90,  0, sem limite, 0) -- 6 fotos + PDF
+    -- ('profissional_premium',  'Premium', 18.00,  0, sem limite, 0) -- 10 fotos + PDF + 3 videos + contato via whatsapp com empresa
     ativo             BOOLEAN NOT NULL DEFAULT TRUE
 );
 

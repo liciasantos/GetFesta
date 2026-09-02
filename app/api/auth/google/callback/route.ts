@@ -40,17 +40,16 @@ export async function GET(request: NextRequest) {
   if (tipoNovaConta === "cliente") {
     await query(`INSERT INTO clientes (usuario_id, nome) VALUES ($1, $2)`, [usuario.id, perfil.nome]);
   } else {
-    await query(`INSERT INTO profissionais (usuario_id, nome, consentimento_dados_em) VALUES ($1, $2, now())`, [
-      usuario.id,
-      perfil.nome,
-    ]);
-    const planoProfissional = await queryOne<{ id: number }>(`SELECT id FROM planos WHERE tipo = 'profissional' LIMIT 1`);
-    if (planoProfissional) {
-      await query(`INSERT INTO assinaturas (usuario_id, plano_id, status) VALUES ($1, $2, 'trial')`, [
-        usuario.id,
-        planoProfissional.id,
-      ]);
-    }
+    // Mesma regra de bonus de lancamento do cadastro por email/senha (ver
+    // lib/actions/auth.ts registrarProfissional): os 30 primeiros ganham o
+    // bonus Light (6 fotos + PDF) por 1 ano - calculado dinamicamente em
+    // lib/data/limites-profissional.ts, nao precisa de assinatura aqui.
+    const totalProfissionais = await queryOne<{ total: string }>(`SELECT count(*) AS total FROM profissionais`);
+    const portfolioLiberadoGratis = Number(totalProfissionais?.total ?? 0) < 30;
+    await query(
+      `INSERT INTO profissionais (usuario_id, nome, consentimento_dados_em, portfolio_liberado_gratis) VALUES ($1, $2, now(), $3)`,
+      [usuario.id, perfil.nome, portfolioLiberadoGratis]
+    );
   }
 
   await createSession({ usuarioId: usuario.id, tipo: tipoNovaConta });

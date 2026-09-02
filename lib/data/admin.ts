@@ -83,7 +83,9 @@ export type ProfissionalAdmin = {
   categorias: string[];
   aprovada_para_destaque: boolean;
   portfolio_liberado_gratis: boolean;
-  premium_ativo: boolean;
+  plano_atual_id: number | null;
+  plano_atual_tipo: string | null;
+  plano_atual_nome: string | null;
   nota_media: number | null;
   total_avaliacoes: number;
   criado_em: string;
@@ -93,11 +95,7 @@ export async function listProfissionaisAdmin(): Promise<ProfissionalAdmin[]> {
   return query<ProfissionalAdmin>(
     `SELECT
        p.usuario_id, p.slug, p.nome, u.email, p.aprovada_para_destaque, p.portfolio_liberado_gratis, p.criado_em,
-       EXISTS (
-         SELECT 1 FROM assinaturas a JOIN planos pl ON pl.id = a.plano_id
-         WHERE a.usuario_id = p.usuario_id AND pl.tipo = 'profissional' AND a.status = 'ativa'
-           AND (a.fim_em IS NULL OR a.fim_em > now())
-       ) AS premium_ativo,
+       plano.id AS plano_atual_id, plano.tipo AS plano_atual_tipo, plano.nome AS plano_atual_nome,
        COALESCE(
          (SELECT array_agg(cp.nome ORDER BY cp.nome) FROM profissional_categorias pc JOIN categorias_profissionais cp ON cp.id = pc.categoria_id WHERE pc.profissional_id = p.usuario_id),
          ARRAY[]::text[]
@@ -106,6 +104,12 @@ export async function listProfissionaisAdmin(): Promise<ProfissionalAdmin[]> {
        (SELECT COUNT(*)::int FROM avaliacoes_profissional ap WHERE ap.profissional_id = p.usuario_id) AS total_avaliacoes
      FROM profissionais p
      JOIN usuarios u ON u.id = p.usuario_id
+     LEFT JOIN LATERAL (
+       SELECT a.plano_id FROM assinaturas a
+       WHERE a.usuario_id = p.usuario_id AND a.status = 'ativa' AND (a.fim_em IS NULL OR a.fim_em > now())
+       ORDER BY a.criado_em DESC LIMIT 1
+     ) atual ON true
+     LEFT JOIN planos plano ON plano.id = atual.plano_id
      ORDER BY u.criado_em DESC`
   );
 }
@@ -156,6 +160,12 @@ export type PlanoParaSelect = { id: number; nome: string; valor_mensal: string; 
 export async function listPlanosEmpresaParaSelect(): Promise<PlanoParaSelect[]> {
   return query<PlanoParaSelect>(
     `SELECT id, nome, valor_mensal, tipo FROM planos WHERE tipo::text LIKE 'empresa_%' ORDER BY valor_mensal ASC`
+  );
+}
+
+export async function listPlanosProfissionalParaSelect(): Promise<PlanoParaSelect[]> {
+  return query<PlanoParaSelect>(
+    `SELECT id, nome, valor_mensal, tipo FROM planos WHERE tipo::text LIKE 'profissional_%' ORDER BY valor_mensal ASC`
   );
 }
 

@@ -33,8 +33,9 @@ export default async function ProfissionaisPage() {
         <div className="mx-auto flex max-w-4xl flex-col items-center gap-2 text-center">
           <Badge tone="ad">✨ Vantagem para os pioneiros</Badge>
           <p className="max-w-2xl text-[14.5px] font-semibold leading-relaxed text-[#5c4a10]">
-            Seja um dos 30 primeiros profissionais a criar um perfil e liberamos a função de anexar seu portfólio em
-            PDF permanentemente e de graça — um recurso exclusivo das contas premium.
+            Seja um dos 30 primeiros profissionais a criar um perfil e ganhamos de graça, por 1 ano, os benefícios do
+            plano Light: 6 fotos no catálogo e portfólio em PDF — recursos normalmente exclusivos de quem assina um
+            plano pago.
           </p>
         </div>
       </section>

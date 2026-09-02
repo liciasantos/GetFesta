@@ -213,7 +213,9 @@ async function main() {
     ["empresa_gratis", "Grátis", 0.0, 0, 6, 0],
     ["empresa_leads", "Light", 25.9, 5, 30, 0],
     ["empresa_completo", "Completo", 60.0, 5, null, 3],
-    ["profissional", "Profissional", 2.5, 0, null, 0],
+    ["profissional_gratis", "Grátis", 0.0, 0, null, 0],
+    ["profissional_light", "Light", 9.9, 0, null, 0],
+    ["profissional_premium", "Premium", 18.0, 0, null, 0],
   ] as const) {
     const { rows } = await pool.query<{ id: number }>(
       `INSERT INTO planos (tipo, nome, valor_mensal, desconto_anual_pct, limite_orcamentos_mes, meses_destaque_incluidos)

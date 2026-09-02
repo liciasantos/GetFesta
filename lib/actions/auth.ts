@@ -248,9 +248,10 @@ export async function registrarProfissional(_prevState: ActionState, formData: F
   if (!usuario) return { error: "Não foi possível criar a conta, tente novamente" };
 
   const slug = await gerarSlugUnicoProfissional(parsed.data.nome);
-  // portfolio em PDF liberado de graca so pros 30 primeiros profissionais -
-  // marcado uma unica vez aqui no cadastro, nunca recalculado depois (ver
-  // coluna profissional_liberado_gratis no schema).
+  // bonus de lancamento pros 30 primeiros profissionais - marcado uma unica
+  // vez aqui no cadastro, nunca recalculado depois. Da direito aos limites
+  // do plano Light por 1 ano a partir do cadastro (ver
+  // lib/data/limites-profissional.ts:getLimitesProfissional).
   const totalProfissionais = await queryOne<{ total: string }>(`SELECT count(*) AS total FROM profissionais`);
   const portfolioLiberadoGratis = Number(totalProfissionais?.total ?? 0) < 30;
   await query(
@@ -263,15 +264,6 @@ export async function registrarProfissional(_prevState: ActionState, formData: F
     await query(`INSERT INTO profissional_categorias (profissional_id, categoria_id) VALUES ($1,$2)`, [
       usuario.id,
       categoriaId,
-    ]);
-  }
-
-  // Lancamento: acesso pleno gratuito por tempo limitado (secao 4 do plano).
-  const planoProfissional = await queryOne<{ id: number }>(`SELECT id FROM planos WHERE tipo = 'profissional' LIMIT 1`);
-  if (planoProfissional) {
-    await query(`INSERT INTO assinaturas (usuario_id, plano_id, status) VALUES ($1,$2,'trial')`, [
-      usuario.id,
-      planoProfissional.id,
     ]);
   }
 

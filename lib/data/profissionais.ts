@@ -31,6 +31,7 @@ export type PerfilProfissional = {
   portfolio_liberado_gratis: boolean;
   categorias: { id: number; nome: string }[];
   galeria: { id: string; url: string }[];
+  videoLinks: { id: string; url: string }[];
 };
 
 /** Aceita tanto o slug (URL bonita, /profissional/nome-sobrenome) quanto o
@@ -75,7 +76,7 @@ export async function getMeuPerfilProfissional(idOuSlug: string): Promise<Perfil
   if (!base) return null;
   const usuarioId = base.usuario_id;
 
-  const [categorias, galeria] = await Promise.all([
+  const [categorias, galeria, videoLinks] = await Promise.all([
     query<{ id: number; nome: string }>(
       `SELECT cp.id, cp.nome
        FROM profissional_categorias pc
@@ -88,9 +89,13 @@ export async function getMeuPerfilProfissional(idOuSlug: string): Promise<Perfil
       `SELECT id, url FROM profissional_galeria WHERE profissional_id = $1 AND tipo = 'foto' ORDER BY ordem ASC`,
       [usuarioId]
     ),
+    query<{ id: string; url: string }>(
+      `SELECT id, url FROM profissional_galeria WHERE profissional_id = $1 AND tipo = 'video_link' ORDER BY ordem ASC`,
+      [usuarioId]
+    ),
   ]);
 
-  return { ...base, categorias, galeria };
+  return { ...base, categorias, galeria, videoLinks };
 }
 
 /** Telefone fica em usuarios, não em profissionais - só usado quando uma

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { contatoLiberadoParaCliente, getEmpresaById, registrarVisualizacaoPerfil } from "@/lib/data/empresas";
+import { getLimitesProfissional } from "@/lib/data/limites-profissional";
 import { Badge, Chip, PlaceholderImg } from "@/components/ui";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 import WhatsAppButton from "@/components/WhatsAppButton";
@@ -17,6 +18,8 @@ export default async function EmpresaPerfilPage({ params }: { params: Promise<{ 
   const session = await getSession();
   const contatoLiberado =
     session?.tipo === "cliente" ? await contatoLiberadoParaCliente(empresa.usuario_id, session.usuarioId) : false;
+  const limitesProfissional = session?.tipo === "profissional" ? await getLimitesProfissional(session.usuarioId) : null;
+  const podeContatarComoProfissional = limitesProfissional?.podeContatarEmpresa ?? false;
 
   // Efeito colateral: registra a visualizacao (KPI real do painel do fornecedor).
   await registrarVisualizacaoPerfil(empresa.usuario_id);
@@ -203,7 +206,7 @@ export default async function EmpresaPerfilPage({ params }: { params: Promise<{ 
 
           <section>
             <h4 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Contato</h4>
-            {contatoLiberado ? (
+            {contatoLiberado || podeContatarComoProfissional ? (
               <div className="flex flex-col gap-2 rounded-lg border border-ok bg-ok-soft p-3">
                 <div className="text-[12.5px] font-bold text-ok">
                   {empresa.instagram && <div>Instagram: {empresa.instagram}</div>}
@@ -212,6 +215,13 @@ export default async function EmpresaPerfilPage({ params }: { params: Promise<{ 
                 {empresa.telefone_contato && (
                   <WhatsAppButton empresaId={empresa.usuario_id} href={buildWhatsAppLink(empresa.telefone_contato)} />
                 )}
+              </div>
+            ) : session?.tipo === "profissional" ? (
+              <div className="rounded-lg border border-dashed border-border-strong bg-[#efece5] p-3.5 text-center text-[12px] text-muted">
+                🔒 Entrar em contato direto com empresas é exclusivo do plano Premium (R$18/mês).{" "}
+                <Link href="/perfil-profissional" className="font-bold text-accent-dark underline">
+                  Ver meu plano
+                </Link>
               </div>
             ) : (
               <div className="rounded-lg border border-dashed border-border-strong bg-[#efece5] p-3.5 text-center text-[12px] text-muted">

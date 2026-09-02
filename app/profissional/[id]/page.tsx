@@ -7,6 +7,7 @@ import { buildWhatsAppLink } from "@/lib/whatsapp";
 import { Badge } from "@/components/ui";
 import GaleriaLightbox from "@/components/GaleriaLightbox";
 import PortfolioPdfViewer from "@/components/PortfolioPdfViewer";
+import VideoGallery from "@/components/VideoGallery";
 
 export const dynamic = "force-dynamic";
 
@@ -106,6 +107,13 @@ export default async function PerfilProfissionalParaEmpresaPage({ params }: { pa
         <div className="mt-5 rounded-xl border border-border bg-surface p-5">
           <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Fotos</h2>
           <GaleriaLightbox fotos={perfil.galeria} />
+        </div>
+      )}
+
+      {perfil.videoLinks.length > 0 && (
+        <div className="mt-5 rounded-xl border border-border bg-surface p-5">
+          <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Vídeos de performance</h2>
+          <VideoGallery videos={perfil.videoLinks} />
         </div>
       )}
 
