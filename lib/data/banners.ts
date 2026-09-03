@@ -40,6 +40,22 @@ export type HeroBanner = {
 const HERO_BANNER_CAMPOS =
   "id, titulo, texto, botao_label, botao_url, botao2_label, botao2_url, imagem_fundo, imagem_fundo_mobile";
 
+/** Troca o data URI guardado no banco (upload do admin) pelo link do endpoint
+ * que serve a imagem de verdade (ver app/api/hero-banner/[id]/imagem/[variant]/route.ts)
+ * - assim o navegador baixa como arquivo separado e cacheavel, e o next/image
+ * consegue otimizar, em vez de vir tudo embutido no HTML da home. Banners
+ * mais antigos usam um caminho estatico direto (ex.: /banner_x.webp) - esses
+ * ja sao um arquivo de verdade e ficam como estao. */
+function comLinksDeImagem(row: HeroBanner): HeroBanner {
+  return {
+    ...row,
+    imagem_fundo: row.imagem_fundo.startsWith("data:") ? `/api/hero-banner/${row.id}/imagem/desktop` : row.imagem_fundo,
+    imagem_fundo_mobile: row.imagem_fundo_mobile?.startsWith("data:")
+      ? `/api/hero-banner/${row.id}/imagem/mobile`
+      : row.imagem_fundo_mobile,
+  };
+}
+
 /** Banner principal (topo da home) - 100% administrado, independente de
  * empresa (ver /admin/hero e banners_hero). `regiaoVisitante` vem da
  * geolocalizacao por IP (header x-vercel-ip-country-region, so existe em
@@ -52,11 +68,12 @@ export async function listHeroBannersAtivos(regiaoVisitante?: string | null): Pr
       `SELECT ${HERO_BANNER_CAMPOS} FROM banners_hero WHERE ativo = true AND regiao_alvo = $1 ORDER BY ordem ASC, id ASC`,
       [regiaoVisitante]
     );
-    if (doEstado.length > 0) return doEstado;
+    if (doEstado.length > 0) return doEstado.map(comLinksDeImagem);
   }
-  return query<HeroBanner>(
+  const rows = await query<HeroBanner>(
     `SELECT ${HERO_BANNER_CAMPOS} FROM banners_hero
      WHERE ativo = true AND (regiao_alvo = 'RJ' OR regiao_alvo IS NULL)
      ORDER BY ordem ASC, id ASC`
   );
+  return rows.map(comLinksDeImagem);
 }
