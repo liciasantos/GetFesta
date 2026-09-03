@@ -110,7 +110,7 @@ export default async function PerfilProfissionalPage() {
       </div>
 
       <h2 className="mb-2 mt-8 text-xs font-bold uppercase tracking-wide text-muted-2">
-        Vagas compatíveis com suas funções e cidade
+        Vagas compatíveis com suas funções e estado
       </h2>
       <div className="overflow-hidden rounded-xl border border-border">
         {vagas.length === 0 && <p className="p-4 text-[12.5px] text-muted">Nenhuma vaga compatível por enquanto.</p>}

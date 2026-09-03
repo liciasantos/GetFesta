@@ -15,12 +15,14 @@ export type VagaFeedItem = {
   sexo_desejado: string;
 };
 
-/** Vagas em aberto que combinam com as funções e a cidade do profissional -
+/** Vagas em aberto que combinam com as funções e o estado do profissional -
  * mesmo padrão de "lead compatível" já usado pra pedidos no painel da empresa
  * (lib/data/pedidos.ts:listPedidosCompativeis), só que na direção inversa.
- * sexo_desejado='indiferente' aparece pra todo mundo; senão, só combina se
- * bater com o sexo do profissional (quem é nao_binario/prefiro_nao_informar
- * ou nao informou so ve vagas indiferentes). */
+ * Compara por estado (nao cidade) pra nao esconder vagas de cidades vizinhas
+ * na mesma regiao metropolitana (ex.: profissional de Nilopolis via vaga na
+ * capital do RJ). sexo_desejado='indiferente' aparece pra todo mundo; senão,
+ * só combina se bater com o sexo do profissional (quem é
+ * nao_binario/prefiro_nao_informar ou nao informou so ve vagas indiferentes). */
 export async function listVagasCompativeis(profissionalId: string): Promise<(VagaFeedItem & { ja_candidatado: boolean })[]> {
   return query<VagaFeedItem & { ja_candidatado: boolean }>(
     `SELECT
@@ -35,8 +37,9 @@ export async function listVagasCompativeis(profissionalId: string): Promise<(Vag
      JOIN empresas e ON e.usuario_id = v.empresa_id
      JOIN profissionais p ON p.usuario_id = $1
      LEFT JOIN bairros pb ON pb.id = p.bairro_id
+     LEFT JOIN cidades pci ON pci.id = pb.cidade_id
      WHERE v.status = 'aberta'
-       AND pb.cidade_id = v.cidade_id
+       AND pci.estado = ci.estado
        AND (v.sexo_desejado = 'indiferente' OR v.sexo_desejado = p.sexo)
        AND EXISTS (
          SELECT 1 FROM profissional_categorias pc WHERE pc.profissional_id = $1 AND pc.categoria_id = v.categoria_profissional_id

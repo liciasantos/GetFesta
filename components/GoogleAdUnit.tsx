@@ -18,9 +18,11 @@ export default function GoogleAdUnit({ clientId, slotId }: { clientId: string; s
   }, []);
 
   return (
+    // min-height reserva o espaco antes do Google preencher o anuncio, pra
+    // nao empurrar o resto da pagina quando o iframe aparecer (CLS).
     <ins
       className="adsbygoogle"
-      style={{ display: "block" }}
+      style={{ display: "block", minHeight: 100 }}
       data-ad-client={clientId}
       data-ad-slot={slotId}
       data-ad-format="auto"
