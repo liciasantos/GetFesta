@@ -10,10 +10,12 @@ import {
   criarAdminSchema,
   criarBannerHeroSchema,
   criarBannerSchema,
+  criarEmpresaManualSchema,
   criarPlanoPeriodoSchema,
   marcarAssinaturaPagaSchema,
   trocarPlanoManualSchema,
 } from "@/lib/validators";
+import { gerarSlugUnicoEmpresa } from "@/lib/slug";
 
 async function requireAdmin() {
   const session = await getSession();
@@ -548,6 +550,79 @@ export async function criarPlanoPeriodo(_prevState: BannerActionState, formData:
 
   revalidatePath("/admin/planos");
   redirect("/admin/planos");
+}
+
+/** Admin cadastra uma empresa manualmente (ex.: fechou por telefone/pessoalmente
+ * e quer deixar o perfil pronto) - mesmo fluxo de dados de registrarEmpresa
+ * (lib/actions/auth.ts), só que sem os checkboxes de aceite (quem preenche
+ * é o admin, nao a empresa) e sem criar sessao pro admin virar a empresa. A
+ * empresa entra depois com o e-mail/senha que o admin definir aqui. Regra de
+ * e-mail/CNPJ únicos continua igual pra qualquer cadastro, sem excecao. */
+export async function criarEmpresaManual(_prevState: BannerActionState, formData: FormData): Promise<BannerActionState> {
+  const session = await requireAdmin();
+  if (!session) return { error: "Sessão inválida." };
+
+  const parsed = criarEmpresaManualSchema.safeParse({
+    nomeFantasia: formData.get("nomeFantasia"),
+    razaoSocial: formData.get("razaoSocial"),
+    cnpj: formData.get("cnpj"),
+    email: formData.get("email"),
+    telefoneContato: formData.get("telefoneContato"),
+    instagram: formData.get("instagram") || undefined,
+    senha: formData.get("senha"),
+    cidadeId: formData.get("cidadeId"),
+    categoriaIds: formData.getAll("categoriaIds"),
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
+
+  const cnpjLimpo = parsed.data.cnpj.replace(/\D/g, "");
+  const existente = await queryOne(
+    `SELECT u.id FROM usuarios u WHERE u.email = $1
+     UNION SELECT e.usuario_id FROM empresas e WHERE regexp_replace(e.cnpj, '\\D', '', 'g') = $2`,
+    [parsed.data.email, cnpjLimpo]
+  );
+  if (existente) return { error: "Já existe uma conta com esse e-mail ou CNPJ." };
+
+  const senhaHash = await hashPassword(parsed.data.senha);
+  const usuario = await queryOne<{ id: string }>(
+    `INSERT INTO usuarios (tipo, email, senha_hash, telefone) VALUES ('empresa', $1, $2, $3) RETURNING id`,
+    [parsed.data.email, senhaHash, parsed.data.telefoneContato]
+  );
+  if (!usuario) return { error: "Não foi possível criar a conta, tente novamente." };
+
+  const slug = await gerarSlugUnicoEmpresa(parsed.data.nomeFantasia);
+  await query(
+    `INSERT INTO empresas (usuario_id, slug, razao_social, nome_fantasia, cnpj, instagram, telefone_contato)
+     VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+    [
+      usuario.id,
+      slug,
+      parsed.data.razaoSocial,
+      parsed.data.nomeFantasia,
+      parsed.data.cnpj,
+      parsed.data.instagram ?? null,
+      parsed.data.telefoneContato,
+    ]
+  );
+
+  for (const categoriaId of parsed.data.categoriaIds) {
+    await query(`INSERT INTO empresa_categorias (empresa_id, categoria_id) VALUES ($1,$2)`, [usuario.id, categoriaId]);
+  }
+  await query(`INSERT INTO empresa_areas_atuacao (empresa_id, cidade_id, bairro_id) VALUES ($1,$2,NULL)`, [
+    usuario.id,
+    parsed.data.cidadeId,
+  ]);
+
+  const planoGratis = await queryOne<{ id: number }>(`SELECT id FROM planos WHERE tipo = 'empresa_gratis' LIMIT 1`);
+  if (planoGratis) {
+    await query(`INSERT INTO assinaturas (usuario_id, plano_id, status) VALUES ($1,$2,'ativa')`, [
+      usuario.id,
+      planoGratis.id,
+    ]);
+  }
+
+  revalidatePath("/admin/empresas");
+  redirect("/admin/empresas");
 }
 
 export async function alternarPlanoPeriodoAtivo(periodoId: number): Promise<SimpleActionResult> {

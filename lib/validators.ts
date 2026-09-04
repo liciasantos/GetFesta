@@ -36,6 +36,24 @@ export const registrarEmpresaSchema = z.object({
   aceitouLgpdImagens: aceitouLgpdImagensSchema,
 });
 
+/** Mesmo shape de registrarEmpresaSchema, sem os checkboxes de aceite - quem
+ * está preenchendo é o admin em nome da empresa (ver /admin/empresas/nova),
+ * não a própria empresa. */
+export const criarEmpresaManualSchema = z.object({
+  nomeFantasia: z.string().min(2, "Informe o nome fantasia"),
+  razaoSocial: z.string().min(2, "Informe a razão social"),
+  cnpj: z
+    .string()
+    .min(14, "CNPJ inválido")
+    .refine((v) => v.replace(/\D/g, "").length === 14, "CNPJ deve ter 14 dígitos"),
+  email: z.string().email("E-mail inválido"),
+  telefoneContato: z.string().min(10, "Telefone inválido"),
+  instagram: z.string().optional(),
+  senha: z.string().min(6, "Mínimo de 6 caracteres"),
+  cidadeId: z.coerce.number({ message: "Selecione a cidade de atuação" }),
+  categoriaIds: z.array(z.coerce.number()).min(1, "Selecione ao menos uma categoria"),
+});
+
 export const registrarProfissionalSchema = z.object({
   nome: z.string().min(2, "Informe seu nome"),
   email: z.string().email("E-mail inválido"),

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { listEmpresasAdmin } from "@/lib/data/admin";
-import { Badge } from "@/components/ui";
+import { Badge, buttonClass } from "@/components/ui";
 import EmpresaRowActions from "@/components/admin/EmpresaRowActions";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +19,12 @@ export default async function AdminEmpresasPage() {
         ← Painel administrativo
       </Link>
 
-      <h1 className="mb-1 mt-3 text-xl font-extrabold">Empresas cadastradas</h1>
+      <div className="mb-1 mt-3 flex flex-wrap items-center justify-between gap-2">
+        <h1 className="text-xl font-extrabold">Empresas cadastradas</h1>
+        <Link href="/admin/empresas/nova" className={buttonClass("primary", "sm")}>
+          + Cadastrar empresa
+        </Link>
+      </div>
       <p className="text-sm text-muted">
         Dê o selo de verificado depois de avaliar a empresa, aprove pra entrar no ranking de destaque, ou remova uma
         conta problemática.
