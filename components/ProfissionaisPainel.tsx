@@ -7,21 +7,28 @@ import type { ProfissionalBusca, FiltrosBuscaProfissional } from "@/lib/data/pro
 import type { Cidade } from "@/lib/data/geo";
 import type { CategoriaProfissional } from "@/lib/data/profissionais";
 
-const POR_PAGINA = 5;
-
 const SEXO_OPCOES = [
   { value: "feminino", label: "Feminino" },
   { value: "masculino", label: "Masculino" },
 ];
 
-export default function BuscarProfissionaisPainel({
+/** Grade paginada de profissionais, reaproveitada em dois lugares de
+ * /painel/vagas: "Buscar profissionais" (com filtros, 20 por página = 5
+ * colunas x 4 linhas) e "Profissionais em destaque" (sem filtros, 5 por
+ * página = 1 linha) - os dois embaralhados a cada carregamento (ver
+ * listProfissionaisCompativeis). */
+export default function ProfissionaisPainel({
   inicial,
-  cidades,
-  categorias,
+  cidades = [],
+  categorias = [],
+  porPagina = 20,
+  mostrarFiltros = true,
 }: {
   inicial: ProfissionalBusca[];
-  cidades: Cidade[];
-  categorias: CategoriaProfissional[];
+  cidades?: Cidade[];
+  categorias?: CategoriaProfissional[];
+  porPagina?: number;
+  mostrarFiltros?: boolean;
 }) {
   const [lista, setLista] = useState(inicial);
   const [pagina, setPagina] = useState(0);
@@ -60,56 +67,58 @@ export default function BuscarProfissionaisPainel({
     });
   }
 
-  const totalPaginas = Math.max(1, Math.ceil(lista.length / POR_PAGINA));
-  const visiveis = lista.slice(pagina * POR_PAGINA, pagina * POR_PAGINA + POR_PAGINA);
+  const totalPaginas = Math.max(1, Math.ceil(lista.length / porPagina));
+  const visiveis = lista.slice(pagina * porPagina, pagina * porPagina + porPagina);
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap gap-2.5">
-        <select
-          value={cidadeId}
-          onChange={(e) => aplicarFiltros({ cidadeId: e.target.value })}
-          disabled={isPending}
-          className="rounded-md border border-border px-3 py-2 text-[12.5px] disabled:opacity-50"
-        >
-          <option value="">Todas as localizações</option>
-          {[...cidadesPorEstado.entries()].map(([estado, cidadesDoEstado]) => (
-            <optgroup key={estado} label={estado}>
-              {cidadesDoEstado.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.nome}
-                </option>
-              ))}
-            </optgroup>
-          ))}
-        </select>
-        <select
-          value={sexo}
-          onChange={(e) => aplicarFiltros({ sexo: e.target.value })}
-          disabled={isPending}
-          className="rounded-md border border-border px-3 py-2 text-[12.5px] disabled:opacity-50"
-        >
-          <option value="">Feminino ou masculino</option>
-          {SEXO_OPCOES.map((op) => (
-            <option key={op.value} value={op.value}>
-              {op.label}
-            </option>
-          ))}
-        </select>
-        <select
-          value={categoriaId}
-          onChange={(e) => aplicarFiltros({ categoriaId: e.target.value })}
-          disabled={isPending}
-          className="rounded-md border border-border px-3 py-2 text-[12.5px] disabled:opacity-50"
-        >
-          <option value="">Todas as funções</option>
-          {categorias.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.nome}
-            </option>
-          ))}
-        </select>
-      </div>
+      {mostrarFiltros && (
+        <div className="mb-4 flex flex-wrap gap-2.5">
+          <select
+            value={cidadeId}
+            onChange={(e) => aplicarFiltros({ cidadeId: e.target.value })}
+            disabled={isPending}
+            className="rounded-md border border-border px-3 py-2 text-[12.5px] disabled:opacity-50"
+          >
+            <option value="">Todas as localizações</option>
+            {[...cidadesPorEstado.entries()].map(([estado, cidadesDoEstado]) => (
+              <optgroup key={estado} label={estado}>
+                {cidadesDoEstado.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nome}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+          <select
+            value={sexo}
+            onChange={(e) => aplicarFiltros({ sexo: e.target.value })}
+            disabled={isPending}
+            className="rounded-md border border-border px-3 py-2 text-[12.5px] disabled:opacity-50"
+          >
+            <option value="">Feminino ou masculino</option>
+            {SEXO_OPCOES.map((op) => (
+              <option key={op.value} value={op.value}>
+                {op.label}
+              </option>
+            ))}
+          </select>
+          <select
+            value={categoriaId}
+            onChange={(e) => aplicarFiltros({ categoriaId: e.target.value })}
+            disabled={isPending}
+            className="rounded-md border border-border px-3 py-2 text-[12.5px] disabled:opacity-50"
+          >
+            <option value="">Todas as funções</option>
+            {categorias.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nome}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div className={`grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5 ${isPending ? "opacity-50" : ""}`}>
         {visiveis.map((p) => (
@@ -120,7 +129,7 @@ export default function BuscarProfissionaisPainel({
         )}
       </div>
 
-      {lista.length > POR_PAGINA && (
+      {lista.length > porPagina && (
         <div className="mt-4 flex items-center justify-center gap-3">
           <button
             type="button"

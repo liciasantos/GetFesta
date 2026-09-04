@@ -6,8 +6,7 @@ import { listProfissionaisCompativeis, listCategoriasProfissionais } from "@/lib
 import { listCidades } from "@/lib/data/geo";
 import { Badge, buttonClass } from "@/components/ui";
 import { formatCurrencyBRL, formatDateBR } from "@/lib/format";
-import ProfissionalCard from "@/components/ProfissionalCard";
-import BuscarProfissionaisPainel from "@/components/BuscarProfissionaisPainel";
+import ProfissionaisPainel from "@/components/ProfissionaisPainel";
 
 export const dynamic = "force-dynamic";
 
@@ -74,14 +73,11 @@ export default async function MinhasVagasPage() {
 
       <h2 className="mb-1 mt-10 text-lg font-extrabold">Profissionais em destaque</h2>
       <p className="mb-3 text-[12.5px] text-muted">Posição de anúncio — aparecem aqui por curadoria do time GetFesta.</p>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-        {profissionaisDestaque.map((p) => (
-          <ProfissionalCard key={p.usuario_id} p={p} />
-        ))}
-        {profissionaisDestaque.length === 0 && (
-          <p className="col-span-full text-sm text-muted">Nenhum profissional em destaque no momento.</p>
-        )}
-      </div>
+      {profissionaisDestaque.length === 0 ? (
+        <p className="text-sm text-muted">Nenhum profissional em destaque no momento.</p>
+      ) : (
+        <ProfissionaisPainel inicial={profissionaisDestaque} porPagina={5} mostrarFiltros={false} />
+      )}
 
       <h2 className="mb-1 mt-10 text-lg font-extrabold">Buscar profissionais</h2>
       <p className="mb-3 text-[12.5px] text-muted">
@@ -90,7 +86,12 @@ export default async function MinhasVagasPage() {
       {profissionaisBusca.length === 0 ? (
         <p className="text-sm text-muted">Nenhum profissional compatível com as categorias da sua empresa ainda.</p>
       ) : (
-        <BuscarProfissionaisPainel inicial={profissionaisBusca} cidades={cidades} categorias={categoriasProfissionais} />
+        <ProfissionaisPainel
+          inicial={profissionaisBusca}
+          cidades={cidades}
+          categorias={categoriasProfissionais}
+          porPagina={20}
+        />
       )}
     </div>
   );

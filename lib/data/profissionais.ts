@@ -133,12 +133,12 @@ export type FiltrosBuscaProfissional = {
  * compatível com pelo menos uma das categorias de serviço da empresa (ex.:
  * Buffet), via categoria_profissional_compatibilidade (ver /admin, mapa
  * seedado em db/backfill... n/a, seed direto na migração).
- * apenasDestaque=true filtra só quem pagou pra aparecer em destaque, mantém
- * ordenado por nota média (curadoria paga, melhor avaliado primeiro).
- * apenasDestaque=false ("Buscar profissionais") aceita filtros de
- * cidade/sexo/categoria e embaralha a ordem a cada chamada, pra nao sempre
- * mostrar os mesmos mais bem avaliados primeiro - a lista é paginada 5 a 5
- * no cliente (ver BuscarProfissionaisPainel.tsx). */
+ * apenasDestaque=true filtra só quem pagou pra aparecer em destaque.
+ * Sempre embaralha a ordem a cada chamada (pra nao sempre mostrar os mesmos
+ * primeiro) - a lista é paginada no cliente (ver ProfissionaisPainel.tsx),
+ * 5 por vez em "Profissionais em destaque" e 20 por vez (5 colunas x 4
+ * linhas) em "Buscar profissionais", que também aceita os filtros de
+ * cidade/sexo/categoria. */
 export async function listProfissionaisCompativeis(
   empresaId: string,
   apenasDestaque = false,
@@ -191,7 +191,7 @@ export async function listProfissionaisCompativeis(
        LEFT JOIN cidades ci ON ci.id = b.cidade_id
        WHERE ${condicoes.join(" AND ")}
      ) sub
-     ORDER BY ${apenasDestaque ? "nota_media DESC NULLS LAST, nome ASC" : "random()"}
+     ORDER BY random()
      LIMIT ${apenasDestaque ? 30 : 60}`,
     params
   );
