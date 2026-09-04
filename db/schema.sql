@@ -389,6 +389,11 @@ CREATE TABLE profissional_dias_indisponiveis (
     data             DATE NOT NULL,
     hora_inicio      TIME,
     hora_fim         TIME,
+    -- preenchido so quando o bloqueio foi criado automaticamente por uma
+    -- selecao de vaga (ver marcarVagaPreenchida em lib/actions/vagas.ts) -
+    -- permite achar e remover so esse bloqueio se a empresa desfizer a
+    -- selecao depois, sem mexer em bloqueios manuais do profissional.
+    vaga_id          UUID REFERENCES vagas_profissionais(id) ON DELETE SET NULL,
     criado_em        TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT horario_valido CHECK (
         (hora_inicio IS NULL AND hora_fim IS NULL)

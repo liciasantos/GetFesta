@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { query, queryOne } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { avaliarProfissionalSchema, criarVagaSchema } from "@/lib/validators";
+import { sendEmail, buildVagaSelecionadaEmail } from "@/lib/email";
 
 export type VagaActionState = { error?: string; success?: boolean } | undefined;
 
@@ -77,9 +78,26 @@ export async function candidatarVaga(vagaId: string): Promise<CandidatarVagaResu
 
 export type FecharVagaResult = { error?: string; ok?: boolean };
 
+/** Calcula o horário de término (HH:MM) a partir do início + duração em
+ * horas. Retorna null se passar da meia-noite (TIME não representa isso) -
+ * nesse caso o chamador bloqueia o dia inteiro em vez de um horário. */
+function calcularHoraFim(horaInicio: string, duracaoHoras: number): string | null {
+  const [h, m] = horaInicio.split(":").map(Number);
+  const totalMin = h * 60 + m + Math.round(duracaoHoras * 60);
+  if (totalMin >= 24 * 60) return null;
+  const fh = Math.floor(totalMin / 60);
+  const fm = totalMin % 60;
+  return `${String(fh).padStart(2, "0")}:${String(fm).padStart(2, "0")}`;
+}
+
 /** Empresa marca com qual profissional fechou a vaga - é o único jeito de
  * saber, depois que a data do evento passa, se ela conseguiu contratar
- * alguém ou não (ver comentário na coluna profissional_selecionado_id). */
+ * alguém ou não (ver comentário na coluna profissional_selecionado_id).
+ * Além de fechar a vaga: marca a candidatura escolhida como 'selecionado' e
+ * as demais como 'recusado', bloqueia automaticamente o dia/horário do
+ * evento na agenda do profissional (profissional_dias_indisponiveis, com
+ * vaga_id pra poder desfazer depois - ver removerSelecaoVaga) e avisa o
+ * profissional por e-mail. */
 export async function marcarVagaPreenchida(vagaId: string, profissionalId: string): Promise<FecharVagaResult> {
   const session = await getSession();
   if (!session || session.tipo !== "empresa") return { error: "Sessão inválida." };
@@ -90,14 +108,100 @@ export async function marcarVagaPreenchida(vagaId: string, profissionalId: strin
   );
   if (!candidatura) return { error: "Esse profissional não é candidato dessa vaga." };
 
+  const vaga = await queryOne<{
+    categoria_nome: string;
+    data_evento: string;
+    hora_inicio: string;
+    duracao_horas: string;
+    nome_fantasia: string;
+  }>(
+    `SELECT cp.nome AS categoria_nome, v.data_evento, v.hora_inicio, v.duracao_horas, e.nome_fantasia
+     FROM vagas_profissionais v
+     JOIN categorias_profissionais cp ON cp.id = v.categoria_profissional_id
+     JOIN empresas e ON e.usuario_id = v.empresa_id
+     WHERE v.id = $1 AND v.empresa_id = $2`,
+    [vagaId, session.usuarioId]
+  );
+  if (!vaga) return { error: "Vaga não encontrada." };
+
   const res = await query<{ id: string }>(
     `UPDATE vagas_profissionais SET status = 'preenchida', profissional_selecionado_id = $1 WHERE id = $2 AND empresa_id = $3 RETURNING id`,
     [profissionalId, vagaId, session.usuarioId]
   );
   if (res.length === 0) return { error: "Vaga não encontrada." };
 
+  await query(`UPDATE vaga_candidaturas SET status = 'selecionado' WHERE vaga_id = $1 AND profissional_id = $2`, [
+    vagaId,
+    profissionalId,
+  ]);
+  await query(`UPDATE vaga_candidaturas SET status = 'recusado' WHERE vaga_id = $1 AND profissional_id != $2`, [
+    vagaId,
+    profissionalId,
+  ]);
+
+  try {
+    const horaFim = calcularHoraFim(vaga.hora_inicio, Number(vaga.duracao_horas));
+    if (horaFim) {
+      await query(
+        `INSERT INTO profissional_dias_indisponiveis (profissional_id, data, hora_inicio, hora_fim, vaga_id)
+         VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING`,
+        [profissionalId, vaga.data_evento, vaga.hora_inicio, horaFim, vagaId]
+      );
+    } else {
+      // evento passa da meia-noite - bloqueia o dia inteiro pra nao arriscar sobreposicao
+      await query(
+        `INSERT INTO profissional_dias_indisponiveis (profissional_id, data, vaga_id) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`,
+        [profissionalId, vaga.data_evento, vagaId]
+      );
+    }
+  } catch {
+    // se ja existir um bloqueio manual conflitante nesse horario, nao trava a selecao por causa disso
+  }
+
+  const profissional = await queryOne<{ email: string | null; nome: string }>(
+    `SELECT u.email, p.nome FROM profissionais p JOIN usuarios u ON u.id = p.usuario_id WHERE p.usuario_id = $1`,
+    [profissionalId]
+  );
+  if (profissional?.email) {
+    const { subject, html } = buildVagaSelecionadaEmail(
+      profissional.nome,
+      vaga.categoria_nome,
+      vaga.nome_fantasia,
+      vaga.data_evento,
+      vaga.hora_inicio
+    );
+    await sendEmail({ to: profissional.email, subject, html });
+  }
+
   revalidatePath("/painel/vagas");
   revalidatePath(`/painel/vagas/${vagaId}`);
+  revalidatePath("/perfil-profissional");
+  return { ok: true };
+}
+
+/** Desfaz a seleção de uma vaga já preenchida (ex.: o profissional escolhido
+ * ficou impossibilitado de cumprir o evento) - reabre a vaga pra novos
+ * candidatos, devolve todas as candidaturas pra 'candidatado' e libera o
+ * bloqueio de agenda que tinha sido criado automaticamente. */
+export async function removerSelecaoVaga(vagaId: string): Promise<FecharVagaResult> {
+  const session = await getSession();
+  if (!session || session.tipo !== "empresa") return { error: "Sessão inválida." };
+
+  const vaga = await queryOne<{ id: string }>(
+    `SELECT id FROM vagas_profissionais WHERE id = $1 AND empresa_id = $2 AND status = 'preenchida'`,
+    [vagaId, session.usuarioId]
+  );
+  if (!vaga) return { error: "Vaga não encontrada ou não está preenchida." };
+
+  await query(`UPDATE vagas_profissionais SET status = 'aberta', profissional_selecionado_id = NULL WHERE id = $1`, [
+    vagaId,
+  ]);
+  await query(`UPDATE vaga_candidaturas SET status = 'candidatado' WHERE vaga_id = $1`, [vagaId]);
+  await query(`DELETE FROM profissional_dias_indisponiveis WHERE vaga_id = $1`, [vagaId]);
+
+  revalidatePath("/painel/vagas");
+  revalidatePath(`/painel/vagas/${vagaId}`);
+  revalidatePath("/perfil-profissional");
   return { ok: true };
 }
 

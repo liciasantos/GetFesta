@@ -111,6 +111,33 @@ export function buildResetSenhaEmail(nome: string, linkReset: string): { subject
   };
 }
 
+export function buildVagaSelecionadaEmail(
+  nome: string,
+  categoriaNome: string,
+  empresaNome: string,
+  dataEvento: string,
+  horaInicio: string
+): { subject: string; html: string } {
+  const dataFormatada = new Date(dataEvento).toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+  return {
+    subject: `Você foi selecionado(a) para uma vaga de ${categoriaNome}!`,
+    html: emailShell({
+      preheader: `${empresaNome} escolheu você pra vaga de ${categoriaNome}.`,
+      heading: `Boa notícia, ${nome}!`,
+      bodyHtml: `<p style="margin:0 0 12px;">A empresa <b>${empresaNome}</b> escolheu você para a vaga de <b>${categoriaNome}</b> que você se candidatou na GetFesta.</p>
+                 <p style="margin:0 0 20px;">Data do evento: <b>${dataFormatada}</b> às <b>${horaInicio.slice(0, 5)}</b>. Já bloqueamos esse horário na sua agenda automaticamente.</p>`,
+      ctaLabel: "Ver na minha agenda",
+      ctaUrl: `${getAppUrl()}/perfil-profissional`,
+      footerNote: "A empresa pode entrar em contato com você pelo WhatsApp pra combinar os detalhes do evento.",
+    }),
+  };
+}
+
 export function buildConfirmacaoCadastroEmail(nome: string, linkConfirmacao: string): { subject: string; html: string } {
   return {
     subject: "Confirme seu cadastro na GetFesta",

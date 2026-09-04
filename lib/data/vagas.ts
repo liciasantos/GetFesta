@@ -13,23 +13,37 @@ export type VagaFeedItem = {
   criado_em: string;
   empresa_nome_fantasia: string;
   sexo_desejado: string;
+  /** status da vaga em si (aberta/preenchida/cancelada) - junto com
+   * candidatura_status, decide o que mostrar pro profissional (ver
+   * app/perfil-profissional/page.tsx). */
+  status: string;
+  /** status da candidatura desse profissional especifico nessa vaga
+   * ('candidatado'/'selecionado'/'recusado') - null quando ele nunca se
+   * candidatou. */
+  candidatura_status: string | null;
 };
 
-/** Vagas em aberto que combinam com as funções e o estado do profissional -
- * mesmo padrão de "lead compatível" já usado pra pedidos no painel da empresa
- * (lib/data/pedidos.ts:listPedidosCompativeis), só que na direção inversa.
- * Compara por estado (nao cidade) pra nao esconder vagas de cidades vizinhas
- * na mesma regiao metropolitana (ex.: profissional de Nilopolis via vaga na
- * capital do RJ). sexo_desejado='indiferente' aparece pra todo mundo; senão,
- * só combina se bater com o sexo do profissional (quem é
- * nao_binario/prefiro_nao_informar ou nao informou so ve vagas indiferentes). */
+/** Vagas que o profissional pode ver: as em aberto que combinam com suas
+ * funções e estado (mesmo padrão de "lead compatível" já usado pra pedidos
+ * no painel da empresa, lib/data/pedidos.ts:listPedidosCompativeis, só que
+ * na direção inversa) MAIS qualquer vaga que ele já se candidatou antes,
+ * mesmo que ela tenha sido preenchida/cancelada depois - assim ele continua
+ * vendo o resultado da candidatura (selecionado ou nao) em vez da vaga
+ * simplesmente sumir da lista. Compara por estado (nao cidade) pra nao
+ * esconder vagas de cidades vizinhas na mesma regiao metropolitana (ex.:
+ * profissional de Nilopolis ve vaga na capital do RJ). sexo_desejado=
+ * 'indiferente' aparece pra todo mundo; senão, só combina se bater com o
+ * sexo do profissional (quem é nao_binario/prefiro_nao_informar ou nao
+ * informou so ve vagas indiferentes). */
 export async function listVagasCompativeis(profissionalId: string): Promise<(VagaFeedItem & { ja_candidatado: boolean })[]> {
   return query<VagaFeedItem & { ja_candidatado: boolean }>(
     `SELECT
        v.id, cp.nome AS categoria_nome, ci.nome AS cidade_nome, b.nome AS bairro_nome,
        v.data_evento, v.hora_inicio, v.duracao_horas, v.valor, v.descricao, v.criado_em, v.sexo_desejado,
+       v.status,
        e.nome_fantasia AS empresa_nome_fantasia,
-       EXISTS (SELECT 1 FROM vaga_candidaturas vc WHERE vc.vaga_id = v.id AND vc.profissional_id = $1) AS ja_candidatado
+       vc.status AS candidatura_status,
+       (vc.id IS NOT NULL) AS ja_candidatado
      FROM vagas_profissionais v
      JOIN categorias_profissionais cp ON cp.id = v.categoria_profissional_id
      JOIN cidades ci ON ci.id = v.cidade_id
@@ -38,12 +52,16 @@ export async function listVagasCompativeis(profissionalId: string): Promise<(Vag
      JOIN profissionais p ON p.usuario_id = $1
      LEFT JOIN bairros pb ON pb.id = p.bairro_id
      LEFT JOIN cidades pci ON pci.id = pb.cidade_id
-     WHERE v.status = 'aberta'
-       AND pci.estado = ci.estado
-       AND (v.sexo_desejado = 'indiferente' OR v.sexo_desejado = p.sexo)
-       AND EXISTS (
-         SELECT 1 FROM profissional_categorias pc WHERE pc.profissional_id = $1 AND pc.categoria_id = v.categoria_profissional_id
-       )
+     LEFT JOIN vaga_candidaturas vc ON vc.vaga_id = v.id AND vc.profissional_id = $1
+     WHERE (
+       (v.status = 'aberta'
+        AND pci.estado = ci.estado
+        AND (v.sexo_desejado = 'indiferente' OR v.sexo_desejado = p.sexo)
+        AND EXISTS (
+          SELECT 1 FROM profissional_categorias pc WHERE pc.profissional_id = $1 AND pc.categoria_id = v.categoria_profissional_id
+        ))
+       OR vc.id IS NOT NULL
+     )
      ORDER BY v.criado_em DESC`,
     [profissionalId]
   );

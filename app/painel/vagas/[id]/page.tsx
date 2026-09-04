@@ -5,7 +5,7 @@ import { getAvaliacaoDaVaga, getVagaDaEmpresa, listCandidatosDaVaga } from "@/li
 import { formatCurrencyBRL, formatDateBR } from "@/lib/format";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 import { Badge } from "@/components/ui";
-import { FecharComCandidatoButton, NaoFechouButton } from "@/components/FecharVagaButton";
+import { FecharComCandidatoButton, NaoFechouButton, RemoverSelecaoButton } from "@/components/FecharVagaButton";
 import AvaliarProfissionalForm from "@/components/AvaliarProfissionalForm";
 
 export const dynamic = "force-dynamic";
@@ -54,6 +54,9 @@ export default async function VagaCandidatosPage({ params }: { params: Promise<{
             <p className="mt-3 rounded-lg bg-ok-soft p-2.5 text-[12.5px] font-bold text-ok">
               ✓ Fechado com {vaga.profissional_selecionado_nome}
             </p>
+            <div className="mt-2">
+              <RemoverSelecaoButton vagaId={vaga.id} />
+            </div>
             <AvaliarProfissionalForm
               vagaId={vaga.id}
               profissionalId={vaga.profissional_selecionado_id}

@@ -110,7 +110,7 @@ export default async function PerfilProfissionalPage() {
       </div>
 
       <h2 className="mb-2 mt-8 text-xs font-bold uppercase tracking-wide text-muted-2">
-        Vagas compatíveis com suas funções e estado
+        Vagas compatíveis e minhas candidaturas
       </h2>
       <div className="overflow-hidden rounded-xl border border-border">
         {vagas.length === 0 && <p className="p-4 text-[12.5px] text-muted">Nenhuma vaga compatível por enquanto.</p>}
@@ -127,7 +127,13 @@ export default async function PerfilProfissionalPage() {
               <p className="mt-1.5 max-w-md text-[12px] leading-relaxed text-muted">{vaga.descricao}</p>
             </div>
             <div>
-              {vaga.ja_candidatado ? (
+              {vaga.candidatura_status === "selecionado" ? (
+                <Badge tone="ok">🎉 Selecionado!</Badge>
+              ) : vaga.status === "cancelada" ? (
+                <Badge tone="muted">Vaga encerrada</Badge>
+              ) : vaga.candidatura_status === "recusado" ? (
+                <Badge tone="muted">Não foi dessa vez</Badge>
+              ) : vaga.ja_candidatado ? (
                 <Badge tone="ok">Candidatura enviada</Badge>
               ) : (
                 <CandidatarVagaButton vagaId={vaga.id} />

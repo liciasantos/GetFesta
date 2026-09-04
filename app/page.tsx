@@ -244,9 +244,9 @@ export default async function HomePage() {
               >
                 {e.foto_capa ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={e.foto_capa} alt={e.nome_fantasia} className="h-28 w-full object-cover" />
+                  <img src={e.foto_capa} alt={e.nome_fantasia} className="aspect-square w-full object-cover" />
                 ) : (
-                  <PlaceholderImg className="h-28 w-full" />
+                  <PlaceholderImg className="aspect-square w-full" />
                 )}
                 <div className="p-3.5">
                   <div className="text-[13.5px] font-bold">{e.nome_fantasia}</div>

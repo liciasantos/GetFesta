@@ -122,40 +122,78 @@ export type ProfissionalBusca = {
   aprovada_para_destaque: boolean;
 };
 
+export type FiltrosBuscaProfissional = {
+  cidadeId?: number;
+  sexo?: string;
+  categoriaId?: number;
+};
+
 /** Profissionais visíveis pra essa empresa - regra de negócio: um profissional
  * só aparece se pelo menos uma das funções dele (ex.: Cozinheiro) for
  * compatível com pelo menos uma das categorias de serviço da empresa (ex.:
  * Buffet), via categoria_profissional_compatibilidade (ver /admin, mapa
- * seedado em db/backfill... n/a, seed direto na migração). Ordenado por nota
- * média (feedback das empresas) - quem nunca foi avaliado vai por último.
- * apenasDestaque=true filtra só quem pagou pra aparecer em destaque. */
-export async function listProfissionaisCompativeis(empresaId: string, apenasDestaque = false): Promise<ProfissionalBusca[]> {
+ * seedado em db/backfill... n/a, seed direto na migração).
+ * apenasDestaque=true filtra só quem pagou pra aparecer em destaque, mantém
+ * ordenado por nota média (curadoria paga, melhor avaliado primeiro).
+ * apenasDestaque=false ("Buscar profissionais") aceita filtros de
+ * cidade/sexo/categoria e embaralha a ordem a cada chamada, pra nao sempre
+ * mostrar os mesmos mais bem avaliados primeiro - a lista é paginada 5 a 5
+ * no cliente (ver BuscarProfissionaisPainel.tsx). */
+export async function listProfissionaisCompativeis(
+  empresaId: string,
+  apenasDestaque = false,
+  filtros: FiltrosBuscaProfissional = {}
+): Promise<ProfissionalBusca[]> {
+  const params: unknown[] = [empresaId, apenasDestaque];
+  const condicoes = [`($2::boolean = false OR p.aprovada_para_destaque = true)`];
+
+  if (filtros.cidadeId) {
+    params.push(filtros.cidadeId);
+    condicoes.push(`b.cidade_id = $${params.length}`);
+  }
+  if (filtros.sexo) {
+    params.push(filtros.sexo);
+    condicoes.push(`p.sexo = $${params.length}`);
+  }
+  if (filtros.categoriaId) {
+    params.push(filtros.categoriaId);
+    condicoes.push(
+      `EXISTS (SELECT 1 FROM profissional_categorias pcf WHERE pcf.profissional_id = p.usuario_id AND pcf.categoria_id = $${params.length})`
+    );
+  }
+
+  // SELECT DISTINCT nao aceita ORDER BY random() diretamente (o Postgres
+  // exige que toda expressao do ORDER BY apareça na lista de colunas
+  // selecionadas) - por isso o DISTINCT roda numa subquery e o ORDER
+  // BY/LIMIT ficam na consulta de fora, ja sem risco de duplicata.
   return query<ProfissionalBusca>(
-    `SELECT DISTINCT
-        p.usuario_id, p.slug, p.nome,
-        COALESCE(
-          p.foto_perfil_url,
-          (SELECT url FROM profissional_galeria g WHERE g.profissional_id = p.usuario_id AND g.tipo = 'foto' ORDER BY g.ordem ASC LIMIT 1)
-        ) AS foto,
-        b.nome AS bairro_nome, ci.nome AS cidade_nome,
-        (
-          SELECT cp2.nome FROM profissional_categorias pc2
-          JOIN categorias_profissionais cp2 ON cp2.id = pc2.categoria_id
-          WHERE pc2.profissional_id = p.usuario_id ORDER BY cp2.nome LIMIT 1
-        ) AS categoria_principal,
-        (SELECT ROUND(AVG(ap.nota)::numeric, 1) FROM avaliacoes_profissional ap WHERE ap.profissional_id = p.usuario_id) AS nota_media,
-        (SELECT COUNT(*)::int FROM avaliacoes_profissional ap WHERE ap.profissional_id = p.usuario_id) AS total_avaliacoes,
-        p.aprovada_para_destaque
-     FROM profissionais p
-     JOIN profissional_categorias pc ON pc.profissional_id = p.usuario_id
-     JOIN categoria_profissional_compatibilidade comp ON comp.categoria_profissional_id = pc.categoria_id
-     JOIN empresa_categorias ec ON ec.categoria_id = comp.categoria_id AND ec.empresa_id = $1
-     LEFT JOIN bairros b ON b.id = p.bairro_id
-     LEFT JOIN cidades ci ON ci.id = b.cidade_id
-     WHERE ($2::boolean = false OR p.aprovada_para_destaque = true)
-     ORDER BY nota_media DESC NULLS LAST, nome ASC
-     LIMIT 30`,
-    [empresaId, apenasDestaque]
+    `SELECT * FROM (
+       SELECT DISTINCT
+          p.usuario_id, p.slug, p.nome,
+          COALESCE(
+            p.foto_perfil_url,
+            (SELECT url FROM profissional_galeria g WHERE g.profissional_id = p.usuario_id AND g.tipo = 'foto' ORDER BY g.ordem ASC LIMIT 1)
+          ) AS foto,
+          b.nome AS bairro_nome, ci.nome AS cidade_nome,
+          (
+            SELECT cp2.nome FROM profissional_categorias pc2
+            JOIN categorias_profissionais cp2 ON cp2.id = pc2.categoria_id
+            WHERE pc2.profissional_id = p.usuario_id ORDER BY cp2.nome LIMIT 1
+          ) AS categoria_principal,
+          (SELECT ROUND(AVG(ap.nota)::numeric, 1) FROM avaliacoes_profissional ap WHERE ap.profissional_id = p.usuario_id) AS nota_media,
+          (SELECT COUNT(*)::int FROM avaliacoes_profissional ap WHERE ap.profissional_id = p.usuario_id) AS total_avaliacoes,
+          p.aprovada_para_destaque
+       FROM profissionais p
+       JOIN profissional_categorias pc ON pc.profissional_id = p.usuario_id
+       JOIN categoria_profissional_compatibilidade comp ON comp.categoria_profissional_id = pc.categoria_id
+       JOIN empresa_categorias ec ON ec.categoria_id = comp.categoria_id AND ec.empresa_id = $1
+       LEFT JOIN bairros b ON b.id = p.bairro_id
+       LEFT JOIN cidades ci ON ci.id = b.cidade_id
+       WHERE ${condicoes.join(" AND ")}
+     ) sub
+     ORDER BY ${apenasDestaque ? "nota_media DESC NULLS LAST, nome ASC" : "random()"}
+     LIMIT ${apenasDestaque ? 30 : 60}`,
+    params
   );
 }
 
