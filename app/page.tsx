@@ -20,6 +20,7 @@ import BgImage from "@/components/BgImage";
 import MiniPedidoForm from "@/components/MiniPedidoForm";
 import PedidosCarousel from "@/components/PedidosCarousel";
 import DestaquesGrid, { DestaquesKicker } from "@/components/DestaquesGrid";
+import HelpIcon from "@/components/HelpIcon";
 
 export const dynamic = "force-dynamic";
 
@@ -62,21 +63,18 @@ export default async function HomePage() {
             <div className="mt-4 grid gap-3 sm:grid-cols-3">
               <JourneyCard
                 href="#publicar-pedido"
-                emoji="🎉"
                 titulo="Estou organizando uma festa"
                 texto="Publique o que você precisa e receba propostas no WhatsApp — sem custo."
                 cta="Publicar meu pedido"
               />
               <JourneyCard
                 href="/empresas"
-                emoji="🏢"
                 titulo="Sou uma empresa"
                 texto="Receba pedidos de clientes da sua região e contrate profissionais freelance."
                 cta="Saiba mais"
               />
               <JourneyCard
                 href="/profissionais"
-                emoji="✨"
                 titulo="Sou profissional"
                 texto="Monte seu catálogo, gerencie sua agenda e apareça pras empresas certas."
                 cta="Saiba mais"
@@ -351,7 +349,7 @@ export default async function HomePage() {
 
           <div className="mt-9 grid grid-cols-1 gap-5 text-left sm:grid-cols-3">
             <HelpColumn
-              emoji="🎉"
+              icon="cliente"
               titulo="Sou cliente"
               texto="Está organizando uma festa e precisa de fornecedores de confiança?"
               links={[
@@ -361,7 +359,7 @@ export default async function HomePage() {
               ]}
             />
             <HelpColumn
-              emoji="🏪"
+              icon="empresa"
               titulo="Sou empresa"
               texto="Ofereça seus serviços e receba pedidos qualificados de clientes da sua região."
               links={[
@@ -371,7 +369,7 @@ export default async function HomePage() {
               ]}
             />
             <HelpColumn
-              emoji="🎭"
+              icon="profissional"
               titulo="Sou profissional"
               texto="Ofereça seu talento pontual pra eventos e organize sua agenda num só lugar."
               links={[
@@ -409,19 +407,19 @@ export default async function HomePage() {
 }
 
 function HelpColumn({
-  emoji,
+  icon,
   titulo,
   texto,
   links,
 }: {
-  emoji: string;
+  icon: "cliente" | "empresa" | "profissional";
   titulo: string;
   texto: string;
   links: { label: string; href: string }[];
 }) {
   return (
     <div className="rounded-2xl border border-border bg-surface p-6">
-      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-accent-soft text-xl">{emoji}</span>
+      <HelpIcon slug={icon} className="h-10 w-10" />
       <h3 className="mt-4 text-xs font-bold uppercase tracking-wide text-muted-2">{titulo}</h3>
       <p className="mt-2 text-[13px] leading-relaxed text-muted">{texto}</p>
       <ul className="mt-4 flex flex-col gap-2">
@@ -439,13 +437,11 @@ function HelpColumn({
 
 function JourneyCard({
   href,
-  emoji,
   titulo,
   texto,
   cta,
 }: {
   href: string;
-  emoji: string;
   titulo: string;
   texto: string;
   cta: string;
@@ -455,7 +451,6 @@ function JourneyCard({
       href={href}
       className="card-hover flex flex-col gap-2 rounded-xl border border-border bg-surface-alt p-4 hover:border-accent-soft-2 hover:bg-accent-soft"
     >
-      <span className="text-2xl">{emoji}</span>
       <span className="text-[14px] font-bold">{titulo}</span>
       <p className="text-[12px] leading-relaxed text-muted">{texto}</p>
       <span className="mt-1 text-[12px] font-bold text-accent-dark">{cta} →</span>
