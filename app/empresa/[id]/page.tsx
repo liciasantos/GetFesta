@@ -2,10 +2,11 @@ import { notFound } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { contatoLiberadoParaCliente, getEmpresaById, registrarVisualizacaoPerfil } from "@/lib/data/empresas";
 import { getLimitesProfissional } from "@/lib/data/limites-profissional";
-import { Badge, Chip, PlaceholderImg } from "@/components/ui";
+import { Badge, buttonClass, Chip, PlaceholderImg } from "@/components/ui";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import GaleriaLightbox from "@/components/GaleriaLightbox";
+import { StatRing } from "@/components/StatRing";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -20,18 +21,107 @@ export default async function EmpresaPerfilPage({ params }: { params: Promise<{ 
     session?.tipo === "cliente" ? await contatoLiberadoParaCliente(empresa.usuario_id, session.usuarioId) : false;
   const limitesProfissional = session?.tipo === "profissional" ? await getLimitesProfissional(session.usuarioId) : null;
   const podeContatarComoProfissional = limitesProfissional?.podeContatarEmpresa ?? false;
+  const isDono = session?.tipo === "empresa" && session.usuarioId === empresa.usuario_id;
 
   // Efeito colateral: registra a visualizacao (KPI real do painel do fornecedor).
   await registrarVisualizacaoPerfil(empresa.usuario_id);
 
+  // rings do cabeçalho mobile - só entram na lista se houver dado real (nunca
+  // inventamos numero), por isso o fallback capacidade so aparece quando nao
+  // ha tempo de resposta cadastrado.
+  const rings: Array<{ label: string; value: string; percent: number; color: string }> = [
+    {
+      label: "Avaliação",
+      value: empresa.nota_exibida ? Number(empresa.nota_exibida).toFixed(1) : "novo",
+      percent: empresa.nota_exibida ? (Number(empresa.nota_exibida) / 5) * 100 : 0,
+      color: "var(--color-gold)",
+    },
+  ];
+  if (empresa.total_avaliacoes_exibido) {
+    rings.push({
+      label: "Avaliações",
+      value: String(empresa.total_avaliacoes_exibido),
+      percent: Math.min(100, (empresa.total_avaliacoes_exibido / 50) * 100),
+      color: "var(--color-accent)",
+    });
+  }
+  if (empresa.tempo_resposta_medio_minutos) {
+    rings.push({
+      label: "Resposta",
+      value: `~${empresa.tempo_resposta_medio_minutos}min`,
+      percent: Math.min(100, Math.max(10, 100 - ((empresa.tempo_resposta_medio_minutos - 5) / 55) * 100)),
+      color: "var(--color-ok)",
+    });
+  } else if (empresa.capacidade_convidados) {
+    rings.push({
+      label: "Capacidade",
+      value: `${empresa.capacidade_convidados}`,
+      percent: Math.min(100, (empresa.capacidade_convidados / 300) * 100),
+      color: "var(--color-ok)",
+    });
+  }
+
   return (
     <div>
-      {/* CABEÇALHO — sem banner full-bleed; a foto de destaque da galeria fica
-          numa coluna grande ao lado do nome (largura fixa ~400px), esticada
+      {/* CABEÇALHO MOBILE — cartão estilo "perfil social": capa + avatar
+          sobreposto + nome centralizado + anéis de estatística. Só aparece
+          abaixo do breakpoint sm; do sm pra cima o cabeçalho de baixo assume. */}
+      <div className="sm:hidden">
+        <div className="relative h-44 w-full overflow-hidden bg-surface-alt">
+          {empresa.foto_capa ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={empresa.foto_capa} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <PlaceholderImg className="h-full w-full" />
+          )}
+          {isDono && (
+            <Link
+              href="/painel"
+              aria-label="Voltar ao painel"
+              className="absolute left-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm hover:bg-black/55"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+                <path d="M15 6l-6 6 6 6" />
+              </svg>
+            </Link>
+          )}
+        </div>
+        <div className="px-6 pb-6 text-center">
+          {empresa.logo_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={empresa.logo_url}
+              alt={empresa.nome_fantasia}
+              className="relative -mt-[60px] mx-auto h-[119px] w-[119px] rounded-full border-4 border-bg object-cover shadow-card"
+            />
+          ) : (
+            <div className="relative -mt-[60px] mx-auto flex h-[119px] w-[119px] items-center justify-center rounded-full border-4 border-bg bg-accent-soft font-display text-2xl font-extrabold text-accent-dark shadow-card">
+              {empresa.nome_fantasia[0]?.toUpperCase()}
+            </div>
+          )}
+
+          <div className="mt-3 flex items-center justify-center gap-1.5">
+            <h1 className="text-lg font-extrabold">{empresa.nome_fantasia}</h1>
+            {empresa.selo_verificado && <span title="Selo verificado">✓</span>}
+          </div>
+          <p className="mt-0.5 text-[12.5px] text-muted">
+            {empresa.categorias[0] ?? empresa.cidades[0] ?? "Fornecedor de festas"}
+          </p>
+
+          <div className="mt-5 flex items-center justify-center gap-5">
+            {rings.map((r) => (
+              <StatRing key={r.label} {...r} />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* CABEÇALHO DESKTOP — sem banner full-bleed; a foto de destaque da galeria
+          fica numa coluna grande ao lado do nome (largura fixa ~400px), esticada
           via flex (items-stretch) até a altura da coluna da esquerda — ou
           seja, até a base do card de numeros. */}
-      <div className="mx-auto max-w-6xl px-6 pt-8">
-        <div className="flex flex-col gap-6 sm:flex-row sm:items-stretch">
+      <div className="mx-auto max-w-6xl px-6 pt-4 sm:pt-8">
+        <div className="hidden gap-6 sm:flex sm:items-stretch">
           <div className="flex flex-1 flex-col gap-5">
             <div className="flex items-center gap-4">
               {empresa.logo_url ? (
@@ -119,7 +209,7 @@ export default async function EmpresaPerfilPage({ params }: { params: Promise<{ 
 
         {/* SOBRE — texto livre da empresa, o principal espaço pra ela se vender pro cliente */}
         {empresa.descricao && (
-          <section className="mt-10">
+          <section className="mt-4 sm:mt-10">
             <h2 className="section-kicker">Sobre a {empresa.nome_fantasia}</h2>
             <p className="mt-3 max-w-3xl whitespace-pre-line text-[15px] leading-relaxed text-text">{empresa.descricao}</p>
           </section>
@@ -227,8 +317,11 @@ export default async function EmpresaPerfilPage({ params }: { params: Promise<{ 
               <div className="rounded-lg border border-dashed border-border-strong bg-[#efece5] p-3.5 text-center text-[12px] text-muted">
                 🔒 Instagram e telefone ficam disponíveis depois que uma empresa que você contatou manifesta interesse no seu
                 pedido.
-                <div className="mt-2">
-                  <Link href="/publicar-pedido" className="font-bold text-accent-dark underline">
+                <div className="mt-3 sm:mt-2">
+                  <Link href="/publicar-pedido" className={`${buttonClass("primary")} w-full sm:hidden`}>
+                    Publicar um pedido agora
+                  </Link>
+                  <Link href="/publicar-pedido" className="hidden font-bold text-accent-dark underline sm:inline">
                     Publicar um pedido agora
                   </Link>
                 </div>

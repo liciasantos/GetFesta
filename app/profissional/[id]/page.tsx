@@ -4,10 +4,11 @@ import { getSession } from "@/lib/auth";
 import { getMeuPerfilProfissional, getTelefoneProfissional } from "@/lib/data/profissionais";
 import { listBloqueiosIndisponibilidade } from "@/lib/data/disponibilidade";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
-import { Badge } from "@/components/ui";
+import { Badge, PlaceholderImg } from "@/components/ui";
 import GaleriaLightbox from "@/components/GaleriaLightbox";
 import PortfolioPdfViewer from "@/components/PortfolioPdfViewer";
 import VideoGallery from "@/components/VideoGallery";
+import { StatRing } from "@/components/StatRing";
 
 export const dynamic = "force-dynamic";
 
@@ -44,13 +45,89 @@ export default async function PerfilProfissionalParaEmpresaPage({ params }: { pa
   const diasInteiros = bloqueiosDisponibilidade.filter((b) => !b.horaInicio);
   const horariosEspecificos = bloqueiosDisponibilidade.filter((b) => b.horaInicio);
 
+  // rings do cabeçalho mobile - só entram na lista se houver dado real.
+  const rings: Array<{ label: string; value: string; percent: number; color: string }> = [
+    {
+      label: "Avaliação",
+      value: perfil.nota_media ? Number(perfil.nota_media).toFixed(1) : "novo",
+      percent: perfil.nota_media ? (Number(perfil.nota_media) / 5) * 100 : 0,
+      color: "var(--color-gold)",
+    },
+  ];
+  if (perfil.total_avaliacoes) {
+    rings.push({
+      label: "Avaliações",
+      value: String(perfil.total_avaliacoes),
+      percent: Math.min(100, (perfil.total_avaliacoes / 30) * 100),
+      color: "var(--color-accent)",
+    });
+  }
+  if (perfil.tempo_experiencia_meses !== null) {
+    rings.push({
+      label: "Experiência",
+      value: formatTempoExperiencia(perfil.tempo_experiencia_meses),
+      percent: Math.min(100, (perfil.tempo_experiencia_meses / 120) * 100),
+      color: "var(--color-ok)",
+    });
+  }
+
   return (
     <div className="mx-auto max-w-2xl px-6 py-8">
       <Link href="/painel/vagas" className="text-[12.5px] font-bold text-accent-dark underline">
         ← Voltar
       </Link>
 
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface p-5">
+      {/* CABEÇALHO MOBILE — cartão estilo "perfil social": capa + avatar
+          sobreposto + nome centralizado + anéis de estatística. Só aparece
+          abaixo do breakpoint sm; do sm pra cima o cartão de baixo assume. */}
+      <div className="-mx-6 mt-3 sm:hidden">
+        <div className="relative h-40 w-full overflow-hidden bg-surface-alt">
+          {perfil.galeria[0] ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={perfil.galeria[0].url} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <PlaceholderImg className="h-full w-full" />
+          )}
+        </div>
+        <div className="px-6 pb-2 text-center">
+          {perfil.foto_perfil_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={perfil.foto_perfil_url}
+              alt={perfil.nome}
+              className="relative -mt-11 mx-auto h-[88px] w-[88px] rounded-full border-4 border-bg object-cover shadow-card"
+            />
+          ) : (
+            <div className="relative -mt-11 mx-auto flex h-[88px] w-[88px] items-center justify-center rounded-full border-4 border-bg bg-accent-soft font-display text-2xl font-extrabold text-accent-dark shadow-card">
+              {perfil.nome[0]?.toUpperCase()}
+            </div>
+          )}
+
+          <h1 className="mt-3 text-lg font-extrabold">{perfil.nome}</h1>
+          <p className="mt-0.5 text-[12.5px] text-muted">
+            {perfil.categorias[0]?.nome ?? perfil.bairro_nome ?? perfil.cidade_nome ?? "Profissional de festas"}
+          </p>
+
+          <div className="mt-5 flex items-center justify-center gap-5">
+            {rings.map((r) => (
+              <StatRing key={r.label} {...r} />
+            ))}
+          </div>
+
+          {telefone && (
+            <a
+              href={buildWhatsAppLink(telefone, `Olá ${perfil.nome}! Vi seu perfil na GetFesta.`)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-5 inline-flex items-center justify-center rounded-lg bg-accent px-5 py-2.5 text-[13px] font-bold text-white hover:bg-accent-dark"
+            >
+              💬 WhatsApp
+            </a>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-3 hidden flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface p-5 sm:flex">
         <div className="flex items-center gap-4">
           {perfil.foto_perfil_url ? (
             // eslint-disable-next-line @next/next/no-img-element
