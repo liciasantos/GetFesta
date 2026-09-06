@@ -1,10 +1,10 @@
 import { query } from "@/lib/db";
 
-export type Cidade = { id: number; estado: string; nome: string };
+export type Cidade = { id: number; estado: string; nome: string; macrorregiao: string | null };
 export type Bairro = { id: number; cidade_id: number; nome: string };
 
 export async function listCidades(): Promise<Cidade[]> {
-  return query<Cidade>(`SELECT id, estado, nome FROM cidades ORDER BY nome`);
+  return query<Cidade>(`SELECT id, estado, nome, macrorregiao FROM cidades ORDER BY nome`);
 }
 
 export async function listBairros(cidadeId: number): Promise<Bairro[]> {

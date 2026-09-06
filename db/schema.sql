@@ -79,9 +79,14 @@ CREATE TABLE configuracoes_site (
 -- 2. LOCALIDADES (usado por empresas, profissionais, pedidos, clientes)
 -- ---------------------------------------------------------------------
 CREATE TABLE cidades (
-    id      SERIAL PRIMARY KEY,
-    estado  CHAR(2) NOT NULL,
-    nome    VARCHAR(120) NOT NULL,
+    id           SERIAL PRIMARY KEY,
+    estado       CHAR(2) NOT NULL,
+    nome         VARCHAR(120) NOT NULL,
+    -- agrupamento so pra exibicao nos formularios (Estado > Macrorregiao >
+    -- Cidade), quando a lista de cidades do estado fica longa demais pra um
+    -- select simples - ver lib/estados.ts. NAO influencia o casamento de
+    -- pedido<->empresa nem vaga<->profissional, que continuam por estado.
+    macrorregiao VARCHAR(60),
     UNIQUE (estado, nome)
 );
 

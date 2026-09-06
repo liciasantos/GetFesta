@@ -64,7 +64,12 @@ export async function getPedidoById(id: string): Promise<PedidoFeedItem | null> 
 }
 
 /** Pedidos em aberto que combinam com as categorias/cidades da empresa - o "lead"
- * que aparece no painel do fornecedor (secao 8 do plano: notificacao de lead compativel). */
+ * que aparece no painel do fornecedor (secao 8 do plano: notificacao de lead compativel).
+ * Casamento de localizacao e por estado (nao cidade exata) - uma empresa do
+ * Rio de Janeiro capital tambem ve pedidos de Araruama, por exemplo, mesmo
+ * padrao ja usado em vaga<->profissional (lib/data/vagas.ts). A coluna
+ * cidades.macrorregiao existe só pra agrupar a lista de cidades nos
+ * formulários (ver lib/estados.ts) - não entra nessa comparação. */
 export type PedidoLead = PedidoFeedItem & {
   telefone_temp: string;
   nome_temp: string;
@@ -93,7 +98,9 @@ export async function listPedidosCompativeis(empresaId: string): Promise<PedidoL
          WHERE pc.pedido_id = p.id
        )
        AND EXISTS (
-         SELECT 1 FROM empresa_areas_atuacao ea WHERE ea.empresa_id = $1 AND ea.cidade_id = p.cidade_id
+         SELECT 1 FROM empresa_areas_atuacao ea
+         JOIN cidades cea ON cea.id = ea.cidade_id
+         WHERE ea.empresa_id = $1 AND cea.estado = ci.estado
        )
      ORDER BY p.criado_em DESC`,
     [empresaId]

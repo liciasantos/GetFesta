@@ -6,13 +6,14 @@ import { criarEmpresaManual } from "@/lib/actions/admin";
 import type { BannerActionState } from "@/lib/actions/admin";
 import { buttonClass } from "@/components/ui";
 import type { Cidade, Categoria } from "@/lib/data/geo";
-import { ESTADOS } from "@/lib/estados";
+import { ESTADOS, agruparCidadesPorMacrorregiao } from "@/lib/estados";
 
 export default function NovaEmpresaForm({ cidades, categorias }: { cidades: Cidade[]; categorias: Categoria[] }) {
   const [state, formAction, pending] = useActionState<BannerActionState, FormData>(criarEmpresaManual, undefined);
   const [estado, setEstado] = useState("");
   const [cidadeId, setCidadeId] = useState("");
   const cidadesDoEstado = cidades.filter((c) => c.estado === estado);
+  const cidadesPorMacrorregiao = agruparCidadesPorMacrorregiao(cidadesDoEstado);
 
   return (
     <form action={formAction} className="flex flex-col gap-3">
@@ -73,10 +74,14 @@ export default function NovaEmpresaForm({ cidades, categorias }: { cidades: Cida
           <option value="" disabled>
             {estado ? "Selecione" : "Escolha o estado primeiro"}
           </option>
-          {cidadesDoEstado.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.nome}
-            </option>
+          {[...cidadesPorMacrorregiao.entries()].map(([regiao, cidadesDaRegiao]) => (
+            <optgroup key={regiao} label={regiao}>
+              {cidadesDaRegiao.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nome}
+                </option>
+              ))}
+            </optgroup>
           ))}
         </select>
       </Field>

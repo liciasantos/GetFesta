@@ -7,7 +7,7 @@ import { buttonClass } from "@/components/ui";
 import AceiteTermosCheckbox from "@/components/AceiteTermosCheckbox";
 import AceiteLgpdImagensCheckbox from "@/components/AceiteLgpdImagensCheckbox";
 import type { Cidade, Categoria } from "@/lib/data/geo";
-import { ESTADOS } from "@/lib/estados";
+import { ESTADOS, agruparCidadesPorMacrorregiao } from "@/lib/estados";
 
 export default function RegistroEmpresaForm({
   cidades,
@@ -24,6 +24,7 @@ export default function RegistroEmpresaForm({
   const [estado, setEstado] = useState("");
   const [cidadeId, setCidadeId] = useState("");
   const cidadesDoEstado = cidades.filter((c) => c.estado === estado);
+  const cidadesPorMacrorregiao = agruparCidadesPorMacrorregiao(cidadesDoEstado);
 
   return (
     <form action={formAction} className="flex flex-col gap-3">
@@ -82,10 +83,14 @@ export default function RegistroEmpresaForm({
           <option value="" disabled>
             {estado ? "Selecione" : "Escolha o estado primeiro"}
           </option>
-          {cidadesDoEstado.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.nome}
-            </option>
+          {[...cidadesPorMacrorregiao.entries()].map(([regiao, cidadesDaRegiao]) => (
+            <optgroup key={regiao} label={regiao}>
+              {cidadesDaRegiao.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nome}
+                </option>
+              ))}
+            </optgroup>
           ))}
         </select>
       </Field>

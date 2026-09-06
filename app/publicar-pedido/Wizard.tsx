@@ -4,7 +4,7 @@ import { useActionState, useEffect, useMemo, useState, useTransition } from "rea
 import Link from "next/link";
 import { buttonClass } from "@/components/ui";
 import type { Cidade, Bairro, Categoria } from "@/lib/data/geo";
-import { ESTADOS } from "@/lib/estados";
+import { ESTADOS, agruparCidadesPorMacrorregiao } from "@/lib/estados";
 import { getBairrosAction, criarBairroCustomAction } from "@/lib/actions/geo";
 import { criarPedido } from "@/lib/actions/pedidos";
 import { registrarCliente, type ActionState } from "@/lib/actions/auth";
@@ -98,6 +98,7 @@ export default function PublicarPedidoWizard({
   }, [tipoEvento, categorias, categoriasAutoAplicadas]);
 
   const cidadesDoEstado = useMemo(() => cidades.filter((c) => c.estado === estado), [cidades, estado]);
+  const cidadesPorMacrorregiao = useMemo(() => agruparCidadesPorMacrorregiao(cidadesDoEstado), [cidadesDoEstado]);
 
   function handleEstadoChange(value: string) {
     setEstado(value);
@@ -228,10 +229,14 @@ export default function PublicarPedidoWizard({
                 className="rounded-md border border-border px-3 py-2.5 text-sm disabled:opacity-50"
               >
                 <option value="">{estado ? "Selecione a cidade" : "Escolha o estado primeiro"}</option>
-                {cidadesDoEstado.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.nome}
-                  </option>
+                {[...cidadesPorMacrorregiao.entries()].map(([regiao, cidadesDaRegiao]) => (
+                  <optgroup key={regiao} label={regiao}>
+                    {cidadesDaRegiao.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.nome}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
               {bairros.length > 0 && (

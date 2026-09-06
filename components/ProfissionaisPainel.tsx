@@ -6,6 +6,7 @@ import ProfissionalCard from "@/components/ProfissionalCard";
 import type { ProfissionalBusca, FiltrosBuscaProfissional } from "@/lib/data/profissionais";
 import type { Cidade } from "@/lib/data/geo";
 import type { CategoriaProfissional } from "@/lib/data/profissionais";
+import { agruparCidadesPorMacrorregiao } from "@/lib/estados";
 
 const SEXO_OPCOES = [
   { value: "feminino", label: "Feminino" },
@@ -37,15 +38,7 @@ export default function ProfissionaisPainel({
   const [categoriaId, setCategoriaId] = useState("");
   const [isPending, startTransition] = useTransition();
 
-  const cidadesPorEstado = useMemo(() => {
-    const grupos = new Map<string, Cidade[]>();
-    for (const c of cidades) {
-      const grupo = grupos.get(c.estado) ?? [];
-      grupo.push(c);
-      grupos.set(c.estado, grupo);
-    }
-    return grupos;
-  }, [cidades]);
+  const cidadesPorMacrorregiao = useMemo(() => agruparCidadesPorMacrorregiao(cidades), [cidades]);
 
   function aplicarFiltros(novo: Partial<{ cidadeId: string; sexo: string; categoriaId: string }>) {
     const filtroCidade = novo.cidadeId ?? cidadeId;
@@ -81,9 +74,9 @@ export default function ProfissionaisPainel({
             className="rounded-md border border-border px-3 py-2 text-[12.5px] disabled:opacity-50"
           >
             <option value="">Todas as localizações</option>
-            {[...cidadesPorEstado.entries()].map(([estado, cidadesDoEstado]) => (
-              <optgroup key={estado} label={estado}>
-                {cidadesDoEstado.map((c) => (
+            {[...cidadesPorMacrorregiao.entries()].map(([regiao, cidadesDaRegiao]) => (
+              <optgroup key={regiao} label={regiao}>
+                {cidadesDaRegiao.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.nome}
                   </option>

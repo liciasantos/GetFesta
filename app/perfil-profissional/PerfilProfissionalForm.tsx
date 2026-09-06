@@ -5,7 +5,7 @@ import { atualizarPerfilProfissional, type PerfilActionState } from "@/lib/actio
 import { getBairrosAction, criarBairroCustomAction } from "@/lib/actions/geo";
 import { buttonClass } from "@/components/ui";
 import type { Cidade, Bairro } from "@/lib/data/geo";
-import { ESTADOS } from "@/lib/estados";
+import { ESTADOS, agruparCidadesPorMacrorregiao } from "@/lib/estados";
 import type { CategoriaProfissional, PerfilProfissional } from "@/lib/data/profissionais";
 
 const DISPONIBILIDADE_OPCOES: Array<{ value: "disponivel" | "indisponivel" | "nao_informado"; label: string }> = [
@@ -42,6 +42,7 @@ export default function PerfilProfissionalForm({
   const [, startTransition] = useTransition();
   const categoriasSelecionadas = new Set(perfil.categorias.map((c) => c.id));
   const cidadesDoEstado = cidades.filter((c) => c.estado === estado);
+  const cidadesPorMacrorregiao = agruparCidadesPorMacrorregiao(cidadesDoEstado);
 
   useEffect(() => {
     if (!cidadeId) return;
@@ -110,10 +111,14 @@ export default function PerfilProfissionalForm({
           className="rounded-md border border-border px-3 py-2.5 text-sm disabled:opacity-50"
         >
           <option value="">{estado ? "Selecione" : "Escolha o estado primeiro"}</option>
-          {cidadesDoEstado.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.nome}
-            </option>
+          {[...cidadesPorMacrorregiao.entries()].map(([regiao, cidadesDaRegiao]) => (
+            <optgroup key={regiao} label={regiao}>
+              {cidadesDaRegiao.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nome}
+                </option>
+              ))}
+            </optgroup>
           ))}
         </select>
       </Field>

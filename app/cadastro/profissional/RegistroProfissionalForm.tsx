@@ -6,7 +6,7 @@ import { getBairrosAction, criarBairroCustomAction } from "@/lib/actions/geo";
 import { buttonClass } from "@/components/ui";
 import AceiteTermosCheckbox from "@/components/AceiteTermosCheckbox";
 import type { Cidade, Bairro } from "@/lib/data/geo";
-import { ESTADOS } from "@/lib/estados";
+import { ESTADOS, agruparCidadesPorMacrorregiao } from "@/lib/estados";
 import type { CategoriaProfissional } from "@/lib/data/profissionais";
 
 const BAIRRO_OUTRO = "outro";
@@ -26,6 +26,7 @@ export default function RegistroProfissionalForm({
   const [bairroCustomNome, setBairroCustomNome] = useState("");
   const [, startTransition] = useTransition();
   const cidadesDoEstado = cidades.filter((c) => c.estado === estado);
+  const cidadesPorMacrorregiao = agruparCidadesPorMacrorregiao(cidadesDoEstado);
 
   function handleEstadoChange(value: string) {
     setEstado(value);
@@ -88,10 +89,14 @@ export default function RegistroProfissionalForm({
           className="rounded-md border border-border px-3 py-2.5 text-sm disabled:opacity-50"
         >
           <option value="">{estado ? "Selecione" : "Escolha o estado primeiro"}</option>
-          {cidadesDoEstado.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.nome}
-            </option>
+          {[...cidadesPorMacrorregiao.entries()].map(([regiao, cidadesDaRegiao]) => (
+            <optgroup key={regiao} label={regiao}>
+              {cidadesDaRegiao.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nome}
+                </option>
+              ))}
+            </optgroup>
           ))}
         </select>
       </Field>
