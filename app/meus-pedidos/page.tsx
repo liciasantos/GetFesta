@@ -9,6 +9,7 @@ import { buildWhatsAppLink } from "@/lib/whatsapp";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import DestaquesGrid, { DestaquesKicker } from "@/components/DestaquesGrid";
 import MarcarContratadoButton from "@/components/MarcarContratadoButton";
+import DicaIcon from "@/components/DicaIcon";
 import { budgetRangeLabel } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -22,9 +23,8 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const DICAS = [
-  { icone: "💌", titulo: "Faça seu convite", desc: "Monte um convite online com foto, data e local em minutos." },
-  { icone: "✅", titulo: "Confirmação de presença (RSVP)", desc: "Saiba quantos adultos e crianças confirmaram presença." },
-  { icone: "🧮", titulo: "Calculadora de custos", desc: "Estime o orçamento por convidado antes de fechar com o fornecedor." },
+  { icone: "convite", titulo: "Faça seu convite", desc: "Monte um convite online com foto, data e local em minutos." },
+  { icone: "confirmacao", titulo: "Confirmação de presença (RSVP)", desc: "Saiba quantos adultos e crianças confirmaram presença." },
 ];
 
 export default async function MeusPedidosPage() {
@@ -158,10 +158,25 @@ export default async function MeusPedidosPage() {
       <div className="mt-8">
         <h2 className="text-[13px] font-bold uppercase tracking-wide text-muted-2">Dicas para sua festa</h2>
         <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+          <Link href="/calculadora-eventos" className="rounded-lg border border-border bg-surface p-3.5 hover:border-border-strong">
+            <div className="flex items-start justify-between gap-2">
+              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-accent-soft text-accent-dark">
+                <DicaIcon slug="calculadora" className="h-6 w-6" />
+              </span>
+              <Badge tone="ok">Usar agora</Badge>
+            </div>
+            <div className="mt-2 text-[12.5px] font-bold">Calculadora de festa</div>
+            <p className="mt-1 text-[11.5px] leading-relaxed text-muted">
+              Informe os convidados e descubra quanto comprar de comida e bebida.
+            </p>
+          </Link>
+
           {DICAS.map((d) => (
             <div key={d.titulo} className="rounded-lg border border-border bg-surface p-3.5">
               <div className="flex items-start justify-between gap-2">
-                <span className="text-xl">{d.icone}</span>
+                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-accent-soft text-accent-dark">
+                  <DicaIcon slug={d.icone} className="h-6 w-6" />
+                </span>
                 <Badge tone="muted">Em breve</Badge>
               </div>
               <div className="mt-2 text-[12.5px] font-bold">{d.titulo}</div>
@@ -171,7 +186,9 @@ export default async function MeusPedidosPage() {
 
           <div className="flex flex-col justify-between rounded-lg bg-text p-3.5 text-white">
             <div>
-              <span className="text-xl">🎁</span>
+              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-accent">
+                <DicaIcon slug="presente" className="h-6 w-6" />
+              </span>
               <div className="mt-2 text-[12.5px] font-bold">Tudo em um só lugar</div>
               <p className="mt-1 text-[11.5px] leading-relaxed text-white/75">
                 Convite, RSVP, calculadora e fornecedores — em breve, benefícios exclusivos pra quem organiza pela GetFesta.
