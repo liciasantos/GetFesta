@@ -32,17 +32,32 @@ export default async function MinhasVagasPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-8">
-      <Link href="/painel" className="text-[12.5px] font-bold text-accent-dark underline">
-        ← Voltar
-      </Link>
-
-      <div className="mb-1 mt-3 flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-xl font-extrabold">Minhas vagas para profissionais</h1>
-        <Link href="/painel/vagas/nova" className={buttonClass("primary", "sm")}>
-          + Publicar vaga
+      {/* HERÓI MOBILE — fundo escuro encostado nas bordas, igual ao da Home
+          do painel; no desktop o cabeçalho de sempre (abaixo) continua. */}
+      <div className="-mx-6 -mt-8 bg-text px-6 pb-6 pt-6 text-white sm:hidden">
+        <Link href="/painel" className="text-[12.5px] font-bold text-accent underline">
+          ← Voltar
+        </Link>
+        <h1 className="mt-3 text-xl font-extrabold">Minhas vagas para profissionais</h1>
+        <p className="mt-2 text-sm text-white/70">Freelas pontuais (ator, animador, garçom...) para um evento específico.</p>
+        <Link href="/painel/vagas/nova" className={`${buttonClass("primary")} mt-4 w-full`}>
+          Publicar Vaga
         </Link>
       </div>
-      <p className="text-sm text-muted">Freelas pontuais (ator, animador, garçom...) para um evento específico.</p>
+
+      <div className="hidden sm:block">
+        <Link href="/painel" className="text-[12.5px] font-bold text-accent-dark underline">
+          ← Voltar
+        </Link>
+
+        <div className="mb-1 mt-3 flex flex-wrap items-center justify-between gap-2">
+          <h1 className="text-xl font-extrabold">Minhas vagas para profissionais</h1>
+          <Link href="/painel/vagas/nova" className={buttonClass("primary", "sm")}>
+            + Publicar vaga
+          </Link>
+        </div>
+        <p className="text-sm text-muted">Freelas pontuais (ator, animador, garçom...) para um evento específico.</p>
+      </div>
 
       <h2 className="mb-2 mt-6 text-xs font-bold uppercase tracking-wide text-muted-2">Em aberto</h2>
       <div className="flex flex-col gap-3">

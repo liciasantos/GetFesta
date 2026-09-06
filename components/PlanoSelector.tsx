@@ -20,12 +20,16 @@ export default function PlanoSelector({
   periodos,
   whatsapp,
   nomeFantasia,
+  triggerVariant = "secondary",
 }: {
   planos: PlanoEmpresa[];
   planoAtualId: number | null;
   periodos: PlanoPeriodoEmpresa[];
   whatsapp: string;
   nomeFantasia: string;
+  /** "primary" no herói mobile do painel (fundo chapado, botão sólido); o
+   * resto continua "secondary" (contorno), como sempre foi. */
+  triggerVariant?: "primary" | "secondary";
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -132,7 +136,7 @@ export default function PlanoSelector({
             setStep("lista");
           }
         }}
-        className={buttonClass("secondary", "sm")}
+        className={buttonClass(triggerVariant, "sm")}
       >
         Alterar plano
       </button>

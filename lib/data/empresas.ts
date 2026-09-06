@@ -216,16 +216,17 @@ export async function getAvaliacaoGoogle(empresaId: string): Promise<AvaliacaoGo
   };
 }
 
-export async function getNomeFantasia(empresaId: string): Promise<string | null> {
-  const row = await queryOne<{ nome_fantasia: string }>(`SELECT nome_fantasia FROM empresas WHERE usuario_id = $1`, [
-    empresaId,
-  ]);
-  return row?.nome_fantasia ?? null;
-}
+export type PainelHeaderInfo = { nomeFantasia: string; slug: string; logoUrl: string | null };
 
-export async function getSlugEmpresa(empresaId: string): Promise<string | null> {
-  const row = await queryOne<{ slug: string }>(`SELECT slug FROM empresas WHERE usuario_id = $1`, [empresaId]);
-  return row?.slug ?? null;
+/** Dados leves pro cabeçalho do painel (nome, slug do perfil público e logo) -
+ * uma query só, em vez de uma pra cada campo. */
+export async function getPainelHeaderInfo(empresaId: string): Promise<PainelHeaderInfo | null> {
+  const row = await queryOne<{ nome_fantasia: string; slug: string; logo_url: string | null }>(
+    `SELECT nome_fantasia, slug, logo_url FROM empresas WHERE usuario_id = $1`,
+    [empresaId]
+  );
+  if (!row) return null;
+  return { nomeFantasia: row.nome_fantasia, slug: row.slug, logoUrl: row.logo_url };
 }
 
 export async function registrarVisualizacaoPerfil(empresaId: string) {
