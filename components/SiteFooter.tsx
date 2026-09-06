@@ -45,15 +45,20 @@ export default async function SiteFooter() {
       <div className="mx-auto grid max-w-6xl grid-cols-2 gap-x-8 gap-y-10 px-6 py-12 sm:grid-cols-[1.2fr_repeat(2,1fr)] lg:grid-cols-[1.2fr_repeat(4,1fr)]">
         <div className="col-span-2 sm:col-span-1">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-getfesta.svg" alt="GetFesta — quem faz sua festa acontecer" className="h-auto w-[190px]" />
+          <img
+            src="/logo-getfesta.svg"
+            alt="GetFesta — quem faz sua festa acontecer"
+            className="h-auto w-[228px] sm:w-[190px]"
+          />
           <p className="mt-4 max-w-xs text-[12.5px] leading-relaxed text-muted">
             O marketplace que conecta clientes a fornecedores de festas e eventos — sem custo para quem contrata.
           </p>
           <SocialIcons
-            className="mt-4"
+            className="mt-4 justify-center sm:justify-start"
             instagram={config[CONFIG_SOCIAL_INSTAGRAM]}
             tiktok={config[CONFIG_SOCIAL_TIKTOK]}
             youtube={config[CONFIG_SOCIAL_YOUTUBE]}
+            mobileScale
           />
         </div>
 

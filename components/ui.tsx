@@ -34,11 +34,18 @@ export function Card({ children, className = "" }: { children: ReactNode; classN
 const buttonBase =
   "inline-flex items-center justify-center gap-1.5 rounded-lg font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed";
 
-export function buttonClass(variant: "primary" | "secondary" | "ghost" = "primary", size: "md" | "sm" | "lg" = "md") {
+export function buttonClass(
+  variant: "primary" | "secondary" | "ghost" | "whatsapp" = "primary",
+  size: "md" | "sm" | "lg" = "md"
+) {
   const variants: Record<string, string> = {
     primary: "bg-accent text-white shadow-sm hover:bg-accent-dark hover:shadow-md",
     secondary: "bg-surface text-text border border-border-strong hover:bg-surface-alt",
     ghost: "bg-transparent text-accent-dark border border-accent-soft-2 hover:bg-accent-soft",
+    // verde do WhatsApp - usado só no WhatsAppButton, pra diferenciar
+    // visualmente de "Tenho interesse" (laranja) quando os dois aparecem
+    // um depois do outro na mesma lista (ex: pedidos compatíveis do painel).
+    whatsapp: "bg-ok text-white shadow-sm hover:bg-ok/90 hover:shadow-md",
   };
   const sizes: Record<string, string> = {
     lg: "px-6 py-3.5 text-[15px]",

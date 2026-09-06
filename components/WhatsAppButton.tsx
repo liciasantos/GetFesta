@@ -21,7 +21,7 @@ export default function WhatsAppButton({
         // dispara e nao espera - nao deve atrasar a navegacao para o WhatsApp
         void registrarCliqueWhatsapp(empresaId);
       }}
-      className={buttonClass("primary")}
+      className={buttonClass("whatsapp")}
     >
       💬 {label}
     </a>
