@@ -45,6 +45,9 @@ export default async function EmpresaPerfilPage({ params }: { params: Promise<{ 
       color: "var(--color-accent)",
     });
   }
+  // se não há tempo de resposta, a capacidade "sobe" pro 3º anel - nesse caso
+  // ela não se repete de novo mais abaixo, nos chips de preço/capacidade.
+  const capacidadeVirouAnel = !empresa.tempo_resposta_medio_minutos && !!empresa.capacidade_convidados;
   if (empresa.tempo_resposta_medio_minutos) {
     rings.push({
       label: "Resposta",
@@ -52,11 +55,11 @@ export default async function EmpresaPerfilPage({ params }: { params: Promise<{ 
       percent: Math.min(100, Math.max(10, 100 - ((empresa.tempo_resposta_medio_minutos - 5) / 55) * 100)),
       color: "var(--color-ok)",
     });
-  } else if (empresa.capacidade_convidados) {
+  } else if (capacidadeVirouAnel) {
     rings.push({
       label: "Capacidade",
       value: `${empresa.capacidade_convidados}`,
-      percent: Math.min(100, (empresa.capacidade_convidados / 300) * 100),
+      percent: Math.min(100, (empresa.capacidade_convidados! / 300) * 100),
       color: "var(--color-ok)",
     });
   }
@@ -100,19 +103,47 @@ export default async function EmpresaPerfilPage({ params }: { params: Promise<{ 
             </div>
           )}
 
-          <div className="mt-3 flex items-center justify-center gap-1.5">
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
             <h1 className="text-lg font-extrabold">{empresa.nome_fantasia}</h1>
-            {empresa.selo_verificado && <span title="Selo verificado">✓</span>}
+            {empresa.selo_verificado && <Badge tone="ok">✓ Selo verificado</Badge>}
+            {empresa.aprovada_para_destaque && <Badge tone="ad">Destaque</Badge>}
           </div>
-          <p className="mt-0.5 text-[12.5px] text-muted">
-            {empresa.categorias[0] ?? empresa.cidades[0] ?? "Fornecedor de festas"}
+          <p className="mt-1.5 text-[12.5px] text-muted">
+            {[empresa.categorias[0], empresa.cidades.length > 0 ? `📍 ${empresa.cidades.join(", ")}` : null]
+              .filter(Boolean)
+              .join(" · ") || "Fornecedor de festas"}
           </p>
+          {empresa.nota_fonte === "google" && empresa.url_perfil_google && (
+            <a
+              href={empresa.url_perfil_google}
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+              className="mt-1.5 inline-block rounded-full bg-surface-alt px-2.5 py-1 text-[11px] font-bold text-muted hover:underline"
+            >
+              Nota no Google ↗
+            </a>
+          )}
 
           <div className="mt-5 flex items-center justify-center gap-5">
             {rings.map((r) => (
               <StatRing key={r.label} {...r} />
             ))}
           </div>
+
+          {(empresa.preco_a_partir_de || (!capacidadeVirouAnel && empresa.capacidade_convidados)) && (
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+              {empresa.preco_a_partir_de && (
+                <span className="rounded-full bg-surface-alt px-3 py-1.5 text-[11.5px] font-bold text-text">
+                  A partir de R$ {Number(empresa.preco_a_partir_de).toLocaleString("pt-BR")}
+                </span>
+              )}
+              {!capacidadeVirouAnel && empresa.capacidade_convidados && (
+                <span className="rounded-full bg-surface-alt px-3 py-1.5 text-[11.5px] font-bold text-text">
+                  {empresa.capacidade_convidados} conv.
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
