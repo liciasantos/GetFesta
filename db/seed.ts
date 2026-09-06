@@ -200,8 +200,13 @@ async function main() {
     ["mestre_de_cerimonia", "Mestre de cerimônia"],
     ["seguranca", "Segurança"],
   ];
+  const categoriasProf: Record<string, number> = {};
   for (const [slug, nome] of categoriaProfSeed) {
-    await pool.query(`INSERT INTO categorias_profissionais (slug, nome) VALUES ($1, $2)`, [slug, nome]);
+    const { rows } = await pool.query<{ id: number }>(
+      `INSERT INTO categorias_profissionais (slug, nome) VALUES ($1, $2) RETURNING id`,
+      [slug, nome]
+    );
+    categoriasProf[slug] = rows[0].id;
   }
 
   console.log("Seed: planos...");
@@ -490,6 +495,51 @@ async function main() {
     }
   }
 
+  console.log("Seed: profissional de demonstração...");
+  const profissionalUserId = await criarUsuario("profissional", "profissional@teste.com");
+  await pool.query(
+    `INSERT INTO profissionais (
+       usuario_id, slug, nome, foto_perfil_url, sexo, bairro_id,
+       tempo_experiencia_meses, disponibilidade_status, portfolio_liberado_gratis
+     ) VALUES ($1,$2,$3,$4,$5,$6,$7,'disponivel',true)`,
+    [
+      profissionalUserId,
+      "julia-fernandes",
+      "Julia Fernandes",
+      placeholderPhoto("Julia Fernandes", 0),
+      "feminino",
+      bairros["Rio de Janeiro/Copacabana"],
+      30,
+    ]
+  );
+
+  // assinatura ativa no plano premium, pra dar acesso ao contato direto com
+  // empresa (mesmo padrao da empresa demo, que ganha o plano completo).
+  await pool.query(
+    `INSERT INTO assinaturas (usuario_id, plano_id, status, ciclo) VALUES ($1,$2,'ativa','mensal')`,
+    [profissionalUserId, planoIds["profissional_premium"]]
+  );
+
+  for (const slug of ["ator", "animador"]) {
+    await pool.query(`INSERT INTO profissional_categorias (profissional_id, categoria_id) VALUES ($1,$2)`, [
+      profissionalUserId,
+      categoriasProf[slug],
+    ]);
+  }
+
+  for (let i = 0; i < 3; i++) {
+    await pool.query(`INSERT INTO profissional_galeria (profissional_id, tipo, url, ordem) VALUES ($1,'foto',$2,$3)`, [
+      profissionalUserId,
+      placeholderPhoto("Julia Fernandes", i + 1),
+      i,
+    ]);
+  }
+
+  await pool.query(
+    `INSERT INTO avaliacoes_profissional (profissional_id, empresa_id, nota, comentario) VALUES ($1,$2,$3,$4)`,
+    [profissionalUserId, empresaIds["Casa de Festas Lua"], 5, "Super pontual e animada, os convidados adoraram!"]
+  );
+
   console.log("Seed: banners de categoria premium (link direto WhatsApp)...");
   const bannersSeed: Array<[string, string]> = [
     ["decoracao", "Ateliê Flor Decorações"],
@@ -740,6 +790,7 @@ async function main() {
   console.log("Seed concluído com sucesso.");
   console.log("Login de teste (cliente): cliente@teste.com / teste123");
   console.log("Login de teste (empresa): casadefestaslua@teste.com / teste123");
+  console.log("Login de teste (profissional): profissional@teste.com / teste123");
 }
 
 main()

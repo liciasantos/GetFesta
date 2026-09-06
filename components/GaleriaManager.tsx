@@ -10,11 +10,15 @@ export default function GaleriaManager({
   onAdd,
   onRemove,
   limite = 12,
+  colsMobile = 3,
 }: {
   fotos: { id: string; url: string }[];
   onAdd: (dataUrl: string) => Promise<UploadResult>;
   onRemove: (id: string) => Promise<UploadResult>;
   limite?: number;
+  /** Quantas colunas no mobile - 3 é o padrão (empresas), 2 fica maior e
+   * mais fácil de tocar no catálogo do profissional. */
+  colsMobile?: 2 | 3;
 }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -63,7 +67,7 @@ export default function GaleriaManager({
   return (
     <div>
       <div
-        className={`grid grid-cols-3 gap-2.5 rounded-lg sm:grid-cols-4 ${dragOver ? "outline outline-2 outline-offset-4 outline-accent" : ""}`}
+        className={`grid gap-2.5 rounded-lg sm:grid-cols-4 ${colsMobile === 2 ? "grid-cols-2" : "grid-cols-3"} ${dragOver ? "outline outline-2 outline-offset-4 outline-accent" : ""}`}
         onDragOver={(e) => {
           if (vagas === 0) return;
           e.preventDefault();

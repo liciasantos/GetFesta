@@ -23,6 +23,8 @@ import { getLimitesProfissional } from "@/lib/data/limites-profissional";
 import { Badge, buttonClass } from "@/components/ui";
 import { formatCurrencyBRL, formatDateBR } from "@/lib/format";
 import PerfilProfissionalForm from "./PerfilProfissionalForm";
+import { ProfissionalTabsProvider, TabSection } from "@/components/ProfissionalTabs";
+import PerfilProfissionalMobileHeader from "@/components/PerfilProfissionalMobileHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -53,32 +55,48 @@ export default async function PerfilProfissionalPage() {
     `Olá! Sou ${perfil.nome} e quero saber mais sobre como destacar meu perfil profissional na GetFesta.`
   );
 
+  // Cadastro via Google não pede bairro/funcoes - avisa que falta completar.
+  // Reaproveitado no cabeçalho desktop (abaixo) e no mobile (dentro do
+  // PerfilProfissionalMobileHeader), pra não duplicar a lógica da condição.
+  const avisoCompletarCatalogo =
+    !perfil.bairro_id || perfil.categorias.length === 0 ? (
+      <div className="rounded-lg border border-dashed border-border-strong bg-[#efece5] p-3 text-[12.5px] text-muted">
+        ⚠️ Falta completar seu catálogo pra empresas te encontrarem:{" "}
+        {!perfil.bairro_id && <b className="text-text">bairro</b>}
+        {!perfil.bairro_id && perfil.categorias.length === 0 && " e "}
+        {perfil.categorias.length === 0 && <b className="text-text">funções que você exerce</b>} — preencha no
+        formulário abaixo.
+      </div>
+    ) : null;
+
   return (
     <div className="mx-auto max-w-2xl px-6 py-10">
-      <h1 className="text-xl font-extrabold">Meu catálogo profissional</h1>
-      <p className="mt-1 text-sm text-muted">
-        Seu perfil não aparece para clientes finais — só empresas autenticadas na GetFesta podem ver e te contatar.
-      </p>
+      <div className="hidden sm:block">
+        <h1 className="text-xl font-extrabold">Meu catálogo profissional</h1>
+        <p className="mt-1 text-sm text-muted">
+          Seu perfil não aparece para clientes finais — só empresas autenticadas na GetFesta podem ver e te contatar.
+        </p>
+        {avisoCompletarCatalogo && <div className="mt-4">{avisoCompletarCatalogo}</div>}
+      </div>
 
-      {/* Cadastro via Google não pede bairro/funcoes - avisa que falta completar */}
-      {(!perfil.bairro_id || perfil.categorias.length === 0) && (
-        <div className="mt-4 rounded-lg border border-dashed border-border-strong bg-[#efece5] p-3 text-[12.5px] text-muted">
-          ⚠️ Falta completar seu catálogo pra empresas te encontrarem:{" "}
-          {!perfil.bairro_id && <b className="text-text">bairro</b>}
-          {!perfil.bairro_id && perfil.categorias.length === 0 && " e "}
-          {perfil.categorias.length === 0 && <b className="text-text">funções que você exerce</b>} — preencha no
-          formulário abaixo.
-        </div>
-      )}
+      <ProfissionalTabsProvider>
+      <PerfilProfissionalMobileHeader
+        nome={perfil.nome}
+        fotoPerfilUrl={perfil.foto_perfil_url}
+        disponibilidadeLabel={DISPONIBILIDADE_LABEL[perfil.disponibilidade_status]}
+        aviso={avisoCompletarCatalogo}
+        atualizarFoto={atualizarFotoProfissional}
+      />
 
-      <div className="mt-6 flex items-center justify-between gap-4 rounded-xl border border-border bg-surface p-5">
+      <TabSection tab="perfil">
+      <div className="mt-6 hidden items-center justify-between gap-4 rounded-xl border border-border bg-surface p-5 sm:flex">
         <AvatarUpload initialUrl={perfil.foto_perfil_url} name={perfil.nome} action={atualizarFotoProfissional} />
         <Badge tone={perfil.disponibilidade_status === "disponivel" ? "ok" : "muted"}>
           {DISPONIBILIDADE_LABEL[perfil.disponibilidade_status]}
         </Badge>
       </div>
 
-      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-accent bg-accent-soft p-5">
+      <div id="plano-upsell" className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-accent bg-accent-soft p-5">
         <div>
           <h2 className="text-[14px] font-bold text-accent-dark">
             {limites.planoTipo === "premium"
@@ -108,7 +126,9 @@ export default async function PerfilProfissionalPage() {
           Entrar em contato por e-mail
         </a>
       </div>
+      </TabSection>
 
+      <TabSection tab="vagas">
       <h2 className="mb-2 mt-8 text-xs font-bold uppercase tracking-wide text-muted-2">
         Vagas compatíveis e minhas candidaturas
       </h2>
@@ -142,14 +162,18 @@ export default async function PerfilProfissionalPage() {
           </div>
         ))}
       </div>
+      </TabSection>
 
-      <div className="mt-5 rounded-xl border border-border bg-surface p-5">
+      <TabSection tab="galeria">
+      <h2 className="mb-2 mt-8 text-xs font-bold uppercase tracking-wide text-muted-2">Portfolio</h2>
+      <div className="rounded-xl border border-border bg-surface p-5">
         <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Fotos (até {limites.maxFotos})</h2>
         <GaleriaManager
           fotos={perfil.galeria}
           onAdd={adicionarFotoGaleriaProfissional}
           onRemove={removerFotoGaleriaProfissional}
           limite={limites.maxFotos}
+          colsMobile={2}
         />
       </div>
 
@@ -167,12 +191,16 @@ export default async function PerfilProfissionalPage() {
           onRemove={removerVideoLinkProfissional}
         />
       </div>
+      </TabSection>
 
+      <TabSection tab="calendario">
       <div className="mt-5 rounded-xl border border-border bg-surface p-5">
         <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Calendário de disponibilidade</h2>
         <DisponibilidadeCalendar bloqueiosIniciais={bloqueiosDisponibilidade} />
       </div>
+      </TabSection>
 
+      <TabSection tab="perfil">
       <div className="mt-5 rounded-xl border border-border bg-surface p-5">
         <PerfilProfissionalForm perfil={perfil} categorias={categorias} cidades={cidades} />
       </div>
@@ -181,6 +209,8 @@ export default async function PerfilProfissionalPage() {
         <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Alterar senha</h2>
         <AlterarSenhaForm />
       </div>
+      </TabSection>
+      </ProfissionalTabsProvider>
     </div>
   );
 }

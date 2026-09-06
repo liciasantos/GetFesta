@@ -394,6 +394,7 @@ CREATE TABLE profissional_dias_indisponiveis (
     data             DATE NOT NULL,
     hora_inicio      TIME,
     hora_fim         TIME,
+    observacao       VARCHAR(200), -- nota livre e opcional do profissional (ex: "consulta médica")
     -- preenchido so quando o bloqueio foi criado automaticamente por uma
     -- selecao de vaga (ver marcarVagaPreenchida em lib/actions/vagas.ts) -
     -- permite achar e remover so esse bloqueio se a empresa desfizer a
