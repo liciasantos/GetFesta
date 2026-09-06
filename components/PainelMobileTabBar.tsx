@@ -39,7 +39,7 @@ export default function PainelMobileTabBar() {
   const pathname = usePathname();
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] sm:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_rgba(31,41,51,0.08)] sm:hidden"
       aria-label="Navegação do painel"
     >
       <div className="grid grid-cols-4">
@@ -49,21 +49,23 @@ export default function PainelMobileTabBar() {
             <Link
               key={t.href}
               href={t.href}
-              className={`flex flex-col items-center gap-1 py-2.5 text-[11px] font-bold ${
+              className={`flex flex-col items-center gap-1 py-2 text-[11.5px] font-bold ${
                 active ? "text-accent-dark" : "text-muted-2"
               }`}
               aria-current={active ? "page" : undefined}
             >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={1.6}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-6 w-6"
-                dangerouslySetInnerHTML={{ __html: t.icon }}
-              />
+              <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${active ? "bg-accent-soft" : ""}`}>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={1.8}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-[27px] w-[27px]"
+                  dangerouslySetInnerHTML={{ __html: t.icon }}
+                />
+              </span>
               {t.label}
             </Link>
           );
