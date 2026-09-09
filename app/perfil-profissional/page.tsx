@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { getMeuPerfilProfissional, listCategoriasProfissionais } from "@/lib/data/profissionais";
 import { listCidades } from "@/lib/data/geo";
-import { listVagasCompativeis } from "@/lib/data/vagas";
+import { listVagasCompativeis, listVagasConcluidasProfissional } from "@/lib/data/vagas";
 import { listBloqueiosIndisponibilidade } from "@/lib/data/disponibilidade";
 import { getConfiguracoesSite, CONFIG_CONTATO_EMAIL } from "@/lib/data/config";
 import AvatarUpload from "@/components/AvatarUpload";
@@ -26,9 +26,12 @@ import { Badge, buttonClass } from "@/components/ui";
 import { formatCurrencyBRL, formatDateBR } from "@/lib/format";
 import PerfilProfissionalForm from "./PerfilProfissionalForm";
 import { ProfissionalTabsProvider, TabSection } from "@/components/ProfissionalTabs";
+import { TABS, type Tab } from "@/lib/profissional-tabs";
 import PerfilProfissionalMobileHeader from "@/components/PerfilProfissionalMobileHeader";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
+const VAGAS_CONCLUIDAS_RESUMO = 5;
 
 const DISPONIBILIDADE_LABEL: Record<string, string> = {
   disponivel: "Disponível para novos eventos",
@@ -36,15 +39,23 @@ const DISPONIBILIDADE_LABEL: Record<string, string> = {
   nao_informado: "Não informado",
 };
 
-export default async function PerfilProfissionalPage() {
+export default async function PerfilProfissionalPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
   const session = await getSession();
   if (!session || session.tipo !== "profissional") redirect("/entrar");
 
-  const [perfil, categorias, cidades, vagas, bloqueiosDisponibilidade, config, limites] = await Promise.all([
+  const sp = await searchParams;
+  const initialTab: Tab = TABS.some((t) => t.id === sp.tab) ? (sp.tab as Tab) : "perfil";
+
+  const [perfil, categorias, cidades, vagas, vagasConcluidas, bloqueiosDisponibilidade, config, limites] = await Promise.all([
     getMeuPerfilProfissional(session.usuarioId),
     listCategoriasProfissionais(),
     listCidades(),
     listVagasCompativeis(session.usuarioId),
+    listVagasConcluidasProfissional(session.usuarioId, { limit: VAGAS_CONCLUIDAS_RESUMO }),
     listBloqueiosIndisponibilidade(session.usuarioId),
     getConfiguracoesSite(),
     getLimitesProfissional(session.usuarioId),
@@ -81,7 +92,7 @@ export default async function PerfilProfissionalPage() {
         {avisoCompletarCatalogo && <div className="mt-4">{avisoCompletarCatalogo}</div>}
       </div>
 
-      <ProfissionalTabsProvider>
+      <ProfissionalTabsProvider initialTab={initialTab}>
       <PerfilProfissionalMobileHeader
         nome={perfil.nome}
         fotoPerfilUrl={perfil.foto_perfil_url}
@@ -163,6 +174,32 @@ export default async function PerfilProfissionalPage() {
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="mt-5 rounded-xl border border-border bg-surface p-5">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h2 className="text-xs font-bold uppercase tracking-wide text-muted-2">Vagas concluídas</h2>
+          <Link href="/perfil-profissional/vagas-concluidas" className="text-[11.5px] font-bold text-accent-dark underline">
+            Ver histórico completo →
+          </Link>
+        </div>
+        {vagasConcluidas.length === 0 ? (
+          <p className="text-[12.5px] text-muted">Nenhuma vaga concluída ainda.</p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {vagasConcluidas.map((v) => (
+              <div key={v.id} className="flex items-center justify-between gap-3 rounded-lg border border-border p-2.5 text-[12.5px]">
+                <div>
+                  <span className="font-bold">{v.categoria_nome}</span> · {v.empresa_nome_fantasia}
+                  <div className="text-[11px] text-muted-2">{formatDateBR(v.data_evento)}</div>
+                </div>
+                <span className="whitespace-nowrap text-[11px] font-semibold text-muted-2">
+                  {v.valor ? formatCurrencyBRL(v.valor) : "Valor a combinar"}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       </TabSection>
 

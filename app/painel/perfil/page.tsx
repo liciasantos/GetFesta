@@ -2,24 +2,28 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { getEmpresaById, getAvaliacaoGoogle } from "@/lib/data/empresas";
+import { listVagasConcluidasEmpresa } from "@/lib/data/vagas";
 import AvatarUpload from "@/components/AvatarUpload";
 import GaleriaManager from "@/components/GaleriaManager";
 import AlterarSenhaForm from "@/components/AlterarSenhaForm";
 import ExcluirContaForm from "@/components/ExcluirContaForm";
 import { atualizarLogoEmpresa, adicionarFotoGaleria, removerFotoGaleria } from "@/lib/actions/perfil";
 import { excluirContaEmpresa } from "@/lib/actions/conta";
+import { formatCurrencyBRL, formatDateBR } from "@/lib/format";
 import PerfilEmpresaForm from "./PerfilEmpresaForm";
 import AvaliacaoGoogleForm from "./AvaliacaoGoogleForm";
 
 export const dynamic = "force-dynamic";
+const VAGAS_CONCLUIDAS_RESUMO = 5;
 
 export default async function PainelPerfilPage() {
   const session = await getSession();
   if (!session || session.tipo !== "empresa") redirect("/entrar");
 
-  const [empresa, avaliacaoGoogle] = await Promise.all([
+  const [empresa, avaliacaoGoogle, vagasConcluidas] = await Promise.all([
     getEmpresaById(session.usuarioId),
     getAvaliacaoGoogle(session.usuarioId),
+    listVagasConcluidasEmpresa(session.usuarioId, { limit: VAGAS_CONCLUIDAS_RESUMO }),
   ]);
   if (!empresa) redirect("/entrar");
 
@@ -59,6 +63,33 @@ export default async function PainelPerfilPage() {
       <div className="mt-5 rounded-xl border border-border bg-surface p-5">
         <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Nota do Google Meu Negócio</h2>
         <AvaliacaoGoogleForm avaliacao={avaliacaoGoogle} />
+      </div>
+
+      <div className="mt-5 rounded-xl border border-border bg-surface p-5">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h2 className="text-xs font-bold uppercase tracking-wide text-muted-2">Vagas concluídas</h2>
+          <Link href="/painel/vagas/concluidas" className="text-[11.5px] font-bold text-accent-dark underline">
+            Ver histórico completo →
+          </Link>
+        </div>
+        {vagasConcluidas.length === 0 ? (
+          <p className="text-[12.5px] text-muted">Nenhuma vaga concluída ainda.</p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {vagasConcluidas.map((v) => (
+              <div key={v.id} className="flex items-center justify-between gap-3 rounded-lg border border-border p-2.5 text-[12.5px]">
+                <div>
+                  <span className="font-bold">{v.categoria_nome}</span>
+                  {v.profissional_selecionado_nome && <> · {v.profissional_selecionado_nome}</>}
+                  <div className="text-[11px] text-muted-2">{formatDateBR(v.data_evento)}</div>
+                </div>
+                <span className="whitespace-nowrap text-[11px] font-semibold text-muted-2">
+                  {v.valor ? formatCurrencyBRL(v.valor) : "Valor a combinar"}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="mt-5 rounded-xl border border-border bg-surface p-5">

@@ -141,3 +141,79 @@ export async function getAvaliacaoDaVaga(vagaId: string, empresaId: string): Pro
     [vagaId, empresaId]
   );
 }
+
+export type VagaConcluidaEmpresa = {
+  id: string;
+  categoria_nome: string;
+  data_evento: string;
+  valor: string | null;
+  profissional_selecionado_nome: string | null;
+  profissional_selecionado_slug: string | null;
+};
+
+const VAGA_CONCLUIDA_EMPRESA_SELECT = `
+  SELECT v.id, cp.nome AS categoria_nome, v.data_evento, v.valor,
+         sel.nome AS profissional_selecionado_nome, sel.slug AS profissional_selecionado_slug
+  FROM vagas_profissionais v
+  JOIN categorias_profissionais cp ON cp.id = v.categoria_profissional_id
+  LEFT JOIN profissionais sel ON sel.usuario_id = v.profissional_selecionado_id
+  WHERE v.empresa_id = $1 AND v.status = 'preenchida'
+`;
+
+/** Histórico de vagas concluídas da empresa - usado tanto no card resumido
+ * (5 mais recentes) quanto na página de histórico completo (paginada). */
+export async function listVagasConcluidasEmpresa(
+  empresaId: string,
+  { limit, offset = 0 }: { limit: number; offset?: number }
+): Promise<VagaConcluidaEmpresa[]> {
+  return query<VagaConcluidaEmpresa>(
+    `${VAGA_CONCLUIDA_EMPRESA_SELECT} ORDER BY v.data_evento DESC LIMIT $2 OFFSET $3`,
+    [empresaId, limit, offset]
+  );
+}
+
+export async function countVagasConcluidasEmpresa(empresaId: string): Promise<number> {
+  const row = await queryOne<{ total: string }>(
+    `SELECT COUNT(*) AS total FROM vagas_profissionais WHERE empresa_id = $1 AND status = 'preenchida'`,
+    [empresaId]
+  );
+  return Number(row?.total ?? 0);
+}
+
+export type VagaConcluidaProfissional = {
+  id: string;
+  categoria_nome: string;
+  data_evento: string;
+  valor: string | null;
+  empresa_nome_fantasia: string;
+  empresa_slug: string;
+};
+
+const VAGA_CONCLUIDA_PROFISSIONAL_SELECT = `
+  SELECT v.id, cp.nome AS categoria_nome, v.data_evento, v.valor,
+         e.nome_fantasia AS empresa_nome_fantasia, e.slug AS empresa_slug
+  FROM vagas_profissionais v
+  JOIN categorias_profissionais cp ON cp.id = v.categoria_profissional_id
+  JOIN empresas e ON e.usuario_id = v.empresa_id
+  WHERE v.profissional_selecionado_id = $1 AND v.status = 'preenchida'
+`;
+
+/** Histórico de vagas concluídas do profissional - mesmo padrão do lado da
+ * empresa (card resumido + página de histórico paginada). */
+export async function listVagasConcluidasProfissional(
+  profissionalId: string,
+  { limit, offset = 0 }: { limit: number; offset?: number }
+): Promise<VagaConcluidaProfissional[]> {
+  return query<VagaConcluidaProfissional>(
+    `${VAGA_CONCLUIDA_PROFISSIONAL_SELECT} ORDER BY v.data_evento DESC LIMIT $2 OFFSET $3`,
+    [profissionalId, limit, offset]
+  );
+}
+
+export async function countVagasConcluidasProfissional(profissionalId: string): Promise<number> {
+  const row = await queryOne<{ total: string }>(
+    `SELECT COUNT(*) AS total FROM vagas_profissionais WHERE profissional_selecionado_id = $1 AND status = 'preenchida'`,
+    [profissionalId]
+  );
+  return Number(row?.total ?? 0);
+}
