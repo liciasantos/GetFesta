@@ -109,6 +109,28 @@ export async function getTelefoneProfissional(usuarioId: string): Promise<string
   return row?.telefone ?? null;
 }
 
+export type ComentarioAvaliacaoProfissional = {
+  id: string;
+  nota: number;
+  comentario: string;
+  criado_em: string;
+};
+
+/** Comentários que empresas deixaram pro profissional após fechar uma vaga -
+ * sempre anônimo (não expõe qual empresa avaliou, pra não inibir feedback
+ * sincero); só entram avaliações com texto (nota sozinha não aparece aqui,
+ * ela já alimenta o nota_media exibido no topo do perfil). */
+export async function listComentariosProfissional(profissionalId: string): Promise<ComentarioAvaliacaoProfissional[]> {
+  return query<ComentarioAvaliacaoProfissional>(
+    `SELECT id, nota, comentario, criado_em
+     FROM avaliacoes_profissional
+     WHERE profissional_id = $1 AND comentario IS NOT NULL AND comentario <> ''
+     ORDER BY criado_em DESC
+     LIMIT 50`,
+    [profissionalId]
+  );
+}
+
 export type ProfissionalBusca = {
   usuario_id: string;
   slug: string;

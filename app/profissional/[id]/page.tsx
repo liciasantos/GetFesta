@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
-import { getMeuPerfilProfissional, getTelefoneProfissional } from "@/lib/data/profissionais";
+import { getMeuPerfilProfissional, getTelefoneProfissional, listComentariosProfissional } from "@/lib/data/profissionais";
+import { formatDateBR } from "@/lib/format";
 import { listBloqueiosIndisponibilidade } from "@/lib/data/disponibilidade";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 import { Badge, PlaceholderImg } from "@/components/ui";
@@ -38,9 +39,10 @@ export default async function PerfilProfissionalParaEmpresaPage({ params }: { pa
   const perfil = await getMeuPerfilProfissional(id);
   if (!perfil) notFound();
 
-  const [telefone, bloqueiosDisponibilidade] = await Promise.all([
+  const [telefone, bloqueiosDisponibilidade, comentarios] = await Promise.all([
     getTelefoneProfissional(perfil.usuario_id),
     listBloqueiosIndisponibilidade(perfil.usuario_id),
+    listComentariosProfissional(perfil.usuario_id),
   ]);
   const diasInteiros = bloqueiosDisponibilidade.filter((b) => !b.horaInicio);
   const horariosEspecificos = bloqueiosDisponibilidade.filter((b) => b.horaInicio);
@@ -251,6 +253,28 @@ export default async function PerfilProfissionalParaEmpresaPage({ params }: { pa
           </>
         )}
       </div>
+
+      {comentarios.length > 0 && (
+        <div className="mt-5 rounded-xl border border-border bg-surface p-5">
+          <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">
+            Comentários de empresas ({comentarios.length})
+          </h2>
+          <div className="flex flex-col gap-3">
+            {comentarios.map((c) => (
+              <div key={c.id} className="rounded-lg border border-border bg-surface-alt p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[12px] font-bold text-gold">{"★".repeat(c.nota)}{"☆".repeat(5 - c.nota)}</span>
+                  <span className="text-[10.5px] font-semibold text-muted-2">{formatDateBR(c.criado_em)}</span>
+                </div>
+                <p className="mt-1.5 text-[12.5px] leading-relaxed text-text">{c.comentario}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 text-[11px] text-muted-2">
+            Comentários de empresas que já contrataram esse profissional — a identidade de quem avaliou não é exibida.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
