@@ -7,6 +7,8 @@ import CookieConsent from "@/components/CookieConsent";
 import GoogleAdBanner from "@/components/GoogleAdBanner";
 import GoogleAdsenseHead from "@/components/GoogleAdsenseHead";
 import ClarityScript from "@/components/ClarityScript";
+import MobileAccountNav from "@/components/MobileAccountNav";
+import { getSession } from "@/lib/auth";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -27,14 +29,18 @@ export const metadata: Metadata = {
     "Marketplace que conecta clientes a fornecedores de festas e eventos — sem custo para quem contrata.",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const session = await getSession();
+
   return (
     <html lang="pt-BR" className={`h-full ${inter.variable} ${manrope.variable}`}>
       <body className="min-h-full flex flex-col antialiased">
         <GoogleAdsenseHead />
         <ClarityScript />
         <SiteHeader />
-        <main className="flex-1">{children}</main>
+        <main className="flex-1">
+          <MobileAccountNav tipo={session?.tipo ?? null}>{children}</MobileAccountNav>
+        </main>
         <GoogleAdBanner />
         <SiteFooter />
         <CookieConsent />
