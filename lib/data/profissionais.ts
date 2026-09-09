@@ -30,6 +30,7 @@ export type PerfilProfissional = {
   portfolio_pdf_url: string | null;
   portfolio_pdf_nome: string | null;
   portfolio_liberado_gratis: boolean;
+  cpf: string | null;
   categorias: { id: number; nome: string }[];
   galeria: { id: string; url: string }[];
   videoLinks: { id: string; url: string }[];
@@ -62,6 +63,7 @@ export async function getMeuPerfilProfissional(idOuSlug: string): Promise<Perfil
     portfolio_pdf_url: string | null;
     portfolio_pdf_nome: string | null;
     portfolio_liberado_gratis: boolean;
+    cpf: string | null;
   }>(
     `SELECT p.usuario_id, p.slug, p.nome, p.foto_perfil_url, p.bairro_id, b.nome AS bairro_nome,
             ci.id AS cidade_id, ci.nome AS cidade_nome, p.disponibilidade_status,
@@ -69,7 +71,7 @@ export async function getMeuPerfilProfissional(idOuSlug: string): Promise<Perfil
             p.tempo_experiencia_meses,
             (SELECT ROUND(AVG(ap.nota)::numeric, 1) FROM avaliacoes_profissional ap WHERE ap.profissional_id = p.usuario_id) AS nota_media,
             (SELECT COUNT(*)::int FROM avaliacoes_profissional ap WHERE ap.profissional_id = p.usuario_id) AS total_avaliacoes,
-            p.portfolio_pdf_url, p.portfolio_pdf_nome, p.portfolio_liberado_gratis
+            p.portfolio_pdf_url, p.portfolio_pdf_nome, p.portfolio_liberado_gratis, p.cpf
      FROM profissionais p
      LEFT JOIN bairros b ON b.id = p.bairro_id
      LEFT JOIN cidades ci ON ci.id = b.cidade_id

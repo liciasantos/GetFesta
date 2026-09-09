@@ -78,6 +78,15 @@ export default function PerfilProfissionalForm({
         <input name="nome" defaultValue={perfil.nome} required className="rounded-md border border-border px-3 py-2.5 text-sm" />
       </Field>
 
+      <Field label="CPF">
+        <input
+          name="cpf"
+          defaultValue={perfil.cpf ?? ""}
+          placeholder="000.000.000-00"
+          className="rounded-md border border-border px-3 py-2.5 text-sm"
+        />
+      </Field>
+
       <Field label="Sexo">
         <select name="sexo" defaultValue={perfil.sexo ?? ""} className="rounded-md border border-border px-3 py-2.5 text-sm">
           <option value="">Prefiro não informar</option>

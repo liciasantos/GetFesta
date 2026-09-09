@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne } from "@/lib/db";
 import { createSession } from "@/lib/auth";
 import { getAppUrl, trocarCodePorPerfilGoogle, type GoogleTipo } from "@/lib/google-oauth";
+import { gerarSlugUnicoProfissional } from "@/lib/slug";
 
 const TIPOS_PERMITIDOS: GoogleTipo[] = ["cliente", "profissional"];
 
@@ -46,14 +47,19 @@ export async function GET(request: NextRequest) {
     // lib/data/limites-profissional.ts, nao precisa de assinatura aqui.
     const totalProfissionais = await queryOne<{ total: string }>(`SELECT count(*) AS total FROM profissionais`);
     const portfolioLiberadoGratis = Number(totalProfissionais?.total ?? 0) < 20;
+    const slug = await gerarSlugUnicoProfissional(perfil.nome);
     await query(
-      `INSERT INTO profissionais (usuario_id, nome, consentimento_dados_em, portfolio_liberado_gratis) VALUES ($1, $2, now(), $3)`,
-      [usuario.id, perfil.nome, portfolioLiberadoGratis]
+      `INSERT INTO profissionais (usuario_id, slug, nome, consentimento_dados_em, portfolio_liberado_gratis) VALUES ($1, $2, $3, now(), $4)`,
+      [usuario.id, slug, perfil.nome, portfolioLiberadoGratis]
     );
   }
 
   await createSession({ usuarioId: usuario.id, tipo: tipoNovaConta });
-  return NextResponse.redirect(`${appUrl}${destinoPorTipo(tipoNovaConta)}`);
+  // Cadastro via Google nao passa pelo formulario normal, entao nunca chega a
+  // informar CPF - trava aqui antes de liberar o resto do site (diferente de
+  // conta ja existente sem CPF, que so recebe um aviso nao-bloqueante no
+  // proprio perfil, ver app/completar-cadastro/cpf/page.tsx).
+  return NextResponse.redirect(`${appUrl}/completar-cadastro/cpf`);
 }
 
 function destinoPorTipo(tipo: "cliente" | "empresa" | "profissional" | "admin"): string {

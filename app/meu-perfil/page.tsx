@@ -23,6 +23,12 @@ export default async function MeuPerfilPage() {
       <h1 className="text-xl font-extrabold">Meu perfil</h1>
       <p className="mt-1 text-sm text-muted">{perfil.email}</p>
 
+      {!perfil.cpf && (
+        <div className="mt-4 rounded-lg border border-dashed border-border-strong bg-[#efece5] p-3 text-[12.5px] text-muted">
+          ⚠️ Falta completar seu CPF pra manter sua conta segura contra perfis falsos — preencha no formulário abaixo.
+        </div>
+      )}
+
       <div className="mt-6 rounded-xl border border-border bg-surface p-5">
         <AvatarUpload initialUrl={perfil.foto_url} name={perfil.nome} action={atualizarFotoCliente} />
       </div>

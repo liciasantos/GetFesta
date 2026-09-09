@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValidCPF } from "@/lib/cpf";
 
 const aceitouTermosSchema = z
   .string()
@@ -10,10 +11,23 @@ const aceitouLgpdImagensSchema = z
   .optional()
   .refine((v) => v === "on", "É necessário confirmar a declaração sobre imagens de crianças e adolescentes");
 
+/** Obrigatório em cadastros novos (cliente/profissional) - valida os dígitos
+ * verificadores de verdade, não só o tamanho (ver lib/cpf.ts). */
+export const cpfSchema = z.string().refine((v) => isValidCPF(v), "CPF inválido");
+
+/** Mesma validação, mas opcional - usada nos formulários de editar perfil,
+ * onde contas antigas sem CPF não podem ser obrigadas a preencher só pra
+ * salvar outra alteração (ver decisão de aviso não-bloqueante). */
+export const cpfOpcionalSchema = z
+  .string()
+  .optional()
+  .refine((v) => !v || isValidCPF(v), "CPF inválido");
+
 export const registrarClienteSchema = z.object({
   nome: z.string().min(2, "Informe seu nome"),
   email: z.string().email("E-mail inválido"),
   telefone: z.string().min(10, "Telefone inválido"),
+  cpf: cpfSchema,
   senha: z.string().min(6, "Mínimo de 6 caracteres"),
   cidadeId: z.coerce.number().optional(),
   aceitouTermos: aceitouTermosSchema,
@@ -58,6 +72,7 @@ export const registrarProfissionalSchema = z.object({
   nome: z.string().min(2, "Informe seu nome"),
   email: z.string().email("E-mail inválido"),
   telefone: z.string().min(10, "Telefone inválido"),
+  cpf: cpfSchema,
   senha: z.string().min(6, "Mínimo de 6 caracteres"),
   bairroId: z.coerce.number({ message: "Selecione o bairro" }),
   categoriaIds: z.array(z.coerce.number()).min(1, "Selecione ao menos uma categoria"),
@@ -98,6 +113,14 @@ export const alterarSenhaSchema = z
 export const atualizarPerfilClienteSchema = z.object({
   nome: z.string().min(2, "Informe seu nome"),
   cidadeId: z.coerce.number().optional().nullable(),
+  cpf: cpfOpcionalSchema,
+});
+
+/** Formulário dedicado de /completar-cadastro/cpf (gate obrigatório pra quem
+ * criou conta pelo Google, que não passa pelo cadastro por e-mail/senha e
+ * portanto nunca informou CPF) - aqui sim é obrigatório. */
+export const completarCpfSchema = z.object({
+  cpf: cpfSchema,
 });
 
 export const atualizarPerfilEmpresaSchema = z.object({
@@ -120,6 +143,7 @@ export const avaliacaoGoogleSchema = z.object({
 
 export const atualizarPerfilProfissionalSchema = z.object({
   nome: z.string().min(2, "Informe seu nome"),
+  cpf: cpfOpcionalSchema,
   bairroId: z.coerce.number().optional().nullable(),
   disponibilidadeStatus: z.enum(["disponivel", "indisponivel", "nao_informado"]),
   categoriaIds: z.array(z.coerce.number()).min(1, "Selecione ao menos uma categoria"),

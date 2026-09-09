@@ -71,7 +71,7 @@ export default async function PerfilProfissionalPage({
   // Cadastro via Google não pede bairro/funcoes - avisa que falta completar.
   // Reaproveitado no cabeçalho desktop (abaixo) e no mobile (dentro do
   // PerfilProfissionalMobileHeader), pra não duplicar a lógica da condição.
-  const avisoCompletarCatalogo =
+  const avisoCatalogoIncompleto =
     !perfil.bairro_id || perfil.categorias.length === 0 ? (
       <div className="rounded-lg border border-dashed border-border-strong bg-[#efece5] p-3 text-[12.5px] text-muted">
         ⚠️ Falta completar seu catálogo pra empresas te encontrarem:{" "}
@@ -80,6 +80,24 @@ export default async function PerfilProfissionalPage({
         {perfil.categorias.length === 0 && <b className="text-text">funções que você exerce</b>} — preencha no
         formulário abaixo.
       </div>
+    ) : null;
+
+  // Aviso separado do de cima: esse é sobre segurança da conta (evitar
+  // perfil falso), não sobre aparecer melhor pra empresa - contas antigas
+  // sem CPF continuam funcionando normalmente, só com esse lembrete.
+  const avisoCpfFaltando = !perfil.cpf ? (
+    <div className="rounded-lg border border-dashed border-border-strong bg-[#efece5] p-3 text-[12.5px] text-muted">
+      ⚠️ Falta completar seu <b className="text-text">CPF</b> pra manter sua conta segura contra perfis falsos —
+      preencha no formulário abaixo.
+    </div>
+  ) : null;
+
+  const avisoCompletarCatalogo =
+    avisoCatalogoIncompleto || avisoCpfFaltando ? (
+      <>
+        {avisoCatalogoIncompleto}
+        {avisoCpfFaltando && <div className={avisoCatalogoIncompleto ? "mt-2" : ""}>{avisoCpfFaltando}</div>}
+      </>
     ) : null;
 
   return (

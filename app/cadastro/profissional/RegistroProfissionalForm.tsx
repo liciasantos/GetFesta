@@ -66,6 +66,9 @@ export default function RegistroProfissionalForm({
       <Field label="Telefone (WhatsApp)">
         <input name="telefone" required placeholder="(21) 99999-9999" className="rounded-md border border-border px-3 py-2.5 text-sm" />
       </Field>
+      <Field label="CPF">
+        <input name="cpf" required placeholder="000.000.000-00" className="rounded-md border border-border px-3 py-2.5 text-sm" />
+      </Field>
 
       <Field label="Estado">
         <select

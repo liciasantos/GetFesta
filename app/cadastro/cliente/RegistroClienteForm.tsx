@@ -15,6 +15,7 @@ export default function RegistroClienteForm({ cidades }: { cidades: Cidade[] }) 
       <Field label="Nome"><input name="nome" required className="rounded-md border border-border px-3 py-2.5 text-sm" /></Field>
       <Field label="E-mail"><input name="email" type="email" required className="rounded-md border border-border px-3 py-2.5 text-sm" /></Field>
       <Field label="Telefone"><input name="telefone" required placeholder="(21) 99999-9999" className="rounded-md border border-border px-3 py-2.5 text-sm" /></Field>
+      <Field label="CPF"><input name="cpf" required placeholder="000.000.000-00" className="rounded-md border border-border px-3 py-2.5 text-sm" /></Field>
       <Field label="Cidade">
         <select name="cidadeId" className="rounded-md border border-border px-3 py-2.5 text-sm">
           <option value="">Selecione (opcional)</option>

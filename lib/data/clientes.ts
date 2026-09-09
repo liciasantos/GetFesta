@@ -7,11 +7,12 @@ export type PerfilCliente = {
   cidade_id: number | null;
   cidade_nome: string | null;
   email: string | null;
+  cpf: string | null;
 };
 
 export async function getMeuPerfilCliente(usuarioId: string): Promise<PerfilCliente | null> {
   return queryOne<PerfilCliente>(
-    `SELECT c.usuario_id, c.nome, c.foto_url, c.cidade_id, ci.nome AS cidade_nome, u.email
+    `SELECT c.usuario_id, c.nome, c.foto_url, c.cidade_id, ci.nome AS cidade_nome, u.email, c.cpf
      FROM clientes c
      JOIN usuarios u ON u.id = c.usuario_id
      LEFT JOIN cidades ci ON ci.id = c.cidade_id

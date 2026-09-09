@@ -15,6 +15,14 @@ export default function PerfilClienteForm({ perfil, cidades }: { perfil: PerfilC
       <Field label="Nome">
         <input name="nome" defaultValue={perfil.nome} required className="rounded-md border border-border px-3 py-2.5 text-sm" />
       </Field>
+      <Field label="CPF">
+        <input
+          name="cpf"
+          defaultValue={perfil.cpf ?? ""}
+          placeholder="000.000.000-00"
+          className="rounded-md border border-border px-3 py-2.5 text-sm"
+        />
+      </Field>
       <Field label="Cidade">
         <select name="cidadeId" defaultValue={perfil.cidade_id ?? ""} className="rounded-md border border-border px-3 py-2.5 text-sm">
           <option value="">Selecione (opcional)</option>

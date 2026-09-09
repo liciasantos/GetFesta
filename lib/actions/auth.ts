@@ -17,6 +17,7 @@ import { buildConfirmacaoCadastroEmail, buildResetSenhaEmail, sendEmail } from "
 import { getAppUrl } from "@/lib/google-oauth";
 import { gerarSlugUnicoEmpresa, gerarSlugUnicoProfissional } from "@/lib/slug";
 import { buildPasswordResetToken, decodePasswordResetToken, isPasswordResetTokenAindaValido } from "@/lib/password-reset";
+import { formatCPF, normalizeCPF } from "@/lib/cpf";
 
 async function enviarEmailConfirmacaoCadastro(usuarioId: string, email: string, nome: string) {
   const token = buildEmailVerificationToken(usuarioId);
@@ -71,6 +72,7 @@ export async function registrarCliente(_prevState: ActionState, formData: FormDa
     nome: formData.get("nome"),
     email: formData.get("email"),
     telefone: formData.get("telefone"),
+    cpf: formData.get("cpf"),
     senha: formData.get("senha"),
     cidadeId: formData.get("cidadeId") || undefined,
     aceitouTermos: formData.get("aceitouTermos") || undefined,
@@ -93,6 +95,15 @@ export async function registrarCliente(_prevState: ActionState, formData: FormDa
     return { error: "Esse telefone já está cadastrado em outra conta." };
   }
 
+  const cpfNormalizado = normalizeCPF(parsed.data.cpf);
+  const cpfDuplicado = await queryOne(
+    `SELECT usuario_id FROM clientes WHERE cpf IS NOT NULL AND regexp_replace(cpf, '\\D', '', 'g') = $1`,
+    [cpfNormalizado]
+  );
+  if (cpfDuplicado) {
+    return { error: "Esse CPF já está cadastrado em outra conta." };
+  }
+
   const senhaHash = await hashPassword(parsed.data.senha);
   const usuario = await queryOne<{ id: string }>(
     `INSERT INTO usuarios (tipo, email, senha_hash, telefone, termos_aceitos_em) VALUES ('cliente', $1, $2, $3, now()) RETURNING id`,
@@ -100,10 +111,11 @@ export async function registrarCliente(_prevState: ActionState, formData: FormDa
   );
   if (!usuario) return { error: "Não foi possível criar a conta, tente novamente" };
 
-  await query(`INSERT INTO clientes (usuario_id, nome, cidade_id) VALUES ($1, $2, $3)`, [
+  await query(`INSERT INTO clientes (usuario_id, nome, cidade_id, cpf) VALUES ($1, $2, $3, $4)`, [
     usuario.id,
     parsed.data.nome,
     parsed.data.cidadeId ?? null,
+    formatCPF(parsed.data.cpf),
   ]);
 
   // Se veio de um pedido publicado sem login, vincula o pedido a essa conta agora.
@@ -216,6 +228,7 @@ export async function registrarProfissional(_prevState: ActionState, formData: F
     nome: formData.get("nome"),
     email: formData.get("email"),
     telefone: formData.get("telefone"),
+    cpf: formData.get("cpf"),
     senha: formData.get("senha"),
     bairroId: formData.get("bairroId"),
     categoriaIds: formData.getAll("categoriaIds"),
@@ -240,6 +253,15 @@ export async function registrarProfissional(_prevState: ActionState, formData: F
     return { error: "Esse telefone já está cadastrado em outra conta." };
   }
 
+  const cpfNormalizado = normalizeCPF(parsed.data.cpf);
+  const cpfDuplicado = await queryOne(
+    `SELECT usuario_id FROM profissionais WHERE cpf IS NOT NULL AND regexp_replace(cpf, '\\D', '', 'g') = $1`,
+    [cpfNormalizado]
+  );
+  if (cpfDuplicado) {
+    return { error: "Esse CPF já está cadastrado em outra conta." };
+  }
+
   const senhaHash = await hashPassword(parsed.data.senha);
   const usuario = await queryOne<{ id: string }>(
     `INSERT INTO usuarios (tipo, email, senha_hash, telefone, termos_aceitos_em) VALUES ('profissional', $1, $2, $3, now()) RETURNING id`,
@@ -255,9 +277,9 @@ export async function registrarProfissional(_prevState: ActionState, formData: F
   const totalProfissionais = await queryOne<{ total: string }>(`SELECT count(*) AS total FROM profissionais`);
   const portfolioLiberadoGratis = Number(totalProfissionais?.total ?? 0) < 20;
   await query(
-    `INSERT INTO profissionais (usuario_id, slug, nome, bairro_id, consentimento_dados_em, portfolio_liberado_gratis)
-     VALUES ($1,$2,$3,$4,now(),$5)`,
-    [usuario.id, slug, parsed.data.nome, parsed.data.bairroId, portfolioLiberadoGratis]
+    `INSERT INTO profissionais (usuario_id, slug, nome, bairro_id, cpf, consentimento_dados_em, portfolio_liberado_gratis)
+     VALUES ($1,$2,$3,$4,$5,now(),$6)`,
+    [usuario.id, slug, parsed.data.nome, parsed.data.bairroId, formatCPF(parsed.data.cpf), portfolioLiberadoGratis]
   );
 
   for (const categoriaId of parsed.data.categoriaIds) {

@@ -118,12 +118,18 @@ CREATE TABLE clientes (
     nome         VARCHAR(180) NOT NULL,
     foto_url     TEXT,                     -- avatar do cliente (data URI, comprimido no client antes do upload)
     cnpj         VARCHAR(18),              -- obrigatorio se tipo_pessoa = 'juridica'
+    -- nulo em contas criadas antes desse campo existir, ou via cadastro Google
+    -- que ainda nao passou pelo gate de /completar-cadastro/cpf (ver route.ts
+    -- do callback) - por isso o indice unico abaixo e parcial (ignora nulos),
+    -- senao a segunda conta sem CPF preenchido colidiria com a primeira.
+    cpf          VARCHAR(14),
     cidade_id    INTEGER REFERENCES cidades(id),
     bairro_id    INTEGER REFERENCES bairros(id),
     CONSTRAINT chk_cliente_cnpj CHECK (
         (tipo_pessoa = 'fisica') OR (tipo_pessoa = 'juridica' AND cnpj IS NOT NULL)
     )
 );
+CREATE UNIQUE INDEX ux_clientes_cpf ON clientes(cpf) WHERE cpf IS NOT NULL;
 
 -- ---------------------------------------------------------------------
 -- 5. EMPRESAS FORNECEDORAS (sempre pessoa juridica — nunca CPF)
@@ -250,6 +256,10 @@ CREATE TABLE profissionais (
     tempo_experiencia_meses      INTEGER,
     pessoa_juridica              BOOLEAN NOT NULL DEFAULT FALSE,
     cnpj                        VARCHAR(18),           -- se atua como PJ
+    -- mesma regra do cpf de clientes: nulo em contas antigas ou recem-criadas
+    -- via Google (ver app/api/auth/google/callback/route.ts), indice parcial
+    -- pra nao colidir varios nulos entre si.
+    cpf                         VARCHAR(14),
     disponibilidade_status       status_disponibilidade NOT NULL DEFAULT 'nao_informado',
     consentimento_dados_em       TIMESTAMPTZ,           -- aceite do termo especifico LGPD
     aprovada_para_destaque       BOOLEAN NOT NULL DEFAULT FALSE, -- curadoria manual do admin (anuncio pago), mesmo padrao de empresas.aprovada_para_destaque
@@ -263,6 +273,7 @@ CREATE TABLE profissionais (
     portfolio_liberado_gratis    BOOLEAN NOT NULL DEFAULT FALSE,
     criado_em                    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+CREATE UNIQUE INDEX ux_profissionais_cpf ON profissionais(cpf) WHERE cpf IS NOT NULL;
 
 -- um profissional pode atuar em mais de uma categoria (ex.: ator + garcom)
 CREATE TABLE profissional_categorias (

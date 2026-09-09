@@ -12,6 +12,7 @@ import {
 } from "@/lib/validators";
 import { detectContactLeak } from "@/lib/contact-filter";
 import { getLimitesProfissional } from "@/lib/data/limites-profissional";
+import { formatCPF, normalizeCPF } from "@/lib/cpf";
 
 // tamanho maximo aproximado de um avatar em base64 (~600KB) - protege o banco
 // de uploads gigantes, ja que a foto e guardada como data URI (sem storage
@@ -35,12 +36,23 @@ export async function atualizarPerfilCliente(_prevState: PerfilActionState, form
   const parsed = atualizarPerfilClienteSchema.safeParse({
     nome: formData.get("nome"),
     cidadeId: formData.get("cidadeId") || undefined,
+    cpf: formData.get("cpf") || undefined,
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
 
-  await query(`UPDATE clientes SET nome = $1, cidade_id = $2 WHERE usuario_id = $3`, [
+  if (parsed.data.cpf) {
+    const cpfNormalizado = normalizeCPF(parsed.data.cpf);
+    const cpfDuplicado = await queryOne(
+      `SELECT usuario_id FROM clientes WHERE cpf IS NOT NULL AND regexp_replace(cpf, '\\D', '', 'g') = $1 AND usuario_id <> $2`,
+      [cpfNormalizado, session.usuarioId]
+    );
+    if (cpfDuplicado) return { error: "Esse CPF já está cadastrado em outra conta." };
+  }
+
+  await query(`UPDATE clientes SET nome = $1, cidade_id = $2, cpf = COALESCE($3, cpf) WHERE usuario_id = $4`, [
     parsed.data.nome,
     parsed.data.cidadeId ?? null,
+    parsed.data.cpf ? formatCPF(parsed.data.cpf) : null,
     session.usuarioId,
   ]);
 
@@ -69,6 +81,7 @@ export async function atualizarPerfilProfissional(
 
   const parsed = atualizarPerfilProfissionalSchema.safeParse({
     nome: formData.get("nome"),
+    cpf: formData.get("cpf") || undefined,
     bairroId: formData.get("bairroId") || undefined,
     disponibilidadeStatus: formData.get("disponibilidadeStatus"),
     categoriaIds: formData.getAll("categoriaIds"),
@@ -84,6 +97,15 @@ export async function atualizarPerfilProfissional(
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
 
+  if (parsed.data.cpf) {
+    const cpfNormalizado = normalizeCPF(parsed.data.cpf);
+    const cpfDuplicado = await queryOne(
+      `SELECT usuario_id FROM profissionais WHERE cpf IS NOT NULL AND regexp_replace(cpf, '\\D', '', 'g') = $1 AND usuario_id <> $2`,
+      [cpfNormalizado, session.usuarioId]
+    );
+    if (cpfDuplicado) return { error: "Esse CPF já está cadastrado em outra conta." };
+  }
+
   const medidasHabilitadas = parsed.data.medidasHabilitadas === "on";
   const tempoExperienciaMeses =
     parsed.data.tempoExperienciaAnos !== null && parsed.data.tempoExperienciaAnos !== undefined
@@ -92,12 +114,13 @@ export async function atualizarPerfilProfissional(
 
   await query(
     `UPDATE profissionais
-     SET nome = $1, bairro_id = $2, disponibilidade_status = $3, sexo = $4, medidas_habilitadas = $5,
-         altura_cm = $6, peso_kg = $7, cintura_cm = $8, manequim = $9, calcado = $10, tem_tatuagem = $11,
-         tempo_experiencia_meses = $12
-     WHERE usuario_id = $13`,
+     SET nome = $1, cpf = COALESCE($2, cpf), bairro_id = $3, disponibilidade_status = $4, sexo = $5, medidas_habilitadas = $6,
+         altura_cm = $7, peso_kg = $8, cintura_cm = $9, manequim = $10, calcado = $11, tem_tatuagem = $12,
+         tempo_experiencia_meses = $13
+     WHERE usuario_id = $14`,
     [
       parsed.data.nome,
+      parsed.data.cpf ? formatCPF(parsed.data.cpf) : null,
       parsed.data.bairroId ?? null,
       parsed.data.disponibilidadeStatus,
       parsed.data.sexo ?? null,
