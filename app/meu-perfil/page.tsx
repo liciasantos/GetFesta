@@ -4,7 +4,9 @@ import { getMeuPerfilCliente } from "@/lib/data/clientes";
 import { listCidades } from "@/lib/data/geo";
 import AvatarUpload from "@/components/AvatarUpload";
 import AlterarSenhaForm from "@/components/AlterarSenhaForm";
+import ExcluirContaForm from "@/components/ExcluirContaForm";
 import { atualizarFotoCliente } from "@/lib/actions/perfil";
+import { excluirContaCliente } from "@/lib/actions/conta";
 import PerfilClienteForm from "./PerfilClienteForm";
 
 export const dynamic = "force-dynamic";
@@ -32,6 +34,14 @@ export default async function MeuPerfilPage() {
       <div className="mt-5 rounded-xl border border-border bg-surface p-5">
         <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Alterar senha</h2>
         <AlterarSenhaForm />
+      </div>
+
+      <div className="mt-5 rounded-xl border border-danger-soft bg-surface p-5">
+        <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-danger-dark">Excluir conta</h2>
+        <ExcluirContaForm
+          action={excluirContaCliente}
+          aviso="Essa ação é definitiva: seu cadastro, avaliações e conversas serão apagados e não podem ser recuperados."
+        />
       </div>
     </div>
   );

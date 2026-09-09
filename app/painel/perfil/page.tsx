@@ -5,7 +5,9 @@ import { getEmpresaById, getAvaliacaoGoogle } from "@/lib/data/empresas";
 import AvatarUpload from "@/components/AvatarUpload";
 import GaleriaManager from "@/components/GaleriaManager";
 import AlterarSenhaForm from "@/components/AlterarSenhaForm";
+import ExcluirContaForm from "@/components/ExcluirContaForm";
 import { atualizarLogoEmpresa, adicionarFotoGaleria, removerFotoGaleria } from "@/lib/actions/perfil";
+import { excluirContaEmpresa } from "@/lib/actions/conta";
 import PerfilEmpresaForm from "./PerfilEmpresaForm";
 import AvaliacaoGoogleForm from "./AvaliacaoGoogleForm";
 
@@ -62,6 +64,14 @@ export default async function PainelPerfilPage() {
       <div className="mt-5 rounded-xl border border-border bg-surface p-5">
         <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Alterar senha</h2>
         <AlterarSenhaForm />
+      </div>
+
+      <div className="mt-5 rounded-xl border border-danger-soft bg-surface p-5">
+        <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-danger-dark">Excluir conta</h2>
+        <ExcluirContaForm
+          action={excluirContaEmpresa}
+          aviso="Essa ação é definitiva: seu perfil, galeria, vagas, avaliações e assinatura serão apagados e não podem ser recuperados."
+        />
       </div>
     </div>
   );

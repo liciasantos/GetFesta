@@ -10,6 +10,7 @@ import GaleriaManager from "@/components/GaleriaManager";
 import DisponibilidadeCalendar from "@/components/DisponibilidadeCalendar";
 import CandidatarVagaButton from "@/components/CandidatarVagaButton";
 import AlterarSenhaForm from "@/components/AlterarSenhaForm";
+import ExcluirContaForm from "@/components/ExcluirContaForm";
 import PortfolioPdfUpload from "@/components/PortfolioPdfUpload";
 import VideoLinkManager from "@/components/VideoLinkManager";
 import {
@@ -19,6 +20,7 @@ import {
   removerFotoGaleriaProfissional,
   removerVideoLinkProfissional,
 } from "@/lib/actions/perfil";
+import { excluirContaProfissional } from "@/lib/actions/conta";
 import { getLimitesProfissional } from "@/lib/data/limites-profissional";
 import { Badge, buttonClass } from "@/components/ui";
 import { formatCurrencyBRL, formatDateBR } from "@/lib/format";
@@ -208,6 +210,14 @@ export default async function PerfilProfissionalPage() {
       <div className="mt-5 rounded-xl border border-border bg-surface p-5">
         <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Alterar senha</h2>
         <AlterarSenhaForm />
+      </div>
+
+      <div className="mt-5 rounded-xl border border-danger-soft bg-surface p-5">
+        <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-danger-dark">Excluir conta</h2>
+        <ExcluirContaForm
+          action={excluirContaProfissional}
+          aviso="Essa ação é definitiva: seu catálogo, galeria, avaliações, vagas e assinatura serão apagados e não podem ser recuperados."
+        />
       </div>
       </TabSection>
       </ProfissionalTabsProvider>

@@ -35,7 +35,7 @@ const buttonBase =
   "inline-flex items-center justify-center gap-1.5 rounded-lg font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed";
 
 export function buttonClass(
-  variant: "primary" | "secondary" | "ghost" | "whatsapp" = "primary",
+  variant: "primary" | "secondary" | "ghost" | "whatsapp" | "danger" = "primary",
   size: "md" | "sm" | "lg" = "md"
 ) {
   const variants: Record<string, string> = {
@@ -46,6 +46,7 @@ export function buttonClass(
     // visualmente de "Tenho interesse" (laranja) quando os dois aparecem
     // um depois do outro na mesma lista (ex: pedidos compatíveis do painel).
     whatsapp: "bg-ok text-white shadow-sm hover:bg-ok/90 hover:shadow-md",
+    danger: "bg-danger-dark text-white shadow-sm hover:bg-danger-dark/90 hover:shadow-md",
   };
   const sizes: Record<string, string> = {
     lg: "px-6 py-3.5 text-[15px]",
