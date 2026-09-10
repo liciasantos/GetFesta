@@ -9,6 +9,7 @@ import AvatarUpload from "@/components/AvatarUpload";
 import GaleriaManager from "@/components/GaleriaManager";
 import DisponibilidadeCalendar from "@/components/DisponibilidadeCalendar";
 import CandidatarVagaButton from "@/components/CandidatarVagaButton";
+import CompartilharVagaButton from "@/components/CompartilharVagaButton";
 import AlterarSenhaForm from "@/components/AlterarSenhaForm";
 import ExcluirContaForm from "@/components/ExcluirContaForm";
 import PortfolioPdfUpload from "@/components/PortfolioPdfUpload";
@@ -183,7 +184,7 @@ export default async function PerfilProfissionalPage({
               </div>
               <p className="mt-1.5 max-w-md text-[12px] leading-relaxed text-muted">{vaga.descricao}</p>
             </div>
-            <div>
+            <div className="flex flex-col items-end gap-1.5">
               {vaga.candidatura_status === "selecionado" ? (
                 <Badge tone="ok">🎉 Selecionado!</Badge>
               ) : vaga.status === "cancelada" ? (
@@ -195,6 +196,10 @@ export default async function PerfilProfissionalPage({
               ) : (
                 <CandidatarVagaButton vagaId={vaga.id} />
               )}
+              <CompartilharVagaButton
+                vagaId={vaga.id}
+                mensagem={`Vaga de ${vaga.categoria_nome} em ${vaga.cidade_nome} pra ${formatDateBR(vaga.data_evento)} - confira na GetFesta:`}
+              />
             </div>
           </div>
         ))}

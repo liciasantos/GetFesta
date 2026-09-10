@@ -7,6 +7,7 @@ import { buildWhatsAppLink } from "@/lib/whatsapp";
 import { Badge } from "@/components/ui";
 import { DesfazerSelecaoButton, FinalizarVagaButton, NaoFechouButton, SelecionarCandidatoButton } from "@/components/FecharVagaButton";
 import AvaliarProfissionalForm from "@/components/AvaliarProfissionalForm";
+import CompartilharVagaButton from "@/components/CompartilharVagaButton";
 
 export const dynamic = "force-dynamic";
 
@@ -66,6 +67,13 @@ export default async function VagaCandidatosPage({ params }: { params: Promise<{
           {Number(vaga.duracao_horas)}h · {vaga.valor ? formatCurrencyBRL(vaga.valor) : "a combinar"}
         </p>
         <p className="mt-2 text-[13px] leading-relaxed">{vaga.descricao}</p>
+
+        <div className="mt-3">
+          <CompartilharVagaButton
+            vagaId={vaga.id}
+            mensagem={`Vaga de ${vaga.categoria_nome} em ${vaga.cidade_nome} pra ${formatDateBR(vaga.data_evento)} - confira na GetFesta:`}
+          />
+        </div>
 
         {selecionados.length > 0 && (
           <p className="mt-3 rounded-lg bg-ok-soft p-2.5 text-[12.5px] font-bold text-ok">

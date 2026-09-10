@@ -240,3 +240,50 @@ export async function countVagasConcluidasProfissional(profissionalId: string): 
   );
   return Number(row?.total ?? 0);
 }
+
+export type VagaPublica = {
+  id: string;
+  empresa_id: string;
+  categoria_nome: string;
+  cidade_nome: string;
+  bairro_nome: string | null;
+  data_evento: string;
+  hora_inicio: string;
+  duracao_horas: string;
+  valor: string | null;
+  descricao: string;
+  sexo_desejado: string;
+  status: string;
+  vagas_desejadas: number;
+  vagas_selecionadas: number;
+  empresa_nome_fantasia: string;
+  empresa_slug: string;
+};
+
+/** Página pública de uma vaga (link compartilhável, ver CompartilharVagaButton)
+ * - visível pra qualquer visitante, sem exigir login, já que o objetivo é
+ * justamente alcançar gente fora do feed normal de compatibilidade. */
+export async function getVagaPublica(vagaId: string): Promise<VagaPublica | null> {
+  return queryOne<VagaPublica>(
+    `SELECT v.id, v.empresa_id, cp.nome AS categoria_nome, ci.nome AS cidade_nome, b.nome AS bairro_nome,
+            v.data_evento, v.hora_inicio, v.duracao_horas, v.valor, v.descricao, v.sexo_desejado, v.status,
+            v.vagas_desejadas,
+            (SELECT count(*)::int FROM vaga_candidaturas vc WHERE vc.vaga_id = v.id AND vc.status = 'selecionado') AS vagas_selecionadas,
+            e.nome_fantasia AS empresa_nome_fantasia, e.slug AS empresa_slug
+     FROM vagas_profissionais v
+     JOIN categorias_profissionais cp ON cp.id = v.categoria_profissional_id
+     JOIN cidades ci ON ci.id = v.cidade_id
+     LEFT JOIN bairros b ON b.id = v.bairro_id
+     JOIN empresas e ON e.usuario_id = v.empresa_id
+     WHERE v.id = $1`,
+    [vagaId]
+  );
+}
+
+export async function getCandidaturaStatus(vagaId: string, profissionalId: string): Promise<string | null> {
+  const row = await queryOne<{ status: string }>(
+    `SELECT status FROM vaga_candidaturas WHERE vaga_id = $1 AND profissional_id = $2`,
+    [vagaId, profissionalId]
+  );
+  return row?.status ?? null;
+}
