@@ -37,9 +37,16 @@ export default async function VagaCandidatosPage({ params }: { params: Promise<{
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-8">
-      <Link href="/painel/vagas" className="text-[12.5px] font-bold text-accent-dark underline">
-        ← Minhas vagas
-      </Link>
+      <div className="flex items-center justify-between">
+        <Link href="/painel/vagas" className="text-[12.5px] font-bold text-accent-dark underline">
+          ← Minhas vagas
+        </Link>
+        {vaga.status === "aberta" && (
+          <Link href={`/painel/vagas/${vaga.id}/editar`} className="text-[12.5px] font-bold text-accent-dark underline">
+            Editar vaga
+          </Link>
+        )}
+      </div>
 
       <div className="mt-3 rounded-xl border border-border bg-surface p-4">
         <div className="flex flex-wrap items-center gap-2">

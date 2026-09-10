@@ -50,6 +50,84 @@ export async function criarVaga(_prevState: VagaActionState, formData: FormData)
   redirect("/painel/vagas");
 }
 
+/** Empresa edita uma vaga já publicada - só permitido enquanto estiver
+ * 'aberta' (depois de preenchida/cancelada os candidatos já foram avisados
+ * e a agenda bloqueada, então mudar os dados não faria sentido). Não deixa
+ * reduzir vagas_desejadas abaixo de quem já foi selecionado; se o novo valor
+ * bater exatamente com quem já está selecionado, fecha a vaga sozinha (mesma
+ * regra de quando a última posição é preenchida via selecionarCandidatoVaga). */
+export async function editarVaga(_prevState: VagaActionState, formData: FormData): Promise<VagaActionState> {
+  const session = await getSession();
+  if (!session || session.tipo !== "empresa") return { error: "Sessão inválida." };
+
+  const vagaId = formData.get("id");
+  if (typeof vagaId !== "string" || !vagaId) return { error: "Vaga não encontrada." };
+
+  const parsed = criarVagaSchema.safeParse({
+    categoriaProfissionalId: formData.get("categoriaProfissionalId"),
+    cidadeId: formData.get("cidadeId"),
+    bairroId: formData.get("bairroId") || undefined,
+    dataEvento: formData.get("dataEvento"),
+    horaInicio: formData.get("horaInicio"),
+    duracaoHoras: formData.get("duracaoHoras"),
+    valor: formData.get("valor") || undefined,
+    descricao: formData.get("descricao"),
+    sexoDesejado: formData.get("sexoDesejado") || undefined,
+    vagasDesejadas: formData.get("vagasDesejadas") || undefined,
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
+
+  const vaga = await queryOne<{ status: string }>(
+    `SELECT status FROM vagas_profissionais WHERE id = $1 AND empresa_id = $2`,
+    [vagaId, session.usuarioId]
+  );
+  if (!vaga) return { error: "Vaga não encontrada." };
+  if (vaga.status !== "aberta") return { error: "Só é possível editar vagas em aberto." };
+
+  const vagasDesejadas = parsed.data.vagasDesejadas ?? 1;
+  const selecionados = await queryOne<{ total: string }>(
+    `SELECT count(*) AS total FROM vaga_candidaturas WHERE vaga_id = $1 AND status = 'selecionado'`,
+    [vagaId]
+  );
+  const totalSelecionados = Number(selecionados?.total ?? 0);
+  if (vagasDesejadas < totalSelecionados) {
+    return { error: `Já tem ${totalSelecionados} selecionado(s) - não dá pra pedir menos que isso.` };
+  }
+
+  await query(
+    `UPDATE vagas_profissionais
+     SET categoria_profissional_id = $1, cidade_id = $2, bairro_id = $3, data_evento = $4, hora_inicio = $5,
+         duracao_horas = $6, valor = $7, descricao = $8, sexo_desejado = $9, vagas_desejadas = $10
+     WHERE id = $11 AND empresa_id = $12`,
+    [
+      parsed.data.categoriaProfissionalId,
+      parsed.data.cidadeId,
+      parsed.data.bairroId ?? null,
+      parsed.data.dataEvento,
+      parsed.data.horaInicio,
+      parsed.data.duracaoHoras,
+      parsed.data.valor ?? null,
+      parsed.data.descricao,
+      parsed.data.sexoDesejado ?? "indiferente",
+      vagasDesejadas,
+      vagaId,
+      session.usuarioId,
+    ]
+  );
+
+  if (totalSelecionados > 0 && totalSelecionados >= vagasDesejadas) {
+    await query(`UPDATE vagas_profissionais SET status = 'preenchida' WHERE id = $1`, [vagaId]);
+    await query(`UPDATE vaga_candidaturas SET status = 'recusado' WHERE vaga_id = $1 AND status = 'candidatado'`, [
+      vagaId,
+    ]);
+  }
+
+  revalidatePath("/painel/vagas");
+  revalidatePath(`/painel/vagas/${vagaId}`);
+  revalidatePath("/perfil-profissional");
+  redirect(`/painel/vagas/${vagaId}`);
+}
+
 export type CandidatarVagaResult = { error?: string; ok?: boolean };
 
 /**

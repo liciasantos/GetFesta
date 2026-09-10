@@ -75,8 +75,11 @@ export async function listVagasCompativeis(profissionalId: string): Promise<(Vag
 
 export type MinhaVaga = {
   id: string;
+  categoria_profissional_id: number;
   categoria_nome: string;
+  cidade_id: number;
   cidade_nome: string;
+  bairro_id: number | null;
   bairro_nome: string | null;
   data_evento: string;
   hora_inicio: string;
@@ -94,7 +97,8 @@ export type MinhaVaga = {
 
 const MINHA_VAGA_SELECT = `
   SELECT
-    v.id, cp.nome AS categoria_nome, ci.nome AS cidade_nome, b.nome AS bairro_nome,
+    v.id, v.categoria_profissional_id, cp.nome AS categoria_nome, v.cidade_id, ci.nome AS cidade_nome,
+    v.bairro_id, b.nome AS bairro_nome,
     v.data_evento, v.hora_inicio, v.duracao_horas, v.valor, v.descricao, v.criado_em, v.status, v.sexo_desejado,
     v.vagas_desejadas,
     (v.data_evento < CURRENT_DATE) AS realizada,

@@ -1,21 +1,33 @@
 "use client";
 
 import { useActionState, useEffect, useState, useTransition } from "react";
-import { criarVaga, type VagaActionState } from "@/lib/actions/vagas";
+import { criarVaga, editarVaga, type VagaActionState } from "@/lib/actions/vagas";
 import { getBairrosAction, criarBairroCustomAction } from "@/lib/actions/geo";
 import { buttonClass } from "@/components/ui";
 import type { Cidade, Bairro } from "@/lib/data/geo";
 import { ESTADOS, agruparCidadesPorMacrorregiao } from "@/lib/estados";
 import type { CategoriaProfissional } from "@/lib/data/profissionais";
+import type { MinhaVaga } from "@/lib/data/vagas";
 
 const BAIRRO_OUTRO = "outro";
 
-export default function NovaVagaForm({ cidades, categorias }: { cidades: Cidade[]; categorias: CategoriaProfissional[] }) {
-  const [state, formAction, pending] = useActionState<VagaActionState, FormData>(criarVaga, undefined);
-  const [estado, setEstado] = useState("");
-  const [cidadeId, setCidadeId] = useState<number | "">("");
+export default function NovaVagaForm({
+  cidades,
+  categorias,
+  mode = "criar",
+  vaga,
+}: {
+  cidades: Cidade[];
+  categorias: CategoriaProfissional[];
+  mode?: "criar" | "editar";
+  vaga?: MinhaVaga;
+}) {
+  const action = mode === "editar" ? editarVaga : criarVaga;
+  const [state, formAction, pending] = useActionState<VagaActionState, FormData>(action, undefined);
+  const [estado, setEstado] = useState(() => cidades.find((c) => c.id === vaga?.cidade_id)?.estado ?? "");
+  const [cidadeId, setCidadeId] = useState<number | "">(vaga?.cidade_id ?? "");
   const [bairros, setBairros] = useState<Bairro[]>([]);
-  const [bairroSel, setBairroSel] = useState<number | "" | typeof BAIRRO_OUTRO>("");
+  const [bairroSel, setBairroSel] = useState<number | "" | typeof BAIRRO_OUTRO>(vaga?.bairro_id ?? "");
   const [bairroCustomNome, setBairroCustomNome] = useState("");
   const [, startTransition] = useTransition();
   const cidadesDoEstado = cidades.filter((c) => c.estado === estado);
@@ -50,8 +62,15 @@ export default function NovaVagaForm({ cidades, categorias }: { cidades: Cidade[
 
   return (
     <form action={handleSubmit} className="flex flex-col gap-3">
+      {mode === "editar" && vaga && <input type="hidden" name="id" value={vaga.id} />}
+
       <Field label="Função que você precisa">
-        <select name="categoriaProfissionalId" required defaultValue="" className="rounded-md border border-border px-3 py-2.5 text-sm">
+        <select
+          name="categoriaProfissionalId"
+          required
+          defaultValue={vaga?.categoria_profissional_id ?? ""}
+          className="rounded-md border border-border px-3 py-2.5 text-sm"
+        >
           <option value="" disabled>
             Selecione
           </option>
@@ -131,13 +150,17 @@ export default function NovaVagaForm({ cidades, categorias }: { cidades: Cidade[
             type="number"
             min={1}
             max={20}
-            defaultValue={1}
+            defaultValue={vaga?.vagas_desejadas ?? 1}
             required
             className="rounded-md border border-border px-3 py-2.5 text-sm"
           />
         </Field>
         <Field label="Gênero desejado pra vaga">
-          <select name="sexoDesejado" defaultValue="indiferente" className="rounded-md border border-border px-3 py-2.5 text-sm">
+          <select
+            name="sexoDesejado"
+            defaultValue={vaga?.sexo_desejado ?? "indiferente"}
+            className="rounded-md border border-border px-3 py-2.5 text-sm"
+          >
             <option value="indiferente">Indiferente</option>
             <option value="feminino">Feminino</option>
             <option value="masculino">Masculino</option>
@@ -147,10 +170,22 @@ export default function NovaVagaForm({ cidades, categorias }: { cidades: Cidade[
 
       <div className="grid grid-cols-2 gap-3">
         <Field label="Data do evento">
-          <input name="dataEvento" type="date" required className="rounded-md border border-border px-3 py-2.5 text-sm" />
+          <input
+            name="dataEvento"
+            type="date"
+            required
+            defaultValue={vaga ? new Date(vaga.data_evento).toISOString().slice(0, 10) : undefined}
+            className="rounded-md border border-border px-3 py-2.5 text-sm"
+          />
         </Field>
         <Field label="Horário de início">
-          <input name="horaInicio" type="time" required className="rounded-md border border-border px-3 py-2.5 text-sm" />
+          <input
+            name="horaInicio"
+            type="time"
+            required
+            defaultValue={vaga?.hora_inicio.slice(0, 5)}
+            className="rounded-md border border-border px-3 py-2.5 text-sm"
+          />
         </Field>
       </div>
 
@@ -163,6 +198,7 @@ export default function NovaVagaForm({ cidades, categorias }: { cidades: Cidade[
             step={0.5}
             required
             placeholder="Ex: 3"
+            defaultValue={vaga ? Number(vaga.duracao_horas) : undefined}
             className="rounded-md border border-border px-3 py-2.5 text-sm"
           />
         </Field>
@@ -173,6 +209,7 @@ export default function NovaVagaForm({ cidades, categorias }: { cidades: Cidade[
             min={0}
             step="0.01"
             placeholder="Deixe em branco para combinar"
+            defaultValue={vaga?.valor ? Number(vaga.valor) : undefined}
             className="rounded-md border border-border px-3 py-2.5 text-sm"
           />
         </Field>
@@ -185,13 +222,14 @@ export default function NovaVagaForm({ cidades, categorias }: { cidades: Cidade[
           required
           minLength={10}
           placeholder="Ex: Festa infantil tema safári, precisamos de um ator caracterizado de leão, interação com crianças de 3 a 8 anos."
+          defaultValue={vaga?.descricao}
           className="rounded-md border border-border px-3 py-2.5 text-sm"
         />
       </Field>
 
       {state?.error && <p className="text-[12.5px] font-semibold text-accent-dark">{state.error}</p>}
       <button type="submit" disabled={pending} className={buttonClass("primary")}>
-        {pending ? "Publicando..." : "Publicar vaga"}
+        {pending ? "Salvando..." : mode === "editar" ? "Salvar alterações" : "Publicar vaga"}
       </button>
     </form>
   );
