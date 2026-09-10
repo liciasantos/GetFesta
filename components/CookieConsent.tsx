@@ -51,30 +51,34 @@ export default function CookieConsent() {
   // conflito de vez, além de já seguir o mesmo padrão visual do modal de
   // "Preferências de cookies" abaixo.
   if (!preferenciasAbertas) {
+    // Um botão principal (cheio, óbvio de clicar) + um link secundário
+    // sublinhado embaixo, os dois centralizados - evita a leitura de "dois
+    // textos soltos lado a lado" que confundia sobre o que era clicável.
     return (
       <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40 sm:items-center">
-        <div className="w-full max-w-sm rounded-t-xl border border-border bg-surface p-5 sm:rounded-xl">
-          <p className="text-[12.5px] leading-relaxed text-muted">
-            Usamos cookies para melhorar sua experiência.{" "}
+        <div className="w-full max-w-sm rounded-t-xl border border-border bg-surface p-5 text-center sm:rounded-xl">
+          <p className="text-[13px] font-bold">🍪 Usamos cookies</p>
+          <p className="mt-1.5 text-[12.5px] leading-relaxed text-muted">
+            Cookies necessários mantêm o site funcionando; os demais só com sua autorização.{" "}
             <Link href="/privacidade" className="font-semibold text-accent-dark underline">
               Saiba mais
             </Link>
             .
           </p>
-          <div className="mt-4 flex gap-2">
-            <button
-              type="button"
-              onClick={() => setPreferenciasAbertas(true)}
-              className="flex-1 rounded-lg border border-border-strong px-3 py-2 text-[12.5px] font-bold hover:bg-surface-alt"
-            >
-              Preferências de cookies
-            </button>
+          <div className="mt-4 flex flex-col items-center gap-2.5">
             <button
               type="button"
               onClick={aceitarTodos}
-              className="flex-1 rounded-lg bg-accent px-3 py-2 text-[12.5px] font-bold text-white hover:bg-accent-dark"
+              className="w-full rounded-lg bg-accent px-3 py-2.5 text-[13px] font-bold text-white hover:bg-accent-dark"
             >
               Aceitar todos
+            </button>
+            <button
+              type="button"
+              onClick={() => setPreferenciasAbertas(true)}
+              className="text-[12px] font-bold text-accent-dark underline"
+            >
+              Preferências de cookies
             </button>
           </div>
         </div>
