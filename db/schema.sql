@@ -250,6 +250,7 @@ CREATE TABLE profissionais (
     manequim                   VARCHAR(10),
     calcado                    VARCHAR(10),
     tem_tatuagem                VARCHAR(3),            -- sim / nao / NULL = nao informado - relevante pra personagem (ex: princesa/principe)
+    instagram                  VARCHAR(100),          -- opcional, mesmo campo livre (sem validacao de formato) que empresas.instagram
     bairro_id                  INTEGER REFERENCES bairros(id),
     tem_veiculo                 BOOLEAN DEFAULT FALSE,
     tipo_veiculo                VARCHAR(20),           -- carro / moto / nenhum

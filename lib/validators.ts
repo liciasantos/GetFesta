@@ -144,6 +144,7 @@ export const avaliacaoGoogleSchema = z.object({
 export const atualizarPerfilProfissionalSchema = z.object({
   nome: z.string().min(2, "Informe seu nome"),
   cpf: cpfOpcionalSchema,
+  instagram: z.string().max(100).optional(),
   bairroId: z.coerce.number().optional().nullable(),
   disponibilidadeStatus: z.enum(["disponivel", "indisponivel", "nao_informado"]),
   categoriaIds: z.array(z.coerce.number()).min(1, "Selecione ao menos uma categoria"),

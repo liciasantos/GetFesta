@@ -87,6 +87,15 @@ export default function PerfilProfissionalForm({
         />
       </Field>
 
+      <Field label="Instagram (opcional)">
+        <input
+          name="instagram"
+          defaultValue={perfil.instagram ?? ""}
+          placeholder="@seuusuario"
+          className="rounded-md border border-border px-3 py-2.5 text-sm"
+        />
+      </Field>
+
       <Field label="Sexo">
         <select name="sexo" defaultValue={perfil.sexo ?? ""} className="rounded-md border border-border px-3 py-2.5 text-sm">
           <option value="">Prefiro não informar</option>

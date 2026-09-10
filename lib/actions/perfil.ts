@@ -82,6 +82,7 @@ export async function atualizarPerfilProfissional(
   const parsed = atualizarPerfilProfissionalSchema.safeParse({
     nome: formData.get("nome"),
     cpf: formData.get("cpf") || undefined,
+    instagram: formData.get("instagram") || undefined,
     bairroId: formData.get("bairroId") || undefined,
     disponibilidadeStatus: formData.get("disponibilidadeStatus"),
     categoriaIds: formData.getAll("categoriaIds"),
@@ -114,13 +115,14 @@ export async function atualizarPerfilProfissional(
 
   await query(
     `UPDATE profissionais
-     SET nome = $1, cpf = COALESCE($2, cpf), bairro_id = $3, disponibilidade_status = $4, sexo = $5, medidas_habilitadas = $6,
-         altura_cm = $7, peso_kg = $8, cintura_cm = $9, manequim = $10, calcado = $11, tem_tatuagem = $12,
-         tempo_experiencia_meses = $13
-     WHERE usuario_id = $14`,
+     SET nome = $1, cpf = COALESCE($2, cpf), instagram = $3, bairro_id = $4, disponibilidade_status = $5, sexo = $6, medidas_habilitadas = $7,
+         altura_cm = $8, peso_kg = $9, cintura_cm = $10, manequim = $11, calcado = $12, tem_tatuagem = $13,
+         tempo_experiencia_meses = $14
+     WHERE usuario_id = $15`,
     [
       parsed.data.nome,
       parsed.data.cpf ? formatCPF(parsed.data.cpf) : null,
+      parsed.data.instagram ?? null,
       parsed.data.bairroId ?? null,
       parsed.data.disponibilidadeStatus,
       parsed.data.sexo ?? null,

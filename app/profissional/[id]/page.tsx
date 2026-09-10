@@ -176,6 +176,16 @@ export default async function PerfilProfissionalParaEmpresaPage({ params }: { pa
             ⭐ {Number(perfil.nota_media).toFixed(1)} ({perfil.total_avaliacoes})
           </Badge>
         )}
+        {perfil.instagram && (
+          <a
+            href={`https://instagram.com/${perfil.instagram.replace(/^@/, "")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 rounded-full bg-surface-alt px-2.5 py-0.5 text-[11px] font-bold text-text hover:bg-border"
+          >
+            📷 {perfil.instagram.startsWith("@") ? perfil.instagram : `@${perfil.instagram}`}
+          </a>
+        )}
       </div>
 
       {perfil.portfolio_pdf_url && (
