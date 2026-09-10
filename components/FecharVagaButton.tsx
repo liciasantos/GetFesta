@@ -2,10 +2,15 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { marcarVagaNaoPreenchida, marcarVagaPreenchida, removerSelecaoVaga } from "@/lib/actions/vagas";
+import {
+  desfazerSelecaoCandidato,
+  finalizarVagaAntecipadamente,
+  marcarVagaNaoPreenchida,
+  selecionarCandidatoVaga,
+} from "@/lib/actions/vagas";
 import { buttonClass } from "@/components/ui";
 
-export function FecharComCandidatoButton({ vagaId, profissionalId }: { vagaId: string; profissionalId: string }) {
+export function SelecionarCandidatoButton({ vagaId, profissionalId }: { vagaId: string; profissionalId: string }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -18,23 +23,23 @@ export function FecharComCandidatoButton({ vagaId, profissionalId }: { vagaId: s
         className={buttonClass("secondary", "sm")}
         onClick={() =>
           startTransition(async () => {
-            const res = await marcarVagaPreenchida(vagaId, profissionalId);
+            const res = await selecionarCandidatoVaga(vagaId, profissionalId);
             if (res.error) setError(res.error);
             else router.refresh();
           })
         }
       >
-        {isPending ? "Salvando..." : "Fechei com este"}
+        {isPending ? "Salvando..." : "Selecionar"}
       </button>
       {error && <p className="mt-1 text-[11px] font-semibold text-accent-dark">{error}</p>}
     </div>
   );
 }
 
-/** Desfaz a seleção de uma vaga já preenchida - pede confirmação primeiro,
- * já que reabre a vaga (some novos candidatos podem aparecer) e libera o
- * bloqueio de agenda criado automaticamente na seleção. */
-export function RemoverSelecaoButton({ vagaId }: { vagaId: string }) {
+/** Desfaz a seleção de UM candidato - pede confirmação primeiro, já que
+ * libera o bloqueio de agenda dele e, se a vaga estava com todas as posições
+ * preenchidas, reabre pra novos candidatos. */
+export function DesfazerSelecaoButton({ vagaId, profissionalId }: { vagaId: string; profissionalId: string }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [confirmando, setConfirmando] = useState(false);
@@ -47,7 +52,7 @@ export function RemoverSelecaoButton({ vagaId }: { vagaId: string }) {
         onClick={() => setConfirmando(true)}
         className="text-[12px] font-bold text-accent-dark underline"
       >
-        Remover seleção
+        Desfazer seleção
       </button>
     );
   }
@@ -55,7 +60,7 @@ export function RemoverSelecaoButton({ vagaId }: { vagaId: string }) {
   return (
     <div className="mt-2 rounded-lg border border-border-strong bg-surface-alt p-2.5">
       <p className="text-[11.5px] text-muted">
-        Isso reabre a vaga pra novos candidatos e libera o horário na agenda desse profissional. Tem certeza?
+        Isso libera o horário na agenda desse profissional e reabre a posição pra novos candidatos. Tem certeza?
       </p>
       <div className="mt-2 flex gap-2">
         <button
@@ -63,14 +68,14 @@ export function RemoverSelecaoButton({ vagaId }: { vagaId: string }) {
           disabled={isPending}
           onClick={() =>
             startTransition(async () => {
-              const res = await removerSelecaoVaga(vagaId);
+              const res = await desfazerSelecaoCandidato(vagaId, profissionalId);
               if (res.error) setError(res.error);
               else router.refresh();
             })
           }
           className="rounded-md bg-accent px-2.5 py-1 text-[11.5px] font-bold text-white hover:bg-accent-dark disabled:opacity-50"
         >
-          {isPending ? "Removendo..." : "Sim, remover"}
+          {isPending ? "Removendo..." : "Sim, desfazer"}
         </button>
         <button
           type="button"
@@ -81,6 +86,34 @@ export function RemoverSelecaoButton({ vagaId }: { vagaId: string }) {
           Cancelar
         </button>
       </div>
+      {error && <p className="mt-1 text-[11px] font-semibold text-accent-dark">{error}</p>}
+    </div>
+  );
+}
+
+/** Fecha a vaga mesmo sem preencher todas as posições desejadas (ex.:
+ * precisava de 3, achou só 2 e já está satisfeita). */
+export function FinalizarVagaButton({ vagaId }: { vagaId: string }) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  return (
+    <div>
+      <button
+        type="button"
+        disabled={isPending}
+        className="text-[12px] font-bold text-accent-dark underline disabled:opacity-50"
+        onClick={() =>
+          startTransition(async () => {
+            const res = await finalizarVagaAntecipadamente(vagaId);
+            if (res.error) setError(res.error);
+            else router.refresh();
+          })
+        }
+      >
+        {isPending ? "Salvando..." : "Finalizar vaga com os selecionados até agora"}
+      </button>
       {error && <p className="mt-1 text-[11px] font-semibold text-accent-dark">{error}</p>}
     </div>
   );

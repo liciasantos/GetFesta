@@ -125,14 +125,21 @@ function VagaRow({ vaga: v }: { vaga: MinhaVaga }) {
           <Badge tone={v.status === "aberta" ? "ok" : v.status === "preenchida" ? "ok" : "muted"}>
             {STATUS_LABEL[v.status] ?? v.status}
           </Badge>
+          {v.vagas_desejadas > 1 && (
+            <Badge tone="muted">
+              {v.total_selecionados} de {v.vagas_desejadas} preenchidas
+            </Badge>
+          )}
           {precisaFechamento && <Badge tone="warn">Fechou com alguém?</Badge>}
         </div>
         <p className="mt-1 text-[12.5px] text-muted">
           {v.bairro_nome ?? v.cidade_nome} · {formatDateBR(v.data_evento)} · {v.hora_inicio.slice(0, 5)} ·{" "}
           {Number(v.duracao_horas)}h · {v.valor ? formatCurrencyBRL(v.valor) : "a combinar"}
         </p>
-        {v.status === "preenchida" && v.profissional_selecionado_nome && (
-          <p className="mt-1 text-[12px] font-semibold text-ok">✓ Fechado com {v.profissional_selecionado_nome}</p>
+        {v.total_selecionados > 0 && (
+          <p className="mt-1 text-[12px] font-semibold text-ok">
+            ✓ {v.total_selecionados} {v.total_selecionados === 1 ? "profissional selecionado" : "profissionais selecionados"}
+          </p>
         )}
       </div>
       <div className="text-[12.5px] font-bold text-accent-dark">

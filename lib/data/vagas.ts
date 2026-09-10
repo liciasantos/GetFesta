@@ -21,6 +21,11 @@ export type VagaFeedItem = {
    * ('candidatado'/'selecionado'/'recusado') - null quando ele nunca se
    * candidatou. */
   candidatura_status: string | null;
+  /** quantas pessoas a empresa precisa pra essa vaga, e quantas já foram
+   * selecionadas - dá pro profissional uma ideia da concorrência (ex.: "vaga
+   * pra 3 pessoas, 1 já selecionada"). */
+  vagas_desejadas: number;
+  vagas_selecionadas: number;
 };
 
 /** Vagas que o profissional pode ver: as em aberto que combinam com suas
@@ -40,7 +45,8 @@ export async function listVagasCompativeis(profissionalId: string): Promise<(Vag
     `SELECT
        v.id, cp.nome AS categoria_nome, ci.nome AS cidade_nome, b.nome AS bairro_nome,
        v.data_evento, v.hora_inicio, v.duracao_horas, v.valor, v.descricao, v.criado_em, v.sexo_desejado,
-       v.status,
+       v.status, v.vagas_desejadas,
+       (SELECT count(*)::int FROM vaga_candidaturas vc2 WHERE vc2.vaga_id = v.id AND vc2.status = 'selecionado') AS vagas_selecionadas,
        e.nome_fantasia AS empresa_nome_fantasia,
        vc.status AS candidatura_status,
        (vc.id IS NOT NULL) AS ja_candidatado
@@ -80,24 +86,24 @@ export type MinhaVaga = {
   criado_em: string;
   status: string;
   sexo_desejado: string;
+  vagas_desejadas: number;
   total_candidatos: number;
+  total_selecionados: number;
   realizada: boolean;
-  profissional_selecionado_id: string | null;
-  profissional_selecionado_nome: string | null;
 };
 
 const MINHA_VAGA_SELECT = `
   SELECT
     v.id, cp.nome AS categoria_nome, ci.nome AS cidade_nome, b.nome AS bairro_nome,
     v.data_evento, v.hora_inicio, v.duracao_horas, v.valor, v.descricao, v.criado_em, v.status, v.sexo_desejado,
+    v.vagas_desejadas,
     (v.data_evento < CURRENT_DATE) AS realizada,
-    v.profissional_selecionado_id, sel.nome AS profissional_selecionado_nome,
-    (SELECT count(*)::int FROM vaga_candidaturas vc WHERE vc.vaga_id = v.id) AS total_candidatos
+    (SELECT count(*)::int FROM vaga_candidaturas vc WHERE vc.vaga_id = v.id) AS total_candidatos,
+    (SELECT count(*)::int FROM vaga_candidaturas vc WHERE vc.vaga_id = v.id AND vc.status = 'selecionado') AS total_selecionados
   FROM vagas_profissionais v
   JOIN categorias_profissionais cp ON cp.id = v.categoria_profissional_id
   JOIN cidades ci ON ci.id = v.cidade_id
   LEFT JOIN bairros b ON b.id = v.bairro_id
-  LEFT JOIN profissionais sel ON sel.usuario_id = v.profissional_selecionado_id
 `;
 
 export async function listMinhasVagas(empresaId: string): Promise<MinhaVaga[]> {
@@ -115,6 +121,8 @@ export type CandidatoVaga = {
   foto_perfil_url: string | null;
   telefone: string | null;
   candidatado_em: string;
+  /** 'candidatado' | 'selecionado' | 'recusado' */
+  status: string;
 };
 
 /** Contato do profissional só é retornado pra empresa dona da vaga (join com
@@ -122,7 +130,8 @@ export type CandidatoVaga = {
  * schema: profissional é visível pra empresa autenticada, nunca pra terceiros. */
 export async function listCandidatosDaVaga(vagaId: string, empresaId: string): Promise<CandidatoVaga[]> {
   return query<CandidatoVaga>(
-    `SELECT p.usuario_id AS profissional_id, p.slug AS profissional_slug, p.nome, p.foto_perfil_url, u.telefone, vc.criado_em AS candidatado_em
+    `SELECT p.usuario_id AS profissional_id, p.slug AS profissional_slug, p.nome, p.foto_perfil_url, u.telefone,
+            vc.criado_em AS candidatado_em, vc.status
      FROM vaga_candidaturas vc
      JOIN vagas_profissionais v ON v.id = vc.vaga_id AND v.empresa_id = $2
      JOIN profissionais p ON p.usuario_id = vc.profissional_id
@@ -135,10 +144,10 @@ export async function listCandidatosDaVaga(vagaId: string, empresaId: string): P
 
 export type AvaliacaoVaga = { nota: number; comentario: string | null };
 
-export async function getAvaliacaoDaVaga(vagaId: string, empresaId: string): Promise<AvaliacaoVaga | null> {
+export async function getAvaliacaoDaVaga(vagaId: string, empresaId: string, profissionalId: string): Promise<AvaliacaoVaga | null> {
   return queryOne<AvaliacaoVaga>(
-    `SELECT nota, comentario FROM avaliacoes_profissional WHERE vaga_id = $1 AND empresa_id = $2`,
-    [vagaId, empresaId]
+    `SELECT nota, comentario FROM avaliacoes_profissional WHERE vaga_id = $1 AND empresa_id = $2 AND profissional_id = $3`,
+    [vagaId, empresaId, profissionalId]
   );
 }
 
@@ -151,13 +160,16 @@ export type VagaConcluidaEmpresa = {
   profissional_selecionado_slug: string | null;
 };
 
+// uma linha por contratação (não por vaga) - uma vaga com vagas_desejadas=3
+// aparece 3 vezes aqui, uma pra cada profissional selecionado.
 const VAGA_CONCLUIDA_EMPRESA_SELECT = `
   SELECT v.id, cp.nome AS categoria_nome, v.data_evento, v.valor,
          sel.nome AS profissional_selecionado_nome, sel.slug AS profissional_selecionado_slug
-  FROM vagas_profissionais v
+  FROM vaga_candidaturas vc
+  JOIN vagas_profissionais v ON v.id = vc.vaga_id
   JOIN categorias_profissionais cp ON cp.id = v.categoria_profissional_id
-  LEFT JOIN profissionais sel ON sel.usuario_id = v.profissional_selecionado_id
-  WHERE v.empresa_id = $1 AND v.status = 'preenchida'
+  JOIN profissionais sel ON sel.usuario_id = vc.profissional_id
+  WHERE v.empresa_id = $1 AND v.status = 'preenchida' AND vc.status = 'selecionado'
 `;
 
 /** Histórico de vagas concluídas da empresa - usado tanto no card resumido
@@ -174,7 +186,10 @@ export async function listVagasConcluidasEmpresa(
 
 export async function countVagasConcluidasEmpresa(empresaId: string): Promise<number> {
   const row = await queryOne<{ total: string }>(
-    `SELECT COUNT(*) AS total FROM vagas_profissionais WHERE empresa_id = $1 AND status = 'preenchida'`,
+    `SELECT COUNT(*) AS total
+     FROM vaga_candidaturas vc
+     JOIN vagas_profissionais v ON v.id = vc.vaga_id
+     WHERE v.empresa_id = $1 AND v.status = 'preenchida' AND vc.status = 'selecionado'`,
     [empresaId]
   );
   return Number(row?.total ?? 0);
@@ -192,10 +207,11 @@ export type VagaConcluidaProfissional = {
 const VAGA_CONCLUIDA_PROFISSIONAL_SELECT = `
   SELECT v.id, cp.nome AS categoria_nome, v.data_evento, v.valor,
          e.nome_fantasia AS empresa_nome_fantasia, e.slug AS empresa_slug
-  FROM vagas_profissionais v
+  FROM vaga_candidaturas vc
+  JOIN vagas_profissionais v ON v.id = vc.vaga_id
   JOIN categorias_profissionais cp ON cp.id = v.categoria_profissional_id
   JOIN empresas e ON e.usuario_id = v.empresa_id
-  WHERE v.profissional_selecionado_id = $1 AND v.status = 'preenchida'
+  WHERE vc.profissional_id = $1 AND v.status = 'preenchida' AND vc.status = 'selecionado'
 `;
 
 /** Histórico de vagas concluídas do profissional - mesmo padrão do lado da
@@ -212,7 +228,10 @@ export async function listVagasConcluidasProfissional(
 
 export async function countVagasConcluidasProfissional(profissionalId: string): Promise<number> {
   const row = await queryOne<{ total: string }>(
-    `SELECT COUNT(*) AS total FROM vagas_profissionais WHERE profissional_selecionado_id = $1 AND status = 'preenchida'`,
+    `SELECT COUNT(*) AS total
+     FROM vaga_candidaturas vc
+     JOIN vagas_profissionais v ON v.id = vc.vaga_id
+     WHERE vc.profissional_id = $1 AND v.status = 'preenchida' AND vc.status = 'selecionado'`,
     [profissionalId]
   );
   return Number(row?.total ?? 0);

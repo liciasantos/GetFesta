@@ -5,7 +5,7 @@ import { getAvaliacaoDaVaga, getVagaDaEmpresa, listCandidatosDaVaga } from "@/li
 import { formatCurrencyBRL, formatDateBR } from "@/lib/format";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 import { Badge } from "@/components/ui";
-import { FecharComCandidatoButton, NaoFechouButton, RemoverSelecaoButton } from "@/components/FecharVagaButton";
+import { DesfazerSelecaoButton, FinalizarVagaButton, NaoFechouButton, SelecionarCandidatoButton } from "@/components/FecharVagaButton";
 import AvaliarProfissionalForm from "@/components/AvaliarProfissionalForm";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +16,11 @@ const STATUS_LABEL: Record<string, string> = {
   cancelada: "Não preenchida",
 };
 
+const CANDIDATURA_LABEL: Record<string, string> = {
+  selecionado: "✓ Selecionado",
+  recusado: "Não foi dessa vez",
+};
+
 export default async function VagaCandidatosPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
   if (!session || session.tipo !== "empresa") redirect("/entrar?tipo=empresa");
@@ -24,10 +29,11 @@ export default async function VagaCandidatosPage({ params }: { params: Promise<{
   const vaga = await getVagaDaEmpresa(id, session.usuarioId);
   if (!vaga) notFound();
 
-  const [candidatos, avaliacao] = await Promise.all([
-    listCandidatosDaVaga(id, session.usuarioId),
-    vaga.status === "preenchida" ? getAvaliacaoDaVaga(id, session.usuarioId) : Promise.resolve(null),
-  ]);
+  const candidatos = await listCandidatosDaVaga(id, session.usuarioId);
+  const selecionados = candidatos.filter((c) => c.status === "selecionado");
+  const avaliacoes = await Promise.all(
+    selecionados.map((c) => getAvaliacaoDaVaga(id, session.usuarioId, c.profissional_id))
+  );
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-8">
@@ -41,6 +47,11 @@ export default async function VagaCandidatosPage({ params }: { params: Promise<{
           <Badge tone={vaga.status === "aberta" ? "ok" : vaga.status === "preenchida" ? "ok" : "muted"}>
             {STATUS_LABEL[vaga.status] ?? vaga.status}
           </Badge>
+          {vaga.vagas_desejadas > 1 && (
+            <Badge tone="muted">
+              {vaga.total_selecionados} de {vaga.vagas_desejadas} preenchidas
+            </Badge>
+          )}
           {vaga.realizada && vaga.status === "aberta" && <Badge tone="warn">Evento já passou — fechou com alguém?</Badge>}
         </div>
         <p className="mt-1 text-[12.5px] text-muted">
@@ -49,32 +60,32 @@ export default async function VagaCandidatosPage({ params }: { params: Promise<{
         </p>
         <p className="mt-2 text-[13px] leading-relaxed">{vaga.descricao}</p>
 
-        {vaga.status === "preenchida" && vaga.profissional_selecionado_nome && vaga.profissional_selecionado_id && (
-          <>
-            <p className="mt-3 rounded-lg bg-ok-soft p-2.5 text-[12.5px] font-bold text-ok">
-              ✓ Fechado com {vaga.profissional_selecionado_nome}
-            </p>
-            <div className="mt-2">
-              <RemoverSelecaoButton vagaId={vaga.id} />
-            </div>
-            <AvaliarProfissionalForm
-              vagaId={vaga.id}
-              profissionalId={vaga.profissional_selecionado_id}
-              profissionalNome={vaga.profissional_selecionado_nome}
-              avaliacaoAtual={avaliacao}
-            />
-          </>
+        {selecionados.length > 0 && (
+          <p className="mt-3 rounded-lg bg-ok-soft p-2.5 text-[12.5px] font-bold text-ok">
+            ✓ Fechado com {selecionados.map((s) => s.nome).join(", ")}
+          </p>
         )}
         {vaga.status === "cancelada" && (
           <p className="mt-3 rounded-lg bg-surface-alt p-2.5 text-[12.5px] font-semibold text-muted">
             Não fechou com nenhum candidato dessa vez.
           </p>
         )}
-        {vaga.status === "aberta" && candidatos.length > 0 && (
-          <div className="mt-3">
-            <NaoFechouButton vagaId={vaga.id} />
+        {vaga.status === "aberta" && (
+          <div className="mt-3 flex flex-wrap gap-3">
+            {selecionados.length > 0 && <FinalizarVagaButton vagaId={vaga.id} />}
+            {candidatos.length > 0 && selecionados.length === 0 && <NaoFechouButton vagaId={vaga.id} />}
           </div>
         )}
+
+        {selecionados.map((s, i) => (
+          <AvaliarProfissionalForm
+            key={s.profissional_id}
+            vagaId={vaga.id}
+            profissionalId={s.profissional_id}
+            profissionalNome={s.nome}
+            avaliacaoAtual={avaliacoes[i]}
+          />
+        ))}
       </div>
 
       <h2 className="mb-2 mt-6 text-xs font-bold uppercase tracking-wide text-muted-2">
@@ -94,9 +105,12 @@ export default async function VagaCandidatosPage({ params }: { params: Promise<{
               )}
               <div>
                 <div className="text-[13px] font-bold">
-                  {c.nome} {vaga.profissional_selecionado_id === c.profissional_id && <span className="text-ok">✓</span>}
+                  {c.nome} {c.status === "selecionado" && <span className="text-ok">✓</span>}
                 </div>
-                <div className="text-[11px] text-muted">candidatou-se em {formatDateBR(c.candidatado_em)}</div>
+                <div className="text-[11px] text-muted">
+                  candidatou-se em {formatDateBR(c.candidatado_em)}
+                  {c.status !== "candidatado" && ` · ${CANDIDATURA_LABEL[c.status] ?? c.status}`}
+                </div>
               </div>
             </Link>
             <div className="flex items-center gap-2">
@@ -110,7 +124,10 @@ export default async function VagaCandidatosPage({ params }: { params: Promise<{
                   💬 WhatsApp
                 </a>
               )}
-              {vaga.status === "aberta" && <FecharComCandidatoButton vagaId={vaga.id} profissionalId={c.profissional_id} />}
+              {c.status === "selecionado" && <DesfazerSelecaoButton vagaId={vaga.id} profissionalId={c.profissional_id} />}
+              {c.status === "candidatado" && vaga.status === "aberta" && (
+                <SelecionarCandidatoButton vagaId={vaga.id} profissionalId={c.profissional_id} />
+              )}
             </div>
           </div>
         ))}

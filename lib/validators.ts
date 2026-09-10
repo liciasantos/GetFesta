@@ -280,4 +280,5 @@ export const criarVagaSchema = z.object({
   valor: z.coerce.number().min(0).optional().nullable(),
   descricao: z.string().min(10, "Conte mais sobre o que a vaga precisa"),
   sexoDesejado: z.enum(["feminino", "masculino", "indiferente"]).optional(),
+  vagasDesejadas: z.coerce.number().int().min(1, "No mínimo 1").max(20, "No máximo 20").optional(),
 });

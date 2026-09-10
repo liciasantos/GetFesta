@@ -23,13 +23,14 @@ export async function criarVaga(_prevState: VagaActionState, formData: FormData)
     valor: formData.get("valor") || undefined,
     descricao: formData.get("descricao"),
     sexoDesejado: formData.get("sexoDesejado") || undefined,
+    vagasDesejadas: formData.get("vagasDesejadas") || undefined,
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
 
   await query(
     `INSERT INTO vagas_profissionais (
-       empresa_id, categoria_profissional_id, cidade_id, bairro_id, data_evento, hora_inicio, duracao_horas, valor, descricao, sexo_desejado
-     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+       empresa_id, categoria_profissional_id, cidade_id, bairro_id, data_evento, hora_inicio, duracao_horas, valor, descricao, sexo_desejado, vagas_desejadas
+     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
     [
       session.usuarioId,
       parsed.data.categoriaProfissionalId,
@@ -41,6 +42,7 @@ export async function criarVaga(_prevState: VagaActionState, formData: FormData)
       parsed.data.valor ?? null,
       parsed.data.descricao,
       parsed.data.sexoDesejado ?? "indiferente",
+      parsed.data.vagasDesejadas ?? 1,
     ]
   );
 
@@ -90,23 +92,22 @@ function calcularHoraFim(horaInicio: string, duracaoHoras: number): string | nul
   return `${String(fh).padStart(2, "0")}:${String(fm).padStart(2, "0")}`;
 }
 
-/** Empresa marca com qual profissional fechou a vaga - é o único jeito de
- * saber, depois que a data do evento passa, se ela conseguiu contratar
- * alguém ou não (ver comentário na coluna profissional_selecionado_id).
- * Além de fechar a vaga: marca a candidatura escolhida como 'selecionado' e
- * as demais como 'recusado', bloqueia automaticamente o dia/horário do
- * evento na agenda do profissional (profissional_dias_indisponiveis, com
- * vaga_id pra poder desfazer depois - ver removerSelecaoVaga) e avisa o
- * profissional por e-mail. */
-export async function marcarVagaPreenchida(vagaId: string, profissionalId: string): Promise<FecharVagaResult> {
+/** Empresa seleciona um candidato pra uma das vagas_desejadas dessa vaga -
+ * bloqueia automaticamente o dia/horário do evento na agenda do profissional
+ * (profissional_dias_indisponiveis, com vaga_id pra poder desfazer depois -
+ * ver desfazerSelecaoCandidato) e avisa o profissional por e-mail. Quando o
+ * número de selecionados atinge vagas_desejadas, a vaga fecha sozinha
+ * ('preenchida') e quem ainda estava só 'candidatado' vira 'recusado'. */
+export async function selecionarCandidatoVaga(vagaId: string, profissionalId: string): Promise<FecharVagaResult> {
   const session = await getSession();
   if (!session || session.tipo !== "empresa") return { error: "Sessão inválida." };
 
-  const candidatura = await queryOne<{ id: string }>(
-    `SELECT id FROM vaga_candidaturas WHERE vaga_id = $1 AND profissional_id = $2`,
+  const candidatura = await queryOne<{ id: string; status: string }>(
+    `SELECT id, status FROM vaga_candidaturas WHERE vaga_id = $1 AND profissional_id = $2`,
     [vagaId, profissionalId]
   );
   if (!candidatura) return { error: "Esse profissional não é candidato dessa vaga." };
+  if (candidatura.status === "selecionado") return { error: "Esse profissional já foi selecionado." };
 
   const vaga = await queryOne<{
     categoria_nome: string;
@@ -114,8 +115,11 @@ export async function marcarVagaPreenchida(vagaId: string, profissionalId: strin
     hora_inicio: string;
     duracao_horas: string;
     nome_fantasia: string;
+    status: string;
+    vagas_desejadas: number;
   }>(
-    `SELECT cp.nome AS categoria_nome, v.data_evento, v.hora_inicio, v.duracao_horas, e.nome_fantasia
+    `SELECT cp.nome AS categoria_nome, v.data_evento, v.hora_inicio, v.duracao_horas, e.nome_fantasia,
+            v.status, v.vagas_desejadas
      FROM vagas_profissionais v
      JOIN categorias_profissionais cp ON cp.id = v.categoria_profissional_id
      JOIN empresas e ON e.usuario_id = v.empresa_id
@@ -123,21 +127,30 @@ export async function marcarVagaPreenchida(vagaId: string, profissionalId: strin
     [vagaId, session.usuarioId]
   );
   if (!vaga) return { error: "Vaga não encontrada." };
+  if (vaga.status !== "aberta") return { error: "Essa vaga não está mais aberta." };
 
-  const res = await query<{ id: string }>(
-    `UPDATE vagas_profissionais SET status = 'preenchida', profissional_selecionado_id = $1 WHERE id = $2 AND empresa_id = $3 RETURNING id`,
-    [profissionalId, vagaId, session.usuarioId]
+  const jaSelecionados = await queryOne<{ total: string }>(
+    `SELECT count(*) AS total FROM vaga_candidaturas WHERE vaga_id = $1 AND status = 'selecionado'`,
+    [vagaId]
   );
-  if (res.length === 0) return { error: "Vaga não encontrada." };
+  const totalSelecionados = Number(jaSelecionados?.total ?? 0);
+  if (totalSelecionados >= vaga.vagas_desejadas) {
+    return { error: "Todas as vagas dessa publicação já foram preenchidas." };
+  }
 
   await query(`UPDATE vaga_candidaturas SET status = 'selecionado' WHERE vaga_id = $1 AND profissional_id = $2`, [
     vagaId,
     profissionalId,
   ]);
-  await query(`UPDATE vaga_candidaturas SET status = 'recusado' WHERE vaga_id = $1 AND profissional_id != $2`, [
-    vagaId,
-    profissionalId,
-  ]);
+
+  // essa foi a ultima vaga que faltava preencher - fecha a publicacao e
+  // recusa quem ainda estava so candidatado.
+  if (totalSelecionados + 1 >= vaga.vagas_desejadas) {
+    await query(`UPDATE vagas_profissionais SET status = 'preenchida' WHERE id = $1`, [vagaId]);
+    await query(`UPDATE vaga_candidaturas SET status = 'recusado' WHERE vaga_id = $1 AND status = 'candidatado'`, [
+      vagaId,
+    ]);
+  }
 
   try {
     const horaFim = calcularHoraFim(vaga.hora_inicio, Number(vaga.duracao_horas));
@@ -179,25 +192,73 @@ export async function marcarVagaPreenchida(vagaId: string, profissionalId: strin
   return { ok: true };
 }
 
-/** Desfaz a seleção de uma vaga já preenchida (ex.: o profissional escolhido
- * ficou impossibilitado de cumprir o evento) - reabre a vaga pra novos
- * candidatos, devolve todas as candidaturas pra 'candidatado' e libera o
- * bloqueio de agenda que tinha sido criado automaticamente. */
-export async function removerSelecaoVaga(vagaId: string): Promise<FecharVagaResult> {
+/** Desfaz a seleção de UM candidato (ex.: ele ficou impossibilitado de
+ * cumprir o evento) - libera o bloqueio de agenda dele e, se a vaga já
+ * estava com todas as posições preenchidas, reabre pra novos candidatos e
+ * devolve quem tinha sido recusado pra 'candidatado' (já que uma posição
+ * abriu de novo). Diferente da versão antiga, não mexe nos outros
+ * profissionais que continuam selecionados. */
+export async function desfazerSelecaoCandidato(vagaId: string, profissionalId: string): Promise<FecharVagaResult> {
   const session = await getSession();
   if (!session || session.tipo !== "empresa") return { error: "Sessão inválida." };
 
-  const vaga = await queryOne<{ id: string }>(
-    `SELECT id FROM vagas_profissionais WHERE id = $1 AND empresa_id = $2 AND status = 'preenchida'`,
+  const vaga = await queryOne<{ id: string; status: string }>(
+    `SELECT id, status FROM vagas_profissionais WHERE id = $1 AND empresa_id = $2`,
     [vagaId, session.usuarioId]
   );
-  if (!vaga) return { error: "Vaga não encontrada ou não está preenchida." };
+  if (!vaga) return { error: "Vaga não encontrada." };
 
-  await query(`UPDATE vagas_profissionais SET status = 'aberta', profissional_selecionado_id = NULL WHERE id = $1`, [
+  const res = await query<{ id: string }>(
+    `UPDATE vaga_candidaturas SET status = 'candidatado' WHERE vaga_id = $1 AND profissional_id = $2 AND status = 'selecionado' RETURNING id`,
+    [vagaId, profissionalId]
+  );
+  if (res.length === 0) return { error: "Esse profissional não está selecionado nessa vaga." };
+
+  await query(`DELETE FROM profissional_dias_indisponiveis WHERE vaga_id = $1 AND profissional_id = $2`, [
+    vagaId,
+    profissionalId,
+  ]);
+
+  if (vaga.status === "preenchida") {
+    await query(`UPDATE vagas_profissionais SET status = 'aberta' WHERE id = $1`, [vagaId]);
+    await query(`UPDATE vaga_candidaturas SET status = 'candidatado' WHERE vaga_id = $1 AND status = 'recusado'`, [
+      vagaId,
+    ]);
+  }
+
+  revalidatePath("/painel/vagas");
+  revalidatePath(`/painel/vagas/${vagaId}`);
+  revalidatePath("/perfil-profissional");
+  return { ok: true };
+}
+
+/** Empresa decide fechar a vaga mesmo sem preencher todas as posições
+ * desejadas (ex.: precisava de 3, só conseguiu 2 e já está bom) - recusa
+ * quem ainda estava só candidatado. */
+export async function finalizarVagaAntecipadamente(vagaId: string): Promise<FecharVagaResult> {
+  const session = await getSession();
+  if (!session || session.tipo !== "empresa") return { error: "Sessão inválida." };
+
+  const selecionados = await queryOne<{ total: string }>(
+    `SELECT count(*) AS total
+     FROM vaga_candidaturas vc
+     JOIN vagas_profissionais v ON v.id = vc.vaga_id AND v.id = $1 AND v.empresa_id = $2
+     WHERE vc.status = 'selecionado'`,
+    [vagaId, session.usuarioId]
+  );
+  if (Number(selecionados?.total ?? 0) === 0) {
+    return { error: "Selecione pelo menos um candidato antes de finalizar." };
+  }
+
+  const res = await query<{ id: string }>(
+    `UPDATE vagas_profissionais SET status = 'preenchida' WHERE id = $1 AND empresa_id = $2 AND status = 'aberta' RETURNING id`,
+    [vagaId, session.usuarioId]
+  );
+  if (res.length === 0) return { error: "Vaga não encontrada." };
+
+  await query(`UPDATE vaga_candidaturas SET status = 'recusado' WHERE vaga_id = $1 AND status = 'candidatado'`, [
     vagaId,
   ]);
-  await query(`UPDATE vaga_candidaturas SET status = 'candidatado' WHERE vaga_id = $1`, [vagaId]);
-  await query(`DELETE FROM profissional_dias_indisponiveis WHERE vaga_id = $1`, [vagaId]);
 
   revalidatePath("/painel/vagas");
   revalidatePath(`/painel/vagas/${vagaId}`);
@@ -212,7 +273,7 @@ export async function marcarVagaNaoPreenchida(vagaId: string): Promise<FecharVag
   if (!session || session.tipo !== "empresa") return { error: "Sessão inválida." };
 
   const res = await query<{ id: string }>(
-    `UPDATE vagas_profissionais SET status = 'cancelada', profissional_selecionado_id = NULL WHERE id = $1 AND empresa_id = $2 RETURNING id`,
+    `UPDATE vagas_profissionais SET status = 'cancelada' WHERE id = $1 AND empresa_id = $2 RETURNING id`,
     [vagaId, session.usuarioId]
   );
   if (res.length === 0) return { error: "Vaga não encontrada." };
@@ -244,8 +305,9 @@ export async function avaliarProfissional(
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
 
   const vaga = await queryOne<{ id: string }>(
-    `SELECT id FROM vagas_profissionais
-     WHERE id = $1 AND empresa_id = $2 AND status = 'preenchida' AND profissional_selecionado_id = $3`,
+    `SELECT v.id FROM vagas_profissionais v
+     JOIN vaga_candidaturas vc ON vc.vaga_id = v.id AND vc.profissional_id = $3 AND vc.status = 'selecionado'
+     WHERE v.id = $1 AND v.empresa_id = $2`,
     [parsed.data.vagaId, session.usuarioId, parsed.data.profissionalId]
   );
   if (!vaga) return { error: "Essa vaga não pode ser avaliada." };
@@ -253,7 +315,7 @@ export async function avaliarProfissional(
   await query(
     `INSERT INTO avaliacoes_profissional (profissional_id, empresa_id, vaga_id, nota, comentario)
      VALUES ($1,$2,$3,$4,$5)
-     ON CONFLICT (vaga_id, empresa_id) DO UPDATE SET nota = $4, comentario = $5`,
+     ON CONFLICT (vaga_id, empresa_id, profissional_id) DO UPDATE SET nota = $4, comentario = $5`,
     [parsed.data.profissionalId, session.usuarioId, parsed.data.vagaId, parsed.data.nota, parsed.data.comentario ?? null]
   );
 

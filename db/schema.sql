@@ -302,7 +302,10 @@ CREATE TABLE avaliacoes_profissional (
     nota            SMALLINT NOT NULL CHECK (nota BETWEEN 1 AND 5),
     comentario      VARCHAR(500),
     criado_em       TIMESTAMPTZ NOT NULL DEFAULT now(),
-    UNIQUE (vaga_id, empresa_id)
+    -- inclui profissional_id (nao so vaga_id+empresa_id) porque uma vaga pode
+    -- ter mais de uma pessoa contratada (ver vagas_desejadas) - a empresa
+    -- avalia cada uma separadamente.
+    UNIQUE (vaga_id, empresa_id, profissional_id)
 );
 CREATE INDEX idx_avaliacoes_profissional_profissional ON avaliacoes_profissional(profissional_id);
 
@@ -347,12 +350,18 @@ CREATE TABLE vagas_profissionais (
     valor                       NUMERIC(10,2),          -- NULL = a combinar
     descricao                   TEXT NOT NULL,
     sexo_desejado                VARCHAR(20) NOT NULL DEFAULT 'indiferente', -- feminino / masculino / indiferente
+    -- quantas pessoas a empresa precisa contratar nessa mesma vaga (ex: 3
+    -- atores pra personagens diferentes) - quem foi selecionado pra cada
+    -- posicao fica em vaga_candidaturas.status = 'selecionado' (uma linha por
+    -- pessoa), nao existe mais uma unica coluna "profissional_selecionado_id"
+    -- porque isso so suportava uma contratacao por vaga.
+    vagas_desejadas              SMALLINT NOT NULL DEFAULT 1 CHECK (vagas_desejadas >= 1),
     status                      status_vaga NOT NULL DEFAULT 'aberta',
-    -- preenchido quando a empresa marca "fechei com esse profissional" - é o
-    -- jeito de saber se ela fechou (e com quem) depois que a data do evento
-    -- passa; se status continuar 'aberta' com data_evento no passado, a
-    -- aplicacao trata como "evento realizado, empresa nao informou o fechamento".
-    profissional_selecionado_id UUID REFERENCES profissionais(usuario_id),
+    -- vaga fica 'preenchida' quando o numero de candidaturas com status
+    -- 'selecionado' atinge vagas_desejadas (ou a empresa finaliza antes,
+    -- ver finalizarVagaAntecipadamente); se status continuar 'aberta' com
+    -- data_evento no passado, a aplicacao trata como "evento realizado,
+    -- empresa nao informou o fechamento".
     criado_em                   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX idx_vagas_categoria_cidade_status ON vagas_profissionais(categoria_profissional_id, cidade_id, status);

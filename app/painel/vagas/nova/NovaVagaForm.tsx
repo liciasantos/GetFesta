@@ -124,13 +124,26 @@ export default function NovaVagaForm({ cidades, categorias }: { cidades: Cidade[
         </Field>
       </div>
 
-      <Field label="Gênero desejado pra vaga">
-        <select name="sexoDesejado" defaultValue="indiferente" className="rounded-md border border-border px-3 py-2.5 text-sm">
-          <option value="indiferente">Indiferente</option>
-          <option value="feminino">Feminino</option>
-          <option value="masculino">Masculino</option>
-        </select>
-      </Field>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Quantos profissionais você precisa?">
+          <input
+            name="vagasDesejadas"
+            type="number"
+            min={1}
+            max={20}
+            defaultValue={1}
+            required
+            className="rounded-md border border-border px-3 py-2.5 text-sm"
+          />
+        </Field>
+        <Field label="Gênero desejado pra vaga">
+          <select name="sexoDesejado" defaultValue="indiferente" className="rounded-md border border-border px-3 py-2.5 text-sm">
+            <option value="indiferente">Indiferente</option>
+            <option value="feminino">Feminino</option>
+            <option value="masculino">Masculino</option>
+          </select>
+        </Field>
+      </div>
 
       <div className="grid grid-cols-2 gap-3">
         <Field label="Data do evento">

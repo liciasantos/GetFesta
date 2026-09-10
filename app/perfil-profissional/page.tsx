@@ -174,6 +174,12 @@ export default async function PerfilProfissionalPage({
                 <span className="rounded-full bg-surface-alt px-2 py-0.5 text-[11px] font-semibold">
                   {vaga.valor ? formatCurrencyBRL(vaga.valor) : "Valor a combinar"}
                 </span>
+                {vaga.vagas_desejadas > 1 && (
+                  <span className="rounded-full bg-surface-alt px-2 py-0.5 text-[11px] font-semibold">
+                    Vaga pra {vaga.vagas_desejadas} pessoas · {vaga.vagas_selecionadas} selecionada
+                    {vaga.vagas_selecionadas === 1 ? "" : "s"}
+                  </span>
+                )}
               </div>
               <p className="mt-1.5 max-w-md text-[12px] leading-relaxed text-muted">{vaga.descricao}</p>
             </div>
