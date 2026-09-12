@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { listMeusPedidos } from "@/lib/data/pedidos";
 import { getMeuPerfilCliente } from "@/lib/data/clientes";
-import { listBannersAtivos } from "@/lib/data/banners";
+import { listBannersAtivos, registrarVisualizacoesBannerCategoria } from "@/lib/data/banners";
 import { Badge } from "@/components/ui";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 import WhatsAppButton from "@/components/WhatsAppButton";
@@ -36,6 +36,7 @@ export default async function MeusPedidosPage() {
     getMeuPerfilCliente(session.usuarioId),
     listBannersAtivos(),
   ]);
+  await registrarVisualizacoesBannerCategoria(banners);
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-8">

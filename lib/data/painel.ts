@@ -3,19 +3,31 @@ import { query, queryOne } from "@/lib/db";
 export type PainelKpis = {
   visualizacoes: number;
   cliquesWhatsapp: number;
+  visualizacoesBanner: number;
+  cliquesBanner: number;
   pedidosRecebidos: number;
   taxaRespostaPct: string | null;
   tempoRespostaMedioMinutos: number | null;
 };
 
 export async function getPainelKpis(empresaId: string): Promise<PainelKpis> {
-  const [visualizacoes, cliques, pedidosRecebidos, empresa] = await Promise.all([
+  const [visualizacoes, cliques, visualizacoesBanner, cliquesBanner, pedidosRecebidos, empresa] = await Promise.all([
     queryOne<{ count: string }>(
       `SELECT count(*) FROM empresa_eventos WHERE empresa_id = $1 AND tipo = 'visualizacao_perfil'`,
       [empresaId]
     ),
     queryOne<{ count: string }>(
       `SELECT count(*) FROM empresa_eventos WHERE empresa_id = $1 AND tipo = 'clique_whatsapp'`,
+      [empresaId]
+    ),
+    queryOne<{ count: string }>(
+      `SELECT count(*) FROM empresa_eventos
+       WHERE empresa_id = $1 AND tipo IN ('visualizacao_banner_hero', 'visualizacao_banner_categoria')`,
+      [empresaId]
+    ),
+    queryOne<{ count: string }>(
+      `SELECT count(*) FROM empresa_eventos
+       WHERE empresa_id = $1 AND tipo IN ('clique_banner_hero', 'clique_banner_categoria')`,
       [empresaId]
     ),
     queryOne<{ count: string }>(`SELECT count(*) FROM pedido_interesses WHERE empresa_id = $1`, [empresaId]),
@@ -28,6 +40,8 @@ export async function getPainelKpis(empresaId: string): Promise<PainelKpis> {
   return {
     visualizacoes: Number(visualizacoes?.count ?? 0),
     cliquesWhatsapp: Number(cliques?.count ?? 0),
+    visualizacoesBanner: Number(visualizacoesBanner?.count ?? 0),
+    cliquesBanner: Number(cliquesBanner?.count ?? 0),
     pedidosRecebidos: Number(pedidosRecebidos?.count ?? 0),
     taxaRespostaPct: empresa?.taxa_resposta_pct ?? null,
     tempoRespostaMedioMinutos: empresa?.tempo_resposta_medio_minutos ?? null,

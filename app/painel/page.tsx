@@ -135,9 +135,11 @@ export default async function PainelPage() {
         </>
       )}
 
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-5">
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 lg:grid-cols-7">
         <Kpi value={kpis.visualizacoes} label="Visualizações do perfil" />
         <Kpi value={kpis.cliquesWhatsapp} label="Cliques no WhatsApp" />
+        <Kpi value={kpis.visualizacoesBanner} label="Visualizações do banner" />
+        <Kpi value={kpis.cliquesBanner} label="Cliques no banner" />
         <Kpi value={kpis.pedidosRecebidos} label="Pedidos recebidos" />
         <Kpi value={kpis.taxaRespostaPct ? `${Number(kpis.taxaRespostaPct)}%` : "—"} label="Taxa de resposta" />
         <Kpi value={kpis.tempoRespostaMedioMinutos ? `${kpis.tempoRespostaMedioMinutos} min` : "—"} label="Tempo médio de resposta" />

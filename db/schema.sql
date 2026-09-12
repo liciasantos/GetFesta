@@ -632,10 +632,16 @@ CREATE TABLE banners_categoria (
     UNIQUE (categoria_id, inicio_em, fim_em)  -- reforcado na aplicacao: 1 empresa ativa por categoria por periodo
 );
 
--- banner principal (hero) do topo da home - 100% administrado pela GetFesta,
--- independente de qualquer empresa (titulo/texto/botao/imagem livres).
+-- banner principal (hero) do topo da home - 100% administrado pela GetFesta
+-- (titulo/texto/botao/imagem livres), mas pode opcionalmente ser vendido pra
+-- uma empresa especifica (empresa_id) - nesse caso o admin atribui o banner
+-- a ela na criacao/edicao, o que habilita as metricas de visualizacao/clique
+-- no painel dela (ver lib/data/painel.ts:getPainelKpis). Banners sem
+-- empresa_id (institucionais, promocao geral) simplesmente nao contam pra
+-- ninguem.
 CREATE TABLE banners_hero (
     id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    empresa_id   UUID REFERENCES empresas(usuario_id),
     titulo       VARCHAR(160) NOT NULL,
     texto        VARCHAR(300),
     botao_label  VARCHAR(60),
@@ -776,7 +782,15 @@ CREATE INDEX idx_empresa_avaliacoes_google_ativo ON empresa_avaliacoes_google(at
 --     mas o proprio plano pede "painel com numeros concretos" - sem uma
 --     tabela de eventos essas metricas nao teriam de onde vir).
 -- ---------------------------------------------------------------------
-CREATE TYPE tipo_evento_empresa AS ENUM ('visualizacao_perfil', 'clique_whatsapp');
+-- os 4 valores de banner alimentam as metricas de "visualizacoes/cliques do
+-- banner" no painel da empresa que contratou um banner_hero ou
+-- banner_categoria (ver getPainelKpis) - separados dos eventos de perfil
+-- pra nao misturar trafego organico do perfil com trafego vindo do anuncio.
+CREATE TYPE tipo_evento_empresa AS ENUM (
+    'visualizacao_perfil', 'clique_whatsapp',
+    'visualizacao_banner_hero', 'clique_banner_hero',
+    'visualizacao_banner_categoria', 'clique_banner_categoria'
+);
 
 CREATE TABLE empresa_eventos (
     id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),

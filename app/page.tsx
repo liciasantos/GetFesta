@@ -3,7 +3,12 @@ import { headers } from "next/headers";
 import { listCategorias, listCidades } from "@/lib/data/geo";
 import { getEmpresasDestaque } from "@/lib/data/empresas";
 import { listPedidosFeed } from "@/lib/data/pedidos";
-import { listBannersAtivos, listHeroBannersAtivos } from "@/lib/data/banners";
+import {
+  listBannersAtivos,
+  listHeroBannersAtivos,
+  registrarVisualizacoesBannerCategoria,
+  registrarVisualizacoesBannerHero,
+} from "@/lib/data/banners";
 import { listPlanosEmpresa } from "@/lib/data/painel";
 import {
   getConfiguracoesSite,
@@ -42,6 +47,10 @@ export default async function HomePage() {
       getSession(),
       listPlanosEmpresa(),
     ]);
+
+  // registra 1 visualização por empresa anunciante presente nessa carga da
+  // home - depois do Promise.all acima porque precisa da lista já resolvida.
+  await Promise.all([registrarVisualizacoesBannerCategoria(banners), registrarVisualizacoesBannerHero(heroBanners)]);
 
   const empresaLogada = session?.tipo === "empresa";
 

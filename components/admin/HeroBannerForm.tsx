@@ -54,6 +54,25 @@ export default function HeroBannerForm({
         </Field>
       )}
 
+      <Field label="Empresa anunciante (opcional)">
+        <select
+          name="empresaId"
+          defaultValue={banner?.empresa_id ?? ""}
+          className="rounded-md border border-border px-3 py-2.5 text-sm"
+        >
+          <option value="">Nenhuma — banner institucional</option>
+          {empresas.map((e) => (
+            <option key={e.usuario_id} value={e.usuario_id}>
+              {e.nome_fantasia}
+            </option>
+          ))}
+        </select>
+        <p className="mt-1 text-[10.5px] text-muted-2">
+          Se marcar uma empresa aqui, ela passa a ver visualizações e cliques desse banner no painel dela. Deixe em
+          branco pra banners institucionais (sem dono).
+        </p>
+      </Field>
+
       <Field label="Título">
         <input
           ref={tituloRef}

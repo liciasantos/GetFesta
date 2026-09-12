@@ -6,6 +6,7 @@ import { Badge, PlaceholderImg } from "@/components/ui";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import type { BannerCategoria } from "@/lib/data/banners";
+import { registrarCliqueBannerCategoria } from "@/lib/actions/banners";
 
 export default function DestaquesGrid({
   banners,
@@ -37,6 +38,7 @@ export default function DestaquesGrid({
           <div
             key={b.id}
             data-card
+            onClick={() => void registrarCliqueBannerCategoria(b.empresa_id)}
             className={`card-hover flex shrink-0 flex-col overflow-hidden rounded-lg border border-accent-soft-2 bg-white ${cardWidthClass}`}
           >
             <Link href={`/empresa/${b.empresa_slug}`} className="flex flex-1 flex-col">

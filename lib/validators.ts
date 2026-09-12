@@ -224,6 +224,7 @@ export const atualizarBannerSchema = z
   .refine((v) => v.fimEm >= v.inicioEm, { message: "Data de término precisa ser depois do início", path: ["fimEm"] });
 
 export const criarBannerHeroSchema = z.object({
+  empresaId: z.string().uuid().optional(),
   titulo: z.string().min(2, "Informe um título").max(160),
   texto: z.string().max(300).optional(),
   botaoLabel: z.string().max(60).optional(),
@@ -237,6 +238,7 @@ export const criarBannerHeroSchema = z.object({
 
 export const atualizarBannerHeroSchema = z.object({
   id: z.string().uuid(),
+  empresaId: z.string().uuid().optional(),
   titulo: z.string().min(2, "Informe um título").max(160),
   texto: z.string().max(300).optional(),
   botaoLabel: z.string().max(60).optional(),

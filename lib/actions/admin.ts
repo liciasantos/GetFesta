@@ -122,6 +122,7 @@ export async function criarBannerHero(_prevState: BannerActionState, formData: F
   if (!session) return { error: "Sessão inválida." };
 
   const parsed = criarBannerHeroSchema.safeParse({
+    empresaId: formData.get("empresaId") || undefined,
     titulo: formData.get("titulo"),
     texto: formData.get("texto") || undefined,
     botaoLabel: formData.get("botaoLabel") || undefined,
@@ -137,9 +138,10 @@ export async function criarBannerHero(_prevState: BannerActionState, formData: F
   const proximaOrdem = await queryOne<{ max: number | null }>(`SELECT max(ordem) AS max FROM banners_hero`);
 
   await query(
-    `INSERT INTO banners_hero (titulo, texto, botao_label, botao_url, botao2_label, botao2_url, imagem_fundo, imagem_fundo_mobile, regiao_alvo, ativo, ordem)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,true,$10)`,
+    `INSERT INTO banners_hero (empresa_id, titulo, texto, botao_label, botao_url, botao2_label, botao2_url, imagem_fundo, imagem_fundo_mobile, regiao_alvo, ativo, ordem)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,true,$11)`,
     [
+      parsed.data.empresaId ?? null,
       parsed.data.titulo,
       parsed.data.texto ?? null,
       parsed.data.botaoLabel ?? null,
@@ -164,6 +166,7 @@ export async function atualizarBannerHero(_prevState: BannerActionState, formDat
 
   const parsed = atualizarBannerHeroSchema.safeParse({
     id: formData.get("id"),
+    empresaId: formData.get("empresaId") || undefined,
     titulo: formData.get("titulo"),
     texto: formData.get("texto") || undefined,
     botaoLabel: formData.get("botaoLabel") || undefined,
@@ -178,10 +181,11 @@ export async function atualizarBannerHero(_prevState: BannerActionState, formDat
 
   await query(
     `UPDATE banners_hero
-     SET titulo = $1, texto = $2, botao_label = $3, botao_url = $4, botao2_label = $5, botao2_url = $6,
-         imagem_fundo = $7, imagem_fundo_mobile = $8, regiao_alvo = $9
-     WHERE id = $10`,
+     SET empresa_id = $1, titulo = $2, texto = $3, botao_label = $4, botao_url = $5, botao2_label = $6, botao2_url = $7,
+         imagem_fundo = $8, imagem_fundo_mobile = $9, regiao_alvo = $10
+     WHERE id = $11`,
     [
+      parsed.data.empresaId ?? null,
       parsed.data.titulo,
       parsed.data.texto ?? null,
       parsed.data.botaoLabel ?? null,

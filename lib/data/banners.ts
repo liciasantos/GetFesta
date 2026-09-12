@@ -27,6 +27,7 @@ export async function listBannersAtivos(): Promise<BannerCategoria[]> {
 
 export type HeroBanner = {
   id: string;
+  empresa_id: string | null;
   titulo: string;
   texto: string | null;
   botao_label: string | null;
@@ -38,7 +39,7 @@ export type HeroBanner = {
 };
 
 const HERO_BANNER_CAMPOS =
-  "id, titulo, texto, botao_label, botao_url, botao2_label, botao2_url, imagem_fundo, imagem_fundo_mobile";
+  "id, empresa_id, titulo, texto, botao_label, botao_url, botao2_label, botao2_url, imagem_fundo, imagem_fundo_mobile";
 
 /** Troca o data URI guardado no banco (upload do admin) pelo link do endpoint
  * que serve a imagem de verdade (ver app/api/hero-banner/[id]/imagem/[variant]/route.ts)
@@ -56,12 +57,15 @@ function comLinksDeImagem(row: HeroBanner): HeroBanner {
   };
 }
 
-/** Banner principal (topo da home) - 100% administrado, independente de
- * empresa (ver /admin/hero e banners_hero). `regiaoVisitante` vem da
- * geolocalizacao por IP (header x-vercel-ip-country-region, so existe em
- * producao na Vercel - ver app/page.tsx): se detectou SP ou MG e existe
- * banner ativo pra essa regiao, mostra só esses; senão cai pros de RJ ou sem
- * regiao definida (fallback padrão, cobre local/outros estados/sem match). */
+/** Banner principal (topo da home) - conteudo 100% administrado (titulo/
+ * texto/botao/imagem livres), mas pode opcionalmente ser atribuido a uma
+ * empresa que comprou o espaco (empresa_id) pra habilitar as metricas dela
+ * (ver registrarVisualizacoesBannerHero/registrarCliqueBannerHero abaixo).
+ * `regiaoVisitante` vem da geolocalizacao por IP (header
+ * x-vercel-ip-country-region, so existe em producao na Vercel - ver
+ * app/page.tsx): se detectou SP ou MG e existe banner ativo pra essa regiao,
+ * mostra só esses; senão cai pros de RJ ou sem regiao definida (fallback
+ * padrão, cobre local/outros estados/sem match). */
 export async function listHeroBannersAtivos(regiaoVisitante?: string | null): Promise<HeroBanner[]> {
   if (regiaoVisitante === "SP" || regiaoVisitante === "MG") {
     const doEstado = await query<HeroBanner>(
@@ -76,4 +80,27 @@ export async function listHeroBannersAtivos(regiaoVisitante?: string | null): Pr
      ORDER BY ordem ASC, id ASC`
   );
   return rows.map(comLinksDeImagem);
+}
+
+/** Registra 1 visualização por empresa que tem um banner_categoria (Destaques
+ * da semana) presente nessa leva de banners exibidos - chamado logo depois de
+ * listBannersAtivos() nas páginas que renderizam DestaquesGrid (home e
+ * /meus-pedidos). Conta "apareceu numa carga de página", mesmo padrão já
+ * usado em registrarVisualizacaoPerfil (não é impressão real por scroll). */
+export async function registrarVisualizacoesBannerCategoria(banners: BannerCategoria[]): Promise<void> {
+  if (banners.length === 0) return;
+  await query(
+    `INSERT INTO empresa_eventos (empresa_id, tipo) SELECT unnest($1::uuid[]), 'visualizacao_banner_categoria'`,
+    [banners.map((b) => b.empresa_id)]
+  );
+}
+
+/** Mesma ideia, pro banner_hero - só conta pra quem tem empresa_id atribuído
+ * (banners institucionais sem empresa não têm quem acompanhar a métrica). */
+export async function registrarVisualizacoesBannerHero(banners: HeroBanner[]): Promise<void> {
+  const empresaIds = banners.map((b) => b.empresa_id).filter((id): id is string => !!id);
+  if (empresaIds.length === 0) return;
+  await query(`INSERT INTO empresa_eventos (empresa_id, tipo) SELECT unnest($1::uuid[]), 'visualizacao_banner_hero'`, [
+    empresaIds,
+  ]);
 }

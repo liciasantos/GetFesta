@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui";
 import BgImage from "@/components/BgImage";
 import type { HeroBanner } from "@/lib/data/banners";
+import { registrarCliqueBannerHero } from "@/lib/actions/banners";
 
 const ROTATE_MS = 5500;
 
@@ -71,6 +72,7 @@ export default function Hero({ banners }: { banners: HeroBanner[] }) {
                   <div className="mt-5 flex flex-wrap items-center gap-2.5">
                     <Link
                       href={current.botao_url}
+                      onClick={() => current.empresa_id && void registrarCliqueBannerHero(current.empresa_id)}
                       className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-white px-4 py-2.5 text-sm font-bold text-accent-dark hover:bg-white/90"
                     >
                       {current.botao_label}
@@ -78,6 +80,7 @@ export default function Hero({ banners }: { banners: HeroBanner[] }) {
                     {current.botao2_label && current.botao2_url && (
                       <Link
                         href={current.botao2_url}
+                        onClick={() => current.empresa_id && void registrarCliqueBannerHero(current.empresa_id)}
                         className="inline-flex w-fit items-center gap-1.5 rounded-lg border border-white/70 px-4 py-2.5 text-sm font-bold text-white hover:bg-white/10"
                       >
                         {current.botao2_label}
