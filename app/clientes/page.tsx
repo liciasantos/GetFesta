@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { getSession } from "@/lib/auth";
 import { buttonClass } from "@/components/ui";
+import BgImage from "@/components/BgImage";
 import CalculadoraEventosForm from "@/components/CalculadoraEventosForm";
 
 export const metadata: Metadata = {
@@ -65,9 +66,16 @@ export default async function ClientesPage() {
         }}
       />
 
-      {/* HERO */}
-      <section className="border-b border-border bg-surface-alt">
-        <div className="mx-auto max-w-4xl px-6 pt-20 pb-16 text-center sm:pt-28 sm:pb-24">
+      {/* HERO — foto de fundo full-bleed (ambiente claro e desfocado ao
+          centro) + overlay branco translúcido, pra manter o texto escuro
+          legível mesmo sobre os detalhes mais carregados nas bordas (taças,
+          flores). Diferente do overlay escuro de app/quem-somos/page.tsx,
+          que existe pra texto branco. */}
+      <section className="relative overflow-hidden border-b border-border">
+        <BgImage src="/banner_calculadora.png" className="object-cover" priority sizes="100vw" />
+        <div className="absolute inset-0 bg-white/60" />
+
+        <div className="relative mx-auto max-w-4xl px-6 pt-20 pb-16 text-center sm:pt-28 sm:pb-24">
           <span className="section-kicker justify-center">Para clientes</span>
           <h1 className="mt-4 font-display text-[30px] font-extrabold leading-[1.15] sm:text-[42px]">
             Calculadora de festa: descubra quanto comprar antes de fechar com qualquer fornecedor
