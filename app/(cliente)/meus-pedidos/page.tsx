@@ -38,6 +38,9 @@ export default async function MeusPedidosPage() {
   ]);
   await registrarVisualizacoesBannerCategoria(banners);
 
+  const pedidosAtivos = pedidos.filter((p) => p.status === "aberto" || p.status === "em_andamento").length;
+  const propostasRecebidas = pedidos.reduce((soma, p) => soma + p.empresasInteressadas.length, 0);
+
   return (
     <div className="mx-auto max-w-4xl px-6 py-8">
       {/* PERFIL */}
@@ -59,6 +62,14 @@ export default async function MeusPedidosPage() {
         <Link href="/meu-perfil" className="rounded-lg border border-border-strong bg-surface px-3 py-1.5 text-[12.5px] font-bold hover:bg-surface-alt">
           Editar perfil
         </Link>
+      </div>
+
+      {/* KPIS — números simples a partir dos pedidos já buscados acima, sem
+          query nova (nada de variação % por período: isso usa empresa_eventos,
+          tabela que só existe pro lado da empresa). */}
+      <div className="mt-4 grid grid-cols-2 gap-2.5">
+        <Kpi value={pedidosAtivos} label="Pedidos ativos" />
+        <Kpi value={propostasRecebidas} label="Propostas recebidas" />
       </div>
 
       {/* Cadastro via Google não pede cidade - avisa que falta completar */}
@@ -198,6 +209,15 @@ export default async function MeusPedidosPage() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function Kpi({ value, label }: { value: string | number; label: string }) {
+  return (
+    <div className="rounded-lg border border-border bg-surface p-3">
+      <div className="text-xl font-extrabold text-accent-dark">{value}</div>
+      <div className="mt-0.5 text-[10.5px] font-semibold text-muted">{label}</div>
     </div>
   );
 }

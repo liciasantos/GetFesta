@@ -3,8 +3,15 @@
 // Server Components (app/perfil-profissional/page.tsx, validação do ?tab=)
 // quanto por Client Components (components/ProfissionalTabs.tsx,
 // components/ProfissionalGlobalTabBar.tsx).
-export type Tab = "perfil" | "galeria" | "calendario" | "vagas";
+export type Tab = "painel" | "perfil" | "galeria" | "calendario" | "vagas";
 
+// Todos os ids válidos, incluindo "painel" (só existe na sidebar desktop, ver
+// components/painel/ProfissionalPainelSidebar.tsx) - usado pra validar o ?tab=
+// recebido em app/perfil-profissional/page.tsx.
+export const TAB_IDS: Tab[] = ["painel", "perfil", "galeria", "calendario", "vagas"];
+
+// Abas da barra fixa do rodapé (mobile) - não inclui "painel" de propósito,
+// pra não mudar nada no mobile (ver components/painel/ProfissionalPainelSidebar.tsx).
 export const TABS: Array<{ id: Tab; label: string; icon: string }> = [
   {
     id: "perfil",

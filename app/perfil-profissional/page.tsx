@@ -26,9 +26,10 @@ import { getLimitesProfissional } from "@/lib/data/limites-profissional";
 import { Badge, buttonClass } from "@/components/ui";
 import { formatCurrencyBRL, formatDateBR } from "@/lib/format";
 import PerfilProfissionalForm from "./PerfilProfissionalForm";
-import { ProfissionalTabsProvider, TabSection } from "@/components/ProfissionalTabs";
-import { TABS, type Tab } from "@/lib/profissional-tabs";
+import { ProfissionalTabsProvider, TabSection, TabShortcutButton } from "@/components/ProfissionalTabs";
+import { TAB_IDS, type Tab } from "@/lib/profissional-tabs";
 import PerfilProfissionalMobileHeader from "@/components/PerfilProfissionalMobileHeader";
+import ProfissionalPainelSidebar from "@/components/painel/ProfissionalPainelSidebar";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -49,7 +50,7 @@ export default async function PerfilProfissionalPage({
   if (!session || session.tipo !== "profissional") redirect("/entrar");
 
   const sp = await searchParams;
-  const initialTab: Tab = TABS.some((t) => t.id === sp.tab) ? (sp.tab as Tab) : "perfil";
+  const initialTab: Tab = TAB_IDS.includes(sp.tab as Tab) ? (sp.tab as Tab) : "perfil";
 
   const [perfil, categorias, cidades, vagas, vagasConcluidas, bloqueiosDisponibilidade, config, limites] = await Promise.all([
     getMeuPerfilProfissional(session.usuarioId),
@@ -101,8 +102,16 @@ export default async function PerfilProfissionalPage({
       </>
     ) : null;
 
+  const candidaturasEmAnalise = vagas.filter(
+    (v) => v.ja_candidatado && v.candidatura_status !== "selecionado" && v.candidatura_status !== "recusado"
+  ).length;
+
   return (
-    <div className="mx-auto max-w-2xl px-6 py-10">
+    <ProfissionalTabsProvider initialTab={initialTab}>
+    <div className="lg:flex lg:items-start lg:gap-6 lg:pl-6 lg:pt-8">
+      <ProfissionalPainelSidebar />
+      <div className="min-w-0 flex-1">
+      <div className="mx-auto max-w-2xl px-6 py-10">
       <div className="hidden sm:block">
         <h1 className="text-xl font-extrabold">Meu catálogo profissional</h1>
         <p className="mt-1 text-sm text-muted">
@@ -111,7 +120,6 @@ export default async function PerfilProfissionalPage({
         {avisoCompletarCatalogo && <div className="mt-4">{avisoCompletarCatalogo}</div>}
       </div>
 
-      <ProfissionalTabsProvider initialTab={initialTab}>
       <PerfilProfissionalMobileHeader
         nome={perfil.nome}
         fotoPerfilUrl={perfil.foto_perfil_url}
@@ -119,6 +127,24 @@ export default async function PerfilProfissionalPage({
         aviso={avisoCompletarCatalogo}
         atualizarFoto={atualizarFotoProfissional}
       />
+
+      <TabSection tab="painel">
+      <div className="mt-6 grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+        <PainelKpi value={vagas.length} label="Vagas compatíveis" />
+        <PainelKpi value={candidaturasEmAnalise} label="Candidaturas em análise" />
+        <PainelKpi value={vagasConcluidas.length} label="Vagas concluídas (últimas)" />
+        <PainelKpi
+          value={perfil.nota_media ? `${perfil.nota_media} ★` : "—"}
+          label={`Avaliação média (${perfil.total_avaliacoes})`}
+        />
+      </div>
+      <div className="mt-5 flex flex-wrap gap-2">
+        <TabShortcutButton tabId="perfil" label="Editar perfil" />
+        <TabShortcutButton tabId="galeria" label="Galeria e portfólio" />
+        <TabShortcutButton tabId="calendario" label="Calendário" />
+        <TabShortcutButton tabId="vagas" label="Vagas compatíveis" />
+      </div>
+      </TabSection>
 
       <TabSection tab="perfil">
       <div className="mt-6 hidden items-center justify-between gap-4 rounded-xl border border-border bg-surface p-5 sm:flex">
@@ -286,7 +312,18 @@ export default async function PerfilProfissionalPage({
         />
       </div>
       </TabSection>
-      </ProfissionalTabsProvider>
+      </div>
+      </div>
+    </div>
+    </ProfissionalTabsProvider>
+  );
+}
+
+function PainelKpi({ value, label }: { value: string | number; label: string }) {
+  return (
+    <div className="rounded-lg border border-border bg-surface p-3">
+      <div className="text-xl font-extrabold text-accent-dark">{value}</div>
+      <div className="mt-0.5 text-[10.5px] font-semibold text-muted">{label}</div>
     </div>
   );
 }

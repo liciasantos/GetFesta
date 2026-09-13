@@ -8,12 +8,13 @@ const TabContext = createContext<{ tab: Tab; setTab: (t: Tab) => void }>({
   setTab: () => {},
 });
 
-/** Shell da navegação mobile por abas (Perfil/Galeria/Calendário/Vagas), com
- * barra fixa no rodapé. No desktop as abas são ignoradas: TabSection sempre
- * mostra o conteúdo (sm:block), então a página continua a rolagem única de
- * sempre — essa troca acontece só via CSS (mesma árvore de componentes, sem
- * duplicar nenhum client component nem refazer fetch), então não tem custo
- * extra de performance nem de estado dessincronizado entre abas. */
+/** Shell de navegação por abas (Perfil/Galeria/Calendário/Vagas + Painel
+ * inicial só no desktop) - no mobile troca de aba pela barra fixa do rodapé
+ * (MobileTabBar), no desktop pela sidebar (components/painel/
+ * ProfissionalPainelSidebar.tsx). Os dois só trocam o estado `tab` local -
+ * mesma árvore de componentes, sem duplicar nenhum client component nem
+ * refazer fetch, então não tem custo extra de performance nem de estado
+ * dessincronizado entre abas. */
 export function ProfissionalTabsProvider({ children, initialTab = "perfil" }: { children: ReactNode; initialTab?: Tab }) {
   const [tab, setTab] = useState<Tab>(initialTab);
   return (
@@ -35,7 +36,22 @@ export function useProfissionalTab() {
 
 export function TabSection({ tab, children }: { tab: Tab; children: ReactNode }) {
   const { tab: active } = useContext(TabContext);
-  return <div className={`${active === tab ? "block" : "hidden"} sm:block`}>{children}</div>;
+  return <div className={active === tab ? "block" : "hidden"}>{children}</div>;
+}
+
+/** Atalho usado no "Painel inicial" (desktop) pra pular direto pra outra
+ * seção, sem precisar passar pela sidebar. */
+export function TabShortcutButton({ tabId, label }: { tabId: Tab; label: string }) {
+  const { setTab } = useContext(TabContext);
+  return (
+    <button
+      type="button"
+      onClick={() => setTab(tabId)}
+      className="rounded-lg border border-border-strong bg-surface px-3 py-1.5 text-[12.5px] font-bold hover:bg-surface-alt"
+    >
+      {label}
+    </button>
+  );
 }
 
 function MobileTabBar() {
