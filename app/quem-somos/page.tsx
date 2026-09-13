@@ -1,8 +1,27 @@
 import Link from "next/link";
 import { buttonClass } from "@/components/ui";
 import BgImage from "@/components/BgImage";
+import { listCidades } from "@/lib/data/geo";
 
-export default function QuemSomosPage() {
+/** Capital de cada estado atendido, pra exibir um nome de cidade reconhecível
+ * no lugar da sigla — adicione aqui a capital quando a GetFesta chegar a um
+ * estado novo (a contagem em si já é automática, via `cidades` no banco). */
+const CAPITAL_POR_ESTADO: Record<string, string> = {
+  RJ: "Rio de Janeiro",
+  SP: "São Paulo",
+  MG: "Belo Horizonte",
+};
+
+function formatarLista(itens: string[]): string {
+  if (itens.length <= 1) return itens.join("");
+  return `${itens.slice(0, -1).join(", ")} e ${itens[itens.length - 1]}`;
+}
+
+export default async function QuemSomosPage() {
+  const cidades = await listCidades();
+  const estados = Array.from(new Set(cidades.map((c) => c.estado))).sort();
+  const nomesEstados = estados.map((uf) => CAPITAL_POR_ESTADO[uf] ?? uf);
+
   return (
     <div>
       {/* HERO — imagem de fundo com overlay escuro (garante leitura do texto
@@ -35,7 +54,10 @@ export default function QuemSomosPage() {
       <section className="mx-auto max-w-5xl px-6 py-12 sm:py-16">
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
           <Stat big="R$ 0" label="Para publicar um pedido — sempre grátis pro cliente" />
-          <Stat big="2 cidades" label="Rio de Janeiro e São Paulo, no lançamento" />
+          <Stat
+            big={`${estados.length} ${estados.length === 1 ? "cidade" : "cidades"}`}
+            label={`${formatarLista(nomesEstados)}, no lançamento`}
+          />
           <Stat big="3 perfis" label="Cliente, empresa e profissional, cada um com seu espaço" />
         </div>
       </section>
