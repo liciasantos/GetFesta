@@ -104,3 +104,41 @@ export async function registrarVisualizacoesBannerHero(banners: HeroBanner[]): P
     empresaIds,
   ]);
 }
+
+export type MeuBannerCategoria = {
+  id: string;
+  categoria_nome: string;
+  inicio_em: string;
+  fim_em: string;
+  ativo: boolean;
+};
+
+/** "Meus anúncios" (painel da empresa) - histórico completo de Destaques da
+ * semana contratados por essa empresa, ativos e passados (não só os
+ * ativos agora, como listBannersAtivos faz pra home). */
+export async function listMeusBannersCategoria(empresaId: string): Promise<MeuBannerCategoria[]> {
+  return query<MeuBannerCategoria>(
+    `SELECT b.id, c.nome AS categoria_nome, b.inicio_em, b.fim_em, (b.ativo AND now() BETWEEN b.inicio_em AND b.fim_em) AS ativo
+     FROM banners_categoria b
+     JOIN categorias c ON c.id = b.categoria_id
+     WHERE b.empresa_id = $1
+     ORDER BY b.inicio_em DESC`,
+    [empresaId]
+  );
+}
+
+export type MeuBannerHero = {
+  id: string;
+  titulo: string;
+  ativo: boolean;
+  criado_em: string;
+};
+
+/** Banners principais (hero) atribuídos a essa empresa pelo admin - ver
+ * "Empresa anunciante" em components/admin/HeroBannerForm.tsx. */
+export async function listMeusBannersHero(empresaId: string): Promise<MeuBannerHero[]> {
+  return query<MeuBannerHero>(
+    `SELECT id, titulo, ativo, criado_em FROM banners_hero WHERE empresa_id = $1 ORDER BY criado_em DESC`,
+    [empresaId]
+  );
+}

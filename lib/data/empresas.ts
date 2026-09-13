@@ -171,6 +171,29 @@ export async function getEmpresaById(idOuSlug: string): Promise<EmpresaPerfil | 
   };
 }
 
+export type AvaliacaoEmpresa = { nota: number; comentario: string | null; criado_em: string };
+
+/** Histórico paginado de avaliações recebidas (painel da empresa, "Avaliações")
+ * - mesmos dados já mostrados em `avaliacoes` na página pública (sem nome do
+ * cliente, mesmo padrão de anonimato usado nas avaliações de profissional),
+ * só que com paginação própria pra ver tudo, não só as 10 mais recentes. */
+export async function listAvaliacoesEmpresa(
+  empresaId: string,
+  { limit, offset = 0 }: { limit: number; offset?: number }
+): Promise<AvaliacaoEmpresa[]> {
+  return query<AvaliacaoEmpresa>(
+    `SELECT nota, comentario, criado_em FROM avaliacoes WHERE empresa_id = $1 ORDER BY criado_em DESC LIMIT $2 OFFSET $3`,
+    [empresaId, limit, offset]
+  );
+}
+
+export async function countAvaliacoesEmpresa(empresaId: string): Promise<number> {
+  const row = await queryOne<{ total: string }>(`SELECT count(*) AS total FROM avaliacoes WHERE empresa_id = $1`, [
+    empresaId,
+  ]);
+  return Number(row?.total ?? 0);
+}
+
 /** Instagram/telefone só ficam visíveis se o cliente logado tiver ao menos um
  * pedido em que essa empresa manifestou interesse (contato liberado). */
 export async function contatoLiberadoParaCliente(empresaId: string, clienteUsuarioId: string): Promise<boolean> {
