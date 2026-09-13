@@ -23,7 +23,12 @@ export default async function AvaliacoesPage({ searchParams }: { searchParams: P
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-8">
-      <h1 className="text-xl font-extrabold">Avaliações</h1>
+      <div className="mb-1 flex items-center justify-between">
+        <h1 className="text-xl font-extrabold">Avaliações</h1>
+        <Link href="/painel" className="text-[12.5px] font-bold text-accent-dark underline">
+          ← Voltar ao painel
+        </Link>
+      </div>
       <p className="mt-1 text-sm text-muted">
         O que os clientes disseram depois de contratar você — a identidade de quem avaliou não é exibida.
       </p>
@@ -48,10 +53,6 @@ export default async function AvaliacoesPage({ searchParams }: { searchParams: P
       )}
 
       <Pagination basePath="/painel/avaliacoes" page={page} totalPages={totalPages} />
-
-      <Link href="/painel" className="mt-6 inline-block text-[12.5px] font-bold text-accent-dark underline">
-        ← Voltar ao painel
-      </Link>
     </div>
   );
 }

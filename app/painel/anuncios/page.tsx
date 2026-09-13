@@ -25,7 +25,12 @@ export default async function MeusAnunciosPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-8">
-      <h1 className="text-xl font-extrabold">Meus anúncios</h1>
+      <div className="mb-1 flex items-center justify-between">
+        <h1 className="text-xl font-extrabold">Meus anúncios</h1>
+        <Link href="/painel" className="text-[12.5px] font-bold text-accent-dark underline">
+          ← Voltar ao painel
+        </Link>
+      </div>
       <p className="mt-1 text-sm text-muted">Destaques da semana e banner principal que você já contratou.</p>
 
       {temAnuncio && (
@@ -91,10 +96,6 @@ export default async function MeusAnunciosPage() {
           </a>
         )}
       </div>
-
-      <Link href="/painel" className="mt-6 inline-block text-[12.5px] font-bold text-accent-dark underline">
-        ← Voltar ao painel
-      </Link>
     </div>
   );
 }

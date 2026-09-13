@@ -7,6 +7,7 @@ const COLUNAS = [
     titulo: "Para clientes",
     links: [
       { label: "Como funciona", href: "/#como-funciona" },
+      { label: "Calculadora de festa", href: "/clientes" },
       { label: "Buscar fornecedores", href: "/busca" },
       { label: "Publicar pedido", href: "/publicar-pedido" },
     ],
