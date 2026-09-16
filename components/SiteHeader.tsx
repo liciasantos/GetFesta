@@ -52,6 +52,12 @@ export default async function SiteHeader() {
       <Link href="/publicar-pedido" className="hover:text-text">
         Publicar pedido
       </Link>
+      <Link href="/produtos" className="inline-flex items-center gap-1.5 hover:text-text">
+        Produtos para sua festa
+        <span className="rounded-full bg-gold-soft px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-[#8a6300]">
+          Novo
+        </span>
+      </Link>
       <Link href="/empresas" className="hover:text-text">
         Pra empresas
       </Link>

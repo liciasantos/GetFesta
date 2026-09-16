@@ -285,3 +285,25 @@ export const criarVagaSchema = z.object({
   sexoDesejado: z.enum(["feminino", "masculino", "indiferente"]).optional(),
   vagasDesejadas: z.coerce.number().int().min(1, "No mínimo 1").max(20, "No máximo 20").optional(),
 });
+
+const produtoAfiliadoCampos = {
+  nome: z.string().min(2, "Informe o nome do produto"),
+  imagemUrl: z
+    .string()
+    .optional()
+    .refine((v) => !v || z.string().url().safeParse(v).success, "URL da imagem inválida"),
+  preco: z.coerce.number().min(0, "Informe o preço"),
+  categoria: z.string().min(1, "Selecione a categoria"),
+  tema: z.string().optional(),
+  faixaEtaria: z.string().optional(),
+  urlProduto: z.string().url("Informe o link do anúncio no Mercado Livre"),
+  urlAfiliado: z
+    .string()
+    .optional()
+    .refine((v) => !v || z.string().url().safeParse(v).success, "URL de afiliado inválida"),
+  destaque: z.string().optional(),
+  ativo: z.string().optional(),
+};
+
+export const criarProdutoAfiliadoSchema = z.object(produtoAfiliadoCampos);
+export const atualizarProdutoAfiliadoSchema = z.object({ id: z.string().uuid(), ...produtoAfiliadoCampos });

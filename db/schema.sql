@@ -799,3 +799,40 @@ CREATE TABLE empresa_eventos (
     criado_em  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX idx_empresa_eventos_empresa_tipo ON empresa_eventos(empresa_id, tipo, criado_em);
+
+-- ---------------------------------------------------------------------
+-- 16. PRODUTOS AFILIADOS ("Produtos para sua festa") - vitrine de fantasias
+--     e acessorios curados manualmente, com link de afiliado pro Mercado
+--     Livre. GetFesta nunca vende: so direciona o cliente pro anuncio de
+--     verdade (ver lib/data/produtos-afiliados.ts). url_afiliado comeca
+--     vazio ate a conta de afiliado ser aprovada - ate la, o botao "Ver no
+--     Mercado Livre" usa url_produto mesmo (link comum, sem comissao).
+-- ---------------------------------------------------------------------
+CREATE TABLE produtos_afiliados (
+    id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    slug          VARCHAR(80) UNIQUE NOT NULL,
+    nome          VARCHAR(160) NOT NULL,
+    imagem_url    TEXT,                  -- NULL = cai no PlaceholderImg
+    preco         NUMERIC(10,2) NOT NULL,
+    categoria     VARCHAR(40) NOT NULL,  -- slug curado, ver lib/produtos-afiliados-constantes.ts
+    tema          VARCHAR(60),           -- texto livre: "Sonic", "Frozen", "Halloween"...
+    faixa_etaria  VARCHAR(20),           -- 'infantil' | 'adulto' | 'todos'
+    url_produto   TEXT NOT NULL,         -- link comum do anuncio no Mercado Livre
+    url_afiliado  TEXT,                  -- preenchido quando o link de afiliado existir
+    destaque      BOOLEAN NOT NULL DEFAULT FALSE, -- curadoria manual pra "Mais procurados"
+    ativo         BOOLEAN NOT NULL DEFAULT TRUE,
+    criado_em     TIMESTAMPTZ NOT NULL DEFAULT now(),
+    atualizado_em TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_produtos_afiliados_categoria ON produtos_afiliados(categoria) WHERE ativo;
+CREATE INDEX idx_produtos_afiliados_tema ON produtos_afiliados(tema) WHERE ativo;
+
+CREATE TYPE tipo_evento_produto_afiliado AS ENUM ('visualizacao', 'clique');
+
+CREATE TABLE produto_afiliado_eventos (
+    id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    produto_id UUID NOT NULL REFERENCES produtos_afiliados(id) ON DELETE CASCADE,
+    tipo       tipo_evento_produto_afiliado NOT NULL,
+    criado_em  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_produto_afiliado_eventos_produto_tipo ON produto_afiliado_eventos(produto_id, tipo, criado_em);

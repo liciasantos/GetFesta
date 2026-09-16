@@ -1,9 +1,12 @@
 import { logoutAction } from "@/lib/actions/auth";
 import { buttonClass } from "@/components/ui";
+import AdminSidebar from "@/components/admin/AdminSidebar";
 
 /** Layout próprio da área /admin - não usa o header público (a área é
- * escondida de propósito, sem link nenhum no site pra ela). Só o botão de
- * sair fica aqui, já que o header público não trata sessão tipo "admin". */
+ * escondida de propósito, sem link nenhum no site pra ela). Sidebar só em
+ * telas grandes (ver AdminSidebar) - nas 14 seções, cada página mantém seu
+ * próprio link "← Painel administrativo" de sempre pra quem está em telas
+ * menores, então não fica sem navegação nenhuma. */
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <div>
@@ -15,7 +18,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </form>
         </div>
       </header>
-      {children}
+      <div className="lg:flex lg:items-start lg:gap-6 lg:px-6 lg:pt-6">
+        <AdminSidebar />
+        <div className="min-w-0 flex-1">{children}</div>
+      </div>
     </div>
   );
 }

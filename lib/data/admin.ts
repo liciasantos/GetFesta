@@ -314,6 +314,77 @@ export async function getFluxoCaixaResumo(): Promise<FluxoCaixaResumo> {
   return { totalMes: Number(row?.total_mes ?? 0), totalAno: Number(row?.total_ano ?? 0) };
 }
 
+function calcularVariacaoPct(atual: number, anterior: number): number | null {
+  if (anterior === 0) return null;
+  return Math.round(((atual - anterior) / anterior) * 100);
+}
+
+const JANELA_7_DIAS = `
+  count(*) FILTER (WHERE criado_em >= now() - interval '7 days') AS atual,
+  count(*) FILTER (WHERE criado_em < now() - interval '7 days' AND criado_em >= now() - interval '14 days') AS anterior
+`;
+
+export type ContagemComVariacao = { total: number; variacaoPct: number | null };
+export type ContagemPerfisComVariacao = Record<"clientes" | "empresas" | "profissionais", ContagemComVariacao>;
+
+/** Mesmo total de getContagemPerfis, mais a variação % de novos cadastros
+ * dos últimos 7 dias vs os 7 dias anteriores - mesmo padrão de
+ * FILTRO_JANELAS/calcularVariacaoPct em lib/data/painel.ts:getPainelKpis. */
+export async function getContagemPerfisComVariacao(): Promise<ContagemPerfisComVariacao> {
+  const rows = await query<{ tipo: string; total: string; atual: string; anterior: string }>(
+    `SELECT tipo, count(*) AS total, ${JANELA_7_DIAS} FROM usuarios WHERE tipo IN ('cliente','empresa','profissional') GROUP BY tipo`
+  );
+  const porTipo = Object.fromEntries(rows.map((r) => [r.tipo, r]));
+  function paraTipo(tipo: string): ContagemComVariacao {
+    const r = porTipo[tipo];
+    if (!r) return { total: 0, variacaoPct: null };
+    return { total: Number(r.total), variacaoPct: calcularVariacaoPct(Number(r.atual), Number(r.anterior)) };
+  }
+  return { clientes: paraTipo("cliente"), empresas: paraTipo("empresa"), profissionais: paraTipo("profissional") };
+}
+
+export type FluxoCaixaResumoComVariacao = { totalMes: number; variacaoPct: number | null };
+
+/** Faturamento do mês atual vs mês anterior (mesma base de getFluxoCaixaResumo). */
+export async function getFluxoCaixaResumoComVariacao(): Promise<FluxoCaixaResumoComVariacao> {
+  const row = await queryOne<{ atual: string | null; anterior: string | null }>(
+    `SELECT
+       (SELECT COALESCE(sum(valor), 0) FROM pagamentos WHERE status = 'aprovado' AND date_trunc('month', pago_em) = date_trunc('month', now())) AS atual,
+       (SELECT COALESCE(sum(valor), 0) FROM pagamentos WHERE status = 'aprovado' AND date_trunc('month', pago_em) = date_trunc('month', now() - interval '1 month')) AS anterior`
+  );
+  const atual = Number(row?.atual ?? 0);
+  const anterior = Number(row?.anterior ?? 0);
+  return { totalMes: atual, variacaoPct: calcularVariacaoPct(atual, anterior) };
+}
+
+export type PontoGrafico = { label: string; value: number };
+
+/** Novos cadastros (todos os tipos juntos) por dia, últimos N dias - gera os
+ * últimos `dias` pontos mesmo sem cadastro nenhum num dia (LEFT JOIN numa
+ * série gerada), pra não distorcer o gráfico de barras. */
+export async function getCadastrosPorDia(dias = 14): Promise<PontoGrafico[]> {
+  const rows = await query<{ dia: string; total: string }>(
+    `SELECT to_char(d.dia, 'DD/MM') AS dia, count(u.id)::int AS total
+     FROM generate_series(current_date - ($1::int - 1), current_date, interval '1 day') AS d(dia)
+     LEFT JOIN usuarios u ON date_trunc('day', u.criado_em) = d.dia AND u.tipo IN ('cliente','empresa','profissional')
+     GROUP BY d.dia ORDER BY d.dia`,
+    [dias]
+  );
+  return rows.map((r) => ({ label: r.dia, value: Number(r.total) }));
+}
+
+/** Faturamento por mês, últimos N meses (mesmo espírito de getCadastrosPorDia). */
+export async function getFaturamentoPorMes(meses = 6): Promise<PontoGrafico[]> {
+  const rows = await query<{ mes: string; total: string }>(
+    `SELECT to_char(m.mes, 'MM/YYYY') AS mes, COALESCE(sum(p.valor), 0) AS total
+     FROM generate_series(date_trunc('month', now()) - ($1::int - 1 || ' months')::interval, date_trunc('month', now()), interval '1 month') AS m(mes)
+     LEFT JOIN pagamentos p ON date_trunc('month', p.pago_em) = m.mes AND p.status = 'aprovado'
+     GROUP BY m.mes ORDER BY m.mes`,
+    [meses]
+  );
+  return rows.map((r) => ({ label: r.mes, value: Number(r.total) }));
+}
+
 export type PagamentoAdmin = {
   id: string;
   empresa_nome: string;
@@ -371,4 +442,38 @@ export async function listPedidosAdmin(limit = 100): Promise<PedidoAdmin[]> {
      LIMIT $1`,
     [limit]
   );
+}
+
+export type ProdutoAfiliadoAdmin = {
+  id: string;
+  slug: string;
+  nome: string;
+  imagem_url: string | null;
+  preco: string;
+  categoria: string;
+  tema: string | null;
+  faixa_etaria: string | null;
+  url_produto: string;
+  url_afiliado: string | null;
+  destaque: boolean;
+  ativo: boolean;
+  atualizado_em: string;
+};
+
+const PRODUTO_AFILIADO_ADMIN_CAMPOS =
+  "id, slug, nome, imagem_url, preco, categoria, tema, faixa_etaria, url_produto, url_afiliado, destaque, ativo, atualizado_em";
+
+/** Visão completa pro admin (ativos e inativos), ao contrário de
+ * listProdutosAfiliados (lib/data/produtos-afiliados.ts) que só traz o que
+ * está no ar pra vitrine pública. */
+export async function listProdutosAfiliadosAdmin(): Promise<ProdutoAfiliadoAdmin[]> {
+  return query<ProdutoAfiliadoAdmin>(
+    `SELECT ${PRODUTO_AFILIADO_ADMIN_CAMPOS} FROM produtos_afiliados ORDER BY criado_em DESC`
+  );
+}
+
+export async function getProdutoAfiliadoAdmin(id: string): Promise<ProdutoAfiliadoAdmin | null> {
+  return queryOne<ProdutoAfiliadoAdmin>(`SELECT ${PRODUTO_AFILIADO_ADMIN_CAMPOS} FROM produtos_afiliados WHERE id = $1`, [
+    id,
+  ]);
 }

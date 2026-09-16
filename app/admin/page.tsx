@@ -1,93 +1,65 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
-import { getContagemPerfis, getFluxoCaixaResumo } from "@/lib/data/admin";
+import {
+  getCadastrosPorDia,
+  getContagemPerfisComVariacao,
+  getFaturamentoPorMes,
+  getFluxoCaixaResumoComVariacao,
+} from "@/lib/data/admin";
+import { formatCurrencyBRL } from "@/lib/format";
+import BarChart from "@/components/admin/BarChart";
 
 export const dynamic = "force-dynamic";
-
-function formatBRL(n: number): string {
-  return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
 
 export default async function AdminPage() {
   const session = await getSession();
   if (!session || session.tipo !== "admin") redirect("/entrar");
 
-  const [contagem, financeiro] = await Promise.all([getContagemPerfis(), getFluxoCaixaResumo()]);
+  const [contagem, financeiro, cadastrosPorDia, faturamentoPorMes] = await Promise.all([
+    getContagemPerfisComVariacao(),
+    getFluxoCaixaResumoComVariacao(),
+    getCadastrosPorDia(14),
+    getFaturamentoPorMes(6),
+  ]);
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-10">
-      <h1 className="text-xl font-extrabold">Painel administrativo</h1>
-      <p className="mt-1 text-sm text-muted">Área restrita — visível só pra quem tem login de admin.</p>
+    <div className="mx-auto max-w-4xl px-6 py-10">
+      <h1 className="text-xl font-extrabold">Dashboard</h1>
+      <p className="mt-1 text-sm text-muted">Visão geral — as 14 seções do admin agora ficam na sidebar ao lado.</p>
 
-      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
-        <StatCard label="Clientes" value={contagem.clientes} />
-        <StatCard label="Empresas" value={contagem.empresas} />
-        <StatCard label="Profissionais" value={contagem.profissionais} />
-        <StatCard label="Faturamento/mês" value={formatBRL(financeiro.totalMes)} destaque />
-        <StatCard label="Faturamento/ano" value={formatBRL(financeiro.totalAno)} />
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Kpi value={contagem.clientes.total} label="Clientes" variacaoPct={contagem.clientes.variacaoPct} />
+        <Kpi value={contagem.empresas.total} label="Empresas" variacaoPct={contagem.empresas.variacaoPct} />
+        <Kpi value={contagem.profissionais.total} label="Profissionais" variacaoPct={contagem.profissionais.variacaoPct} />
+        <Kpi
+          value={formatCurrencyBRL(financeiro.totalMes)}
+          label="Faturamento/mês"
+          variacaoPct={financeiro.variacaoPct}
+          destaque
+        />
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Link href="/admin/hero" className="card-hover rounded-xl border border-border bg-surface p-5">
-          <div className="text-[14px] font-bold">Banner principal da home</div>
-          <p className="mt-1 text-[12.5px] text-muted">
-            Título, texto, botão e imagens (desktop/mobile) do carrossel no topo da home — 100% administrado.
-          </p>
-        </Link>
-        <Link href="/admin/banners" className="card-hover rounded-xl border border-border bg-surface p-5">
-          <div className="text-[14px] font-bold">Destaques da semana</div>
-          <p className="mt-1 text-[12.5px] text-muted">
-            Selecionar quais empresas aparecem em destaque por categoria — só entram quando pagam o anúncio.
-          </p>
-        </Link>
-        <Link href="/admin/clientes" className="card-hover rounded-xl border border-border bg-surface p-5">
-          <div className="text-[14px] font-bold">Clientes cadastrados</div>
-          <p className="mt-1 text-[12.5px] text-muted">
-            Ver total de clientes e pedidos publicados, banir ou remover uma conta.
-          </p>
-        </Link>
-        <Link href="/admin/empresas" className="card-hover rounded-xl border border-border bg-surface p-5">
-          <div className="text-[14px] font-bold">Empresas cadastradas</div>
-          <p className="mt-1 text-[12.5px] text-muted">
-            Dar selo de verificado, aprovar pra destaque, ou remover uma conta.
-          </p>
-        </Link>
-        <Link href="/admin/profissionais" className="card-hover rounded-xl border border-border bg-surface p-5">
-          <div className="text-[14px] font-bold">Profissionais cadastrados</div>
-          <p className="mt-1 text-[12.5px] text-muted">
-            Aprovar pra destaque quem pagou o anúncio na área &quot;Vagas para profissionais&quot; das empresas.
-          </p>
-        </Link>
-        <Link href="/admin/categorias-compativeis" className="card-hover rounded-xl border border-border bg-surface p-5">
-          <div className="text-[14px] font-bold">Compatibilidade profissional × empresa</div>
-          <p className="mt-1 text-[12.5px] text-muted">
-            Ajustar quais funções de profissional aparecem pra quais categorias de empresa.
-          </p>
-        </Link>
-        <Link href="/admin/legal" className="card-hover rounded-xl border border-border bg-surface p-5">
-          <div className="text-[14px] font-bold">Privacidade e Termos de Uso</div>
-          <p className="mt-1 text-[12.5px] text-muted">Editar o texto das páginas de Política de Privacidade e Termos de Uso.</p>
-        </Link>
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="rounded-xl border border-border bg-surface p-5">
+          <h2 className="text-[13px] font-bold uppercase tracking-wide text-muted-2">Novos cadastros (14 dias)</h2>
+          <div className="mt-4">
+            <BarChart pontos={cadastrosPorDia} />
+          </div>
+        </div>
+        <div className="rounded-xl border border-border bg-surface p-5">
+          <h2 className="text-[13px] font-bold uppercase tracking-wide text-muted-2">Faturamento (6 meses)</h2>
+          <div className="mt-4">
+            <BarChart pontos={faturamentoPorMes} formatValue={formatCurrencyBRL} />
+          </div>
+        </div>
+      </div>
+
+      <h2 className="mb-2 mt-8 text-[13px] font-bold uppercase tracking-wide text-muted-2">Atalhos rápidos</h2>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Link href="/admin/pedidos" className="card-hover rounded-xl border border-border bg-surface p-5">
           <div className="text-[14px] font-bold">Moderação de pedidos</div>
           <p className="mt-1 text-[12.5px] text-muted">Ocultar ou remover um pedido de cliente.</p>
-        </Link>
-        <Link href="/admin/aparencia" className="card-hover rounded-xl border border-border bg-surface p-5">
-          <div className="text-[14px] font-bold">Aparência do site</div>
-          <p className="mt-1 text-[12.5px] text-muted">
-            Trocar as imagens de fundo da seção &quot;Como funciona&quot; e do banner de busca.
-          </p>
-        </Link>
-        <Link href="/admin/site" className="card-hover rounded-xl border border-border bg-surface p-5">
-          <div className="text-[14px] font-bold">Redes sociais e contato</div>
-          <p className="mt-1 text-[12.5px] text-muted">Links do rodapé e dados da página &quot;Contato&quot;.</p>
-        </Link>
-        <Link href="/admin/planos" className="card-hover rounded-xl border border-border bg-surface p-5">
-          <div className="text-[14px] font-bold">Periodicidade e descontos</div>
-          <p className="mt-1 text-[12.5px] text-muted">
-            Criar planos por período (3, 12, 24 meses) com desconto pra quem fecha mais tempo.
-          </p>
         </Link>
         <Link href="/admin/pagamentos" className="card-hover rounded-xl border border-border bg-surface p-5">
           <div className="text-[14px] font-bold">Pagamentos das empresas</div>
@@ -95,24 +67,41 @@ export default async function AdminPage() {
             Quem pagou, quem está atrasado, trocar plano manualmente, status do Mercado Pago.
           </p>
         </Link>
-        <Link href="/admin/financeiro" className="card-hover rounded-xl border border-border bg-surface p-5">
-          <div className="text-[14px] font-bold">Fluxo de caixa</div>
-          <p className="mt-1 text-[12.5px] text-muted">Quanto entrou no mês e no ano, histórico de pagamentos.</p>
+        <Link href="/admin/produtos-afiliados" className="card-hover rounded-xl border border-border bg-surface p-5">
+          <div className="text-[14px] font-bold">Produtos para sua festa</div>
+          <p className="mt-1 text-[12.5px] text-muted">
+            Cadastrar e gerenciar fantasias e acessórios afiliados do Mercado Livre.
+          </p>
         </Link>
-        <Link href="/admin/usuarios" className="card-hover rounded-xl border border-border bg-surface p-5">
-          <div className="text-[14px] font-bold">Usuários do admin</div>
-          <p className="mt-1 text-[12.5px] text-muted">Adicionar ou remover quem tem acesso ao painel administrativo.</p>
+        <Link href="/admin/empresas" className="card-hover rounded-xl border border-border bg-surface p-5">
+          <div className="text-[14px] font-bold">Empresas cadastradas</div>
+          <p className="mt-1 text-[12.5px] text-muted">Dar selo de verificado, aprovar pra destaque, ou remover uma conta.</p>
         </Link>
       </div>
     </div>
   );
 }
 
-function StatCard({ label, value, destaque = false }: { label: string; value: string | number; destaque?: boolean }) {
+function Kpi({
+  value,
+  label,
+  variacaoPct,
+  destaque = false,
+}: {
+  value: string | number;
+  label: string;
+  variacaoPct: number | null;
+  destaque?: boolean;
+}) {
   return (
     <div className={`rounded-xl border p-3.5 ${destaque ? "border-accent bg-accent-soft" : "border-border bg-surface"}`}>
       <div className={`font-display text-xl font-extrabold ${destaque ? "text-accent-dark" : ""}`}>{value}</div>
       <div className="mt-0.5 text-[10.5px] font-semibold uppercase tracking-wide text-muted-2">{label}</div>
+      {variacaoPct !== null && (
+        <div className={`mt-1 text-[10.5px] font-bold ${variacaoPct >= 0 ? "text-ok" : "text-danger-dark"}`}>
+          {variacaoPct >= 0 ? "↑" : "↓"} {Math.abs(variacaoPct)}% nos últimos 7 dias
+        </div>
+      )}
     </div>
   );
 }

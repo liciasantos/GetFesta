@@ -7,15 +7,17 @@ import { getSession, hashPassword } from "@/lib/auth";
 import {
   atualizarBannerHeroSchema,
   atualizarBannerSchema,
+  atualizarProdutoAfiliadoSchema,
   criarAdminSchema,
   criarBannerHeroSchema,
   criarBannerSchema,
   criarEmpresaManualSchema,
   criarPlanoPeriodoSchema,
+  criarProdutoAfiliadoSchema,
   marcarAssinaturaPagaSchema,
   trocarPlanoManualSchema,
 } from "@/lib/validators";
-import { gerarSlugUnicoEmpresa } from "@/lib/slug";
+import { gerarSlugUnicoEmpresa, gerarSlugUnicoProdutoAfiliado } from "@/lib/slug";
 
 async function requireAdmin() {
   const session = await getSession();
@@ -808,5 +810,136 @@ export async function removerPedidosEmLote(pedidoIds: string[]): Promise<SimpleA
   revalidatePath("/admin/pedidos");
   revalidatePath("/");
   revalidatePath("/pedidos");
+  return { ok: true };
+}
+
+// ---------------------------------------------------------------------
+// PRODUTOS AFILIADOS ("Produtos para sua festa") — CRUD do admin
+// ---------------------------------------------------------------------
+
+export type ProdutoAfiliadoActionState = { error?: string; success?: boolean } | undefined;
+
+function revalidarProdutosAfiliados(slug?: string) {
+  revalidatePath("/admin/produtos-afiliados");
+  revalidatePath("/produtos");
+  if (slug) revalidatePath(`/produtos/${slug}`);
+}
+
+export async function criarProdutoAfiliado(
+  _prevState: ProdutoAfiliadoActionState,
+  formData: FormData
+): Promise<ProdutoAfiliadoActionState> {
+  const session = await requireAdmin();
+  if (!session) return { error: "Sessão inválida." };
+
+  const parsed = criarProdutoAfiliadoSchema.safeParse({
+    nome: formData.get("nome"),
+    imagemUrl: formData.get("imagemUrl") || undefined,
+    preco: formData.get("preco"),
+    categoria: formData.get("categoria"),
+    tema: formData.get("tema") || undefined,
+    faixaEtaria: formData.get("faixaEtaria") || undefined,
+    urlProduto: formData.get("urlProduto"),
+    urlAfiliado: formData.get("urlAfiliado") || undefined,
+    destaque: formData.get("destaque") || undefined,
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
+
+  const slug = await gerarSlugUnicoProdutoAfiliado(parsed.data.nome);
+
+  await query(
+    `INSERT INTO produtos_afiliados (slug, nome, imagem_url, preco, categoria, tema, faixa_etaria, url_produto, url_afiliado, destaque, ativo)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,true)`,
+    [
+      slug,
+      parsed.data.nome,
+      parsed.data.imagemUrl || null,
+      parsed.data.preco,
+      parsed.data.categoria,
+      parsed.data.tema || null,
+      parsed.data.faixaEtaria || null,
+      parsed.data.urlProduto,
+      parsed.data.urlAfiliado || null,
+      parsed.data.destaque === "on",
+    ]
+  );
+
+  revalidarProdutosAfiliados();
+  redirect("/admin/produtos-afiliados");
+}
+
+export async function atualizarProdutoAfiliado(
+  _prevState: ProdutoAfiliadoActionState,
+  formData: FormData
+): Promise<ProdutoAfiliadoActionState> {
+  const session = await requireAdmin();
+  if (!session) return { error: "Sessão inválida." };
+
+  const parsed = atualizarProdutoAfiliadoSchema.safeParse({
+    id: formData.get("id"),
+    nome: formData.get("nome"),
+    imagemUrl: formData.get("imagemUrl") || undefined,
+    preco: formData.get("preco"),
+    categoria: formData.get("categoria"),
+    tema: formData.get("tema") || undefined,
+    faixaEtaria: formData.get("faixaEtaria") || undefined,
+    urlProduto: formData.get("urlProduto"),
+    urlAfiliado: formData.get("urlAfiliado") || undefined,
+    destaque: formData.get("destaque") || undefined,
+    ativo: formData.get("ativo") || undefined,
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
+
+  const atual = await queryOne<{ slug: string }>(`SELECT slug FROM produtos_afiliados WHERE id = $1`, [parsed.data.id]);
+  if (!atual) return { error: "Produto não encontrado." };
+
+  await query(
+    `UPDATE produtos_afiliados SET
+       nome = $1, imagem_url = $2, preco = $3, categoria = $4, tema = $5, faixa_etaria = $6,
+       url_produto = $7, url_afiliado = $8, destaque = $9, ativo = $10, atualizado_em = now()
+     WHERE id = $11`,
+    [
+      parsed.data.nome,
+      parsed.data.imagemUrl || null,
+      parsed.data.preco,
+      parsed.data.categoria,
+      parsed.data.tema || null,
+      parsed.data.faixaEtaria || null,
+      parsed.data.urlProduto,
+      parsed.data.urlAfiliado || null,
+      parsed.data.destaque === "on",
+      parsed.data.ativo === "on",
+      parsed.data.id,
+    ]
+  );
+
+  revalidarProdutosAfiliados(atual.slug);
+  redirect("/admin/produtos-afiliados");
+}
+
+export async function alternarProdutoAfiliadoAtivo(produtoId: string): Promise<SimpleActionResult> {
+  const session = await requireAdmin();
+  if (!session) return { error: "Sessão inválida." };
+
+  await query(`UPDATE produtos_afiliados SET ativo = NOT ativo, atualizado_em = now() WHERE id = $1`, [produtoId]);
+  revalidarProdutosAfiliados();
+  return { ok: true };
+}
+
+export async function alternarProdutoAfiliadoDestaque(produtoId: string): Promise<SimpleActionResult> {
+  const session = await requireAdmin();
+  if (!session) return { error: "Sessão inválida." };
+
+  await query(`UPDATE produtos_afiliados SET destaque = NOT destaque, atualizado_em = now() WHERE id = $1`, [produtoId]);
+  revalidarProdutosAfiliados();
+  return { ok: true };
+}
+
+export async function removerProdutoAfiliado(produtoId: string): Promise<SimpleActionResult> {
+  const session = await requireAdmin();
+  if (!session) return { error: "Sessão inválida." };
+
+  await query(`DELETE FROM produtos_afiliados WHERE id = $1`, [produtoId]);
+  revalidarProdutosAfiliados();
   return { ok: true };
 }
