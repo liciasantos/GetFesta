@@ -10,6 +10,8 @@ import {
   registrarVisualizacoesBannerHero,
 } from "@/lib/data/banners";
 import { listPlanosEmpresa } from "@/lib/data/painel";
+import { listProdutosDestaque } from "@/lib/data/produtos-afiliados";
+import ProdutoCard from "@/components/produtos/ProdutoCard";
 import {
   getConfiguracoesSite,
   CONFIG_COMO_FUNCIONA_BG,
@@ -35,7 +37,7 @@ export default async function HomePage() {
   // deteccao", cai pro fallback de RJ/global).
   const regiaoVisitante = (await headers()).get("x-vercel-ip-country-region");
 
-  const [categorias, cidades, empresasDestaque, pedidos, banners, heroBanners, config, session, planosEmpresa] =
+  const [categorias, cidades, empresasDestaque, pedidos, banners, heroBanners, config, session, planosEmpresa, produtosDestaque] =
     await Promise.all([
       listCategorias(),
       listCidades(),
@@ -46,6 +48,7 @@ export default async function HomePage() {
       getConfiguracoesSite(),
       getSession(),
       listPlanosEmpresa(),
+      listProdutosDestaque(8),
     ]);
 
   // registra 1 visualização por empresa anunciante presente nessa carga da
@@ -390,6 +393,33 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* PRODUTOS PARA SUA FESTA — mais vendidos/procurados (curadoria manual
+          via "destaque" no admin, ver /admin/produtos-afiliados e
+          lib/data/produtos-afiliados.ts:listProdutosDestaque). Mesmo que a
+          seção "Mais procurados" de /produtos, só que recortada aqui na home
+          pra puxar tráfego pra vitrine de afiliado. */}
+      {produtosDestaque.length > 0 && (
+        <section className="border-b border-border bg-surface-alt/60 px-6 py-16 sm:py-20">
+          <div className="mx-auto max-w-6xl">
+            <span className="section-kicker">{banners.length > 0 ? "08" : "07"} — Produtos para sua festa</span>
+            <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
+              <h2 className="text-2xl font-extrabold sm:text-[26px]">Mais vendidos e procurados</h2>
+              <Link href="/produtos" className="text-[13px] font-bold text-accent-dark hover:underline">
+                Ver todos →
+              </Link>
+            </div>
+            <p className="mt-1.5 max-w-lg text-[13.5px] text-muted">
+              Fantasias e acessórios selecionados — compre com segurança direto no Mercado Livre.
+            </p>
+            <div className="mt-9 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {produtosDestaque.map((p) => (
+                <ProdutoCard key={p.id} produto={p} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* CTA FORNECEDOR — full banner de fundo por trás do box (nao mais dentro
           dele), afastado da seção de planos com uma margem extra pra respirar. */}
