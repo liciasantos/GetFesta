@@ -9,6 +9,7 @@ import {
 import { CATEGORIAS_PRODUTOS, labelCategoriaProduto } from "@/lib/produtos-afiliados-constantes";
 import ProdutoCard from "@/components/produtos/ProdutoCard";
 import { buttonClass } from "@/components/ui";
+import { paginaMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -24,10 +25,10 @@ function capitalizar(texto: string): string {
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const { tema: temaSlug } = await params;
   const tema = capitalizar(decodeURIComponent(temaSlug));
-  return {
+  return paginaMetadata({
     title: `Fantasias e Produtos ${tema} pra Festa | GetFesta`,
     description: `Fantasias e acessórios do tema ${tema} selecionados pra sua festa — compre com segurança no Mercado Livre.`,
-  };
+  });
 }
 
 export default async function TemaProdutosPage({

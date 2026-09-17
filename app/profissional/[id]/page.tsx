@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
@@ -12,6 +13,10 @@ import VideoGallery from "@/components/VideoGallery";
 import { StatRing } from "@/components/StatRing";
 
 export const dynamic = "force-dynamic";
+
+// Só empresa/admin autenticada acessa (ver redirect abaixo) - nunca deve
+// aparecer no Google, mesmo que algum link vaze publicamente.
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 const DISPONIBILIDADE_LABEL: Record<string, string> = {
   disponivel: "Disponível para novos eventos",

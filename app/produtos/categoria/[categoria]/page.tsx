@@ -9,6 +9,7 @@ import {
 import { CATEGORIAS_PRODUTOS, FAIXAS_ETARIAS_PRODUTOS } from "@/lib/produtos-afiliados-constantes";
 import ProdutoCard from "@/components/produtos/ProdutoCard";
 import { buttonClass } from "@/components/ui";
+import { paginaMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -21,10 +22,10 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   const { categoria: slug } = await params;
   const categoria = CATEGORIAS_PRODUTOS.find((c) => c.slug === slug);
   if (!categoria) return {};
-  return {
+  return paginaMetadata({
     title: `${categoria.label} pra Festa: Produtos Selecionados | GetFesta`,
     description: `${categoria.label} selecionadas pra sua festa — compare opções e compre com segurança no Mercado Livre.`,
-  };
+  });
 }
 
 export default async function CategoriaProdutosPage({

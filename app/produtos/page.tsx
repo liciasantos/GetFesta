@@ -7,14 +7,15 @@ import {
 } from "@/lib/data/produtos-afiliados";
 import { CATEGORIAS_PRODUTOS } from "@/lib/produtos-afiliados-constantes";
 import ProdutoCard from "@/components/produtos/ProdutoCard";
+import { paginaMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = paginaMetadata({
   title: "Produtos para sua Festa: Fantasias e Acessórios | GetFesta",
   description:
     "Fantasias infantis, super-heróis, princesas, Halloween, Natal e acessórios selecionados pra sua festa — compre com segurança no Mercado Livre.",
-};
+});
 
 export default async function ProdutosPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const sp = await searchParams;

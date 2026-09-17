@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getSession } from "@/lib/auth";
@@ -6,6 +7,7 @@ import { formatCurrencyBRL, formatDateBR } from "@/lib/format";
 import { Badge, buttonClass } from "@/components/ui";
 import CandidatarVagaButton from "@/components/CandidatarVagaButton";
 import CompartilharVagaButton from "@/components/CompartilharVagaButton";
+import { paginaMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +22,16 @@ const SEXO_LABEL: Record<string, string> = {
   masculino: "Masculino",
   indiferente: "Indiferente",
 };
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const vaga = await getVagaPublica(id);
+  if (!vaga) return {};
+
+  const titulo = `Vaga de ${vaga.categoria_nome} em ${vaga.cidade_nome} — ${vaga.empresa_nome_fantasia} | GetFesta`;
+  const descricao = `${vaga.empresa_nome_fantasia} procura ${vaga.categoria_nome} pra ${formatDateBR(vaga.data_evento)}, em ${vaga.cidade_nome}. Candidate-se pela GetFesta.`;
+  return paginaMetadata({ title: titulo, description: descricao });
+}
 
 /** Página pública de uma vaga - existe pra dar um link compartilhável (ver
  * CompartilharVagaButton), já que o feed normal de vagas só mostra pra

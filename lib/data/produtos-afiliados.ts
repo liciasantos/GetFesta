@@ -136,6 +136,13 @@ export async function listProdutosPorSlugs(slugs: string[]): Promise<ProdutoAfil
   );
 }
 
+/** Só os slugs (e temas), pra montar app/sitemap.ts sem trazer o produto
+ * inteiro de cada linha. */
+export async function listSlugsProdutosAfiliadosParaSitemap(): Promise<string[]> {
+  const rows = await query<{ slug: string }>(`SELECT slug FROM produtos_afiliados WHERE ativo = true ORDER BY slug`);
+  return rows.map((r) => r.slug);
+}
+
 /** Registra 1 visualização por carregamento da página de produto - mesmo
  * padrão de registrarVisualizacoesBannerCategoria (lib/data/banners.ts). */
 export async function registrarVisualizacaoProduto(produtoId: string): Promise<void> {

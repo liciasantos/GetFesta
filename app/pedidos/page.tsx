@@ -1,11 +1,18 @@
+import type { Metadata } from "next";
 import { listPedidosFeed } from "@/lib/data/pedidos";
 import { listCategorias, listCidades } from "@/lib/data/geo";
 import { agruparCidadesPorMacrorregiao } from "@/lib/estados";
 import { budgetRangeLabel, timeAgo } from "@/lib/format";
 import { maskContactLeak } from "@/lib/contact-filter";
 import { categoryColor } from "@/lib/category-colors";
+import { paginaMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = paginaMetadata({
+  title: "Pedidos de Festa Publicados Agora | GetFesta",
+  description: "Veja pedidos reais de quem está organizando uma festa e precisa de fornecedores — atualizado em tempo real.",
+});
 
 export default async function PedidosPage({
   searchParams,

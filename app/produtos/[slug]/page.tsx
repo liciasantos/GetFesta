@@ -12,6 +12,7 @@ import { PlaceholderImg, Badge } from "@/components/ui";
 import ProdutoCard from "@/components/produtos/ProdutoCard";
 import FavoritarProdutoButton from "@/components/produtos/FavoritarProdutoButton";
 import LinkMercadoLivre from "@/components/produtos/LinkMercadoLivre";
+import { paginaMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -19,10 +20,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const produto = await getProdutoAfiliadoPorSlug(slug);
   if (!produto) return {};
-  return {
-    title: `${produto.nome} — ${formatCurrencyBRL(Number(produto.preco))} | GetFesta`,
-    description: `${produto.nome}: veja detalhes e compre com segurança no Mercado Livre através da GetFesta.`,
-  };
+  const titulo = `${produto.nome} — ${formatCurrencyBRL(Number(produto.preco))} | GetFesta`;
+  const descricao = `${produto.nome}: veja detalhes e compre com segurança no Mercado Livre através da GetFesta.`;
+  return paginaMetadata({ title: titulo, description: descricao, image: produto.imagem_url });
 }
 
 export default async function ProdutoAfiliadoPage({ params }: { params: Promise<{ slug: string }> }) {

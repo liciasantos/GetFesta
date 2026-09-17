@@ -287,3 +287,10 @@ export async function getCandidaturaStatus(vagaId: string, profissionalId: strin
   );
   return row?.status ?? null;
 }
+
+/** Só os ids, pra montar app/sitemap.ts - exclui canceladas (conteúdo morto,
+ * não vale a pena indexar), mantém abertas e preenchidas. */
+export async function listVagaIdsParaSitemap(): Promise<string[]> {
+  const rows = await query<{ id: string }>(`SELECT id FROM vagas_profissionais WHERE status <> 'cancelada' ORDER BY id`);
+  return rows.map((r) => r.id);
+}

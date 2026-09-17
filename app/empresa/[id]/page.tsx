@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { contatoLiberadoParaCliente, getEmpresaById, registrarVisualizacaoPerfil } from "@/lib/data/empresas";
@@ -8,8 +9,29 @@ import WhatsAppButton from "@/components/WhatsAppButton";
 import GaleriaLightbox from "@/components/GaleriaLightbox";
 import { StatRing } from "@/components/StatRing";
 import Link from "next/link";
+import { paginaMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const empresa = await getEmpresaById(id);
+  if (!empresa) return {};
+
+  const localizacao = empresa.cidades[0] ? ` em ${empresa.cidades[0]}` : "";
+  const titulo = `${empresa.nome_fantasia}${empresa.categorias[0] ? ` — ${empresa.categorias[0]}` : ""} | GetFesta`;
+  const descricao =
+    empresa.descricao?.slice(0, 155) ||
+    `Conheça ${empresa.nome_fantasia}${localizacao} e peça um orçamento grátis pela GetFesta.`;
+
+  // foto_capa às vezes é um data URI (upload direto, sem storage externo -
+  // ver lib/actions/perfil.ts) - og:image não aceita isso, precisa ser uma
+  // URL de verdade que o crawler consiga baixar (paginaMetadata já cai pra
+  // imagem padrão do site quando não recebe uma).
+  const imagemOg = empresa.foto_capa?.startsWith("http") ? empresa.foto_capa : undefined;
+
+  return paginaMetadata({ title: titulo, description: descricao, image: imagemOg });
+}
 
 export default async function EmpresaPerfilPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

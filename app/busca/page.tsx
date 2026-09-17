@@ -1,5 +1,7 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { listCategorias, listCidades } from "@/lib/data/geo";
+import { paginaMetadata } from "@/lib/seo";
 import { agruparCidadesPorMacrorregiao } from "@/lib/estados";
 import { searchEmpresas } from "@/lib/data/empresas";
 import { getConfiguracoesSite, CONFIG_BUSCA_BANNER_BG } from "@/lib/data/config";
@@ -7,6 +9,11 @@ import { Badge, PlaceholderImg } from "@/components/ui";
 import BgImage from "@/components/BgImage";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = paginaMetadata({
+  title: "Buscar Fornecedores de Festa | GetFesta",
+  description: "Filtre buffets, decoradores, salões, fotógrafos e outros fornecedores de festa por categoria, cidade e orçamento — grátis, sem cadastro.",
+});
 
 const FAIXAS = [
   { value: "", label: "Qualquer orçamento" },

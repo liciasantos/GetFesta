@@ -14,6 +14,9 @@ export const metadata: Metadata = {
     description: "Veja na hora quanto comprar de comida e bebida pra sua festa — grátis e sem cadastro.",
     type: "website",
     locale: "pt_BR",
+    // definir "openGraph" aqui substitui por completo o herdado da raiz -
+    // sem isso, o link compartilhado ficaria sem imagem nenhuma.
+    images: ["/opengraph-image"],
   },
 };
 

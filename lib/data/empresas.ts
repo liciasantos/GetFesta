@@ -256,6 +256,13 @@ export async function registrarVisualizacaoPerfil(empresaId: string) {
   await query(`INSERT INTO empresa_eventos (empresa_id, tipo) VALUES ($1, 'visualizacao_perfil')`, [empresaId]);
 }
 
+/** Só os slugs, pra montar app/sitemap.ts sem trazer o perfil inteiro de
+ * cada empresa - todas entram (perfil é sempre público, ver app/empresa/[id]/page.tsx). */
+export async function listEmpresaSlugsParaSitemap(): Promise<string[]> {
+  const rows = await query<{ slug: string }>(`SELECT slug FROM empresas ORDER BY slug`);
+  return rows.map((r) => r.slug);
+}
+
 export type PlataformaStats = {
   totalEmpresas: number;
   totalCidades: number;
