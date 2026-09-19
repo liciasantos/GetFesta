@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { headers } from "next/headers";
+import { after } from "next/server";
 import { listCategorias, listCidades } from "@/lib/data/geo";
 import { getEmpresasDestaque } from "@/lib/data/empresas";
 import { listPedidosFeed } from "@/lib/data/pedidos";
@@ -56,8 +57,10 @@ export default async function HomePage() {
     ]);
 
   // registra 1 visualização por empresa anunciante presente nessa carga da
-  // home - depois do Promise.all acima porque precisa da lista já resolvida.
-  await Promise.all([registrarVisualizacoesBannerCategoria(banners), registrarVisualizacoesBannerHero(heroBanners)]);
+  // home - via after() pra não atrasar a resposta com esses 2 INSERTs
+  // (é só analytics, não afeta o que é renderizado; Clarity mostrou LCP alto
+  // e essas escritas bloqueantes eram parte do caminho crítico da home).
+  after(() => Promise.all([registrarVisualizacoesBannerCategoria(banners), registrarVisualizacoesBannerHero(heroBanners)]));
 
   const empresaLogada = session?.tipo === "empresa";
 

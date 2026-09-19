@@ -2,16 +2,15 @@ import Script from "next/script";
 
 const GTM_ID = "GTM-TCRN8BKS";
 
-/** Google Tag Manager - strategy="beforeInteractive" faz o Next.js injetar
- * esse script no <head>, o mais cedo possível (antes de qualquer outro
- * script/hidratação), independente de onde o componente é renderizado na
- * árvore - é a forma recomendada pelo Next.js de carregar o GTM no App
- * Router. O <noscript> (fallback pra quem tem JS desabilitado) vai direto
- * em app/layout.tsx, logo após a abertura do <body>. */
+/** Google Tag Manager - strategy="afterInteractive" (em vez de
+ * "beforeInteractive") pra não travar a thread principal antes da página
+ * hidratar - o Clarity mostrou LCP ~7s e INP ~1s, e o GTM beforeInteractive
+ * era o único script bloqueante entre os três instalados (AdSense e Clarity
+ * já usavam afterInteractive). GTM funciona igual com afterInteractive, só
+ * carrega um pouco depois do primeiro paint em vez de antes dele. */
 export default function GoogleTagManagerScript() {
   return (
-    // eslint-disable-next-line @next/next/no-before-interactive-script-outside-document -- regra pensada pro Pages Router (pages/_document.js); no App Router, colocar beforeInteractive aqui dentro de app/layout.tsx é o padrão documentado pelo próprio Next.js
-    <Script id="gtm-script" strategy="beforeInteractive">
+    <Script id="gtm-script" strategy="afterInteractive">
       {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
