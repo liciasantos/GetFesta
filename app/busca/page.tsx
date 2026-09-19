@@ -5,6 +5,7 @@ import { paginaMetadata } from "@/lib/seo";
 import { agruparCidadesPorMacrorregiao } from "@/lib/estados";
 import { searchEmpresas } from "@/lib/data/empresas";
 import { getConfiguracoesSite, CONFIG_BUSCA_BANNER_BG } from "@/lib/data/config";
+import { getRegiaoAtual } from "@/lib/actions/regiao";
 import { Badge, PlaceholderImg } from "@/components/ui";
 import BgImage from "@/components/BgImage";
 
@@ -29,12 +30,16 @@ export default async function BuscaPage({
   searchParams: Promise<{ categoria?: string; cidadeId?: string; faixa?: string }>;
 }) {
   const sp = await searchParams;
+  const regiaoAtual = await getRegiaoAtual();
   const [categorias, cidades, empresas, config] = await Promise.all([
     listCategorias(),
     listCidades(),
     searchEmpresas({
       categoriaSlug: sp.categoria || undefined,
       cidadeId: sp.cidadeId ? Number(sp.cidadeId) : undefined,
+      // cidade escolhida na própria busca é mais específica, tem prioridade
+      // sobre o filtro de região da barra utilitária.
+      estado: !sp.cidadeId && regiaoAtual ? regiaoAtual : undefined,
       faixa: (sp.faixa as "ate_700" | "700_3000" | "3000_8000" | "acima_8000") || undefined,
     }),
     getConfiguracoesSite(),

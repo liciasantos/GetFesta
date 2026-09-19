@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { buttonClass } from "@/components/ui";
 
 const SEGMENTOS = [
   {
@@ -88,7 +87,7 @@ export default function AccessMenu({ inline = false }: { inline?: boolean }) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className={buttonClass("secondary", "sm")}
+        className="text-[12px] font-bold text-white transition-colors hover:text-accent"
       >
         Entrar / Cadastrar
       </button>

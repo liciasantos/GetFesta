@@ -7,6 +7,12 @@ export const ESTADOS = [
   { sigla: "RJ", nome: "Rio de Janeiro" },
   { sigla: "SP", nome: "São Paulo" },
   { sigla: "MG", nome: "Minas Gerais" },
+  { sigla: "SC", nome: "Santa Catarina" },
+  { sigla: "PE", nome: "Pernambuco" },
+  { sigla: "BA", nome: "Bahia" },
+  { sigla: "RS", nome: "Rio Grande do Sul" },
+  { sigla: "PR", nome: "Paraná" },
+  { sigla: "DF", nome: "Distrito Federal" },
 ] as const;
 
 // import type é apagado na compilação - não arrasta o driver do Postgres

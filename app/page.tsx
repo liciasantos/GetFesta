@@ -10,6 +10,7 @@ import {
   registrarVisualizacoesBannerHero,
 } from "@/lib/data/banners";
 import { listPlanosEmpresa } from "@/lib/data/painel";
+import { getRegiaoAtual } from "@/lib/actions/regiao";
 import { listProdutosDestaque } from "@/lib/data/produtos-afiliados";
 import ProdutoCard from "@/components/produtos/ProdutoCard";
 import {
@@ -36,12 +37,15 @@ export default async function HomePage() {
   // (nao existe em dev local - listHeroBannersAtivos trata null como "sem
   // deteccao", cai pro fallback de RJ/global).
   const regiaoVisitante = (await headers()).get("x-vercel-ip-country-region");
+  // escolhida pelo usuário no filtro de região da barra utilitária -
+  // diferente de regiaoVisitante (geolocalização por IP, só pro banner hero).
+  const regiaoEscolhida = await getRegiaoAtual();
 
   const [categorias, cidades, empresasDestaque, pedidos, banners, heroBanners, config, session, planosEmpresa, produtosDestaque] =
     await Promise.all([
       listCategorias(),
       listCidades(),
-      getEmpresasDestaque(4),
+      getEmpresasDestaque(4, regiaoEscolhida ?? undefined),
       listPedidosFeed({ limit: 15 }),
       listBannersAtivos(),
       listHeroBannersAtivos(regiaoVisitante),

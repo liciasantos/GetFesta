@@ -5,11 +5,18 @@ import { buttonClass } from "@/components/ui";
 import Logo from "@/components/Logo";
 import MobileNav from "@/components/MobileNav";
 import AccessMenu from "@/components/AccessMenu";
+import AtendeMenu from "@/components/AtendeMenu";
+import UtilityBar from "@/components/UtilityBar";
 
+/** Login/conta agora vive na UtilityBar (faixa acima, só desktop) - o
+ * cabeçalho principal fica livre pra caber os links sem cortar nada.
+ * "Pra empresas"/"Pra profissionais" (soltos antes) virou o menu AtendeMenu
+ * ("Trabalha com festas?"), e o "Publicar pedido" que existia como link solto E
+ * como botão virou só o botão (era duplicado). */
 export default async function SiteHeader() {
   const session = await getSession();
 
-  const loggedInLinks = (
+  const loggedInLinksMobile = (
     <>
       {session?.tipo === "empresa" && (
         <>
@@ -44,7 +51,7 @@ export default async function SiteHeader() {
     </>
   );
 
-  const navLinks = (
+  const navLinksMobile = (
     <>
       <Link href="/busca" className="hover:text-text">
         Buscar fornecedores
@@ -69,29 +76,33 @@ export default async function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-surface/95 backdrop-blur-sm">
+      <UtilityBar />
+
       <div className="relative mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
         <Logo />
 
         <nav className="hidden items-center gap-7 text-[13.5px] font-semibold text-muted md:flex">
-          {navLinks}
-          <div className="flex items-center gap-2.5 border-l border-border pl-6">
-            {session ? (
-              loggedInLinks
-            ) : (
-              <>
-                <AccessMenu />
-                <Link href="/publicar-pedido" className={buttonClass("primary", "sm")}>
-                  Publicar pedido
-                </Link>
-              </>
-            )}
+          <Link href="/busca" className="hover:text-text">
+            Buscar fornecedores
+          </Link>
+          <Link href="/produtos" className="inline-flex items-center gap-1.5 hover:text-text">
+            Produtos para sua festa
+            <span className="rounded-full bg-gold-soft px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-[#8a6300]">
+              Novo
+            </span>
+          </Link>
+          <AtendeMenu />
+          <div className="border-l border-border pl-6">
+            <Link href="/publicar-pedido" className={buttonClass("primary", "sm")}>
+              Publicar pedido
+            </Link>
           </div>
         </nav>
 
         <MobileNav>
-          <div className="flex flex-col gap-3.5 text-[14px] font-semibold text-muted">{navLinks}</div>
+          <div className="flex flex-col gap-3.5 text-[14px] font-semibold text-muted">{navLinksMobile}</div>
           {session ? (
-            <div className="flex flex-wrap items-center gap-2.5 border-t border-border pt-4">{loggedInLinks}</div>
+            <div className="flex flex-wrap items-center gap-2.5 border-t border-border pt-4">{loggedInLinksMobile}</div>
           ) : (
             <div className="flex flex-col gap-3 border-t border-border pt-4">
               <AccessMenu inline />

@@ -34,37 +34,44 @@ async function main() {
     RESTART IDENTITY CASCADE;
   `);
 
-  console.log("Seed: cidades e bairros (lancamento: Rio de Janeiro/RJ e Sao Paulo/SP)...");
+  console.log("Seed: cidades e bairros...");
   const cidades: Record<string, number> = {};
-  for (const [estado, nome] of [
-    ["RJ", "Rio de Janeiro"],
-    ["SP", "São Paulo"],
+  for (const [estado, nome, macrorregiao] of [
+    ["RJ", "Rio de Janeiro", "Região Metropolitana"],
+    ["SP", "São Paulo", "Grande São Paulo"],
     // Baixada Fluminense - municipios separados do Rio de Janeiro
-    ["RJ", "Duque de Caxias"],
-    ["RJ", "Nova Iguaçu"],
-    ["RJ", "São João de Meriti"],
-    ["RJ", "Belford Roxo"],
-    ["RJ", "Nilópolis"],
-    ["RJ", "Mesquita"],
-    ["RJ", "Queimados"],
+    ["RJ", "Duque de Caxias", "Baixada Fluminense"],
+    ["RJ", "Nova Iguaçu", "Baixada Fluminense"],
+    ["RJ", "São João de Meriti", "Baixada Fluminense"],
+    ["RJ", "Belford Roxo", "Baixada Fluminense"],
+    ["RJ", "Nilópolis", "Baixada Fluminense"],
+    ["RJ", "Mesquita", "Baixada Fluminense"],
+    ["RJ", "Queimados", "Baixada Fluminense"],
     // Região dos Lagos
-    ["RJ", "Cabo Frio"],
-    ["RJ", "Armação dos Búzios"],
-    ["RJ", "Arraial do Cabo"],
-    ["RJ", "Araruama"],
-    ["RJ", "Iguaba Grande"],
-    ["RJ", "São Pedro da Aldeia"],
-    ["RJ", "Rio das Ostras"],
-    ["RJ", "Casimiro de Abreu"],
-    ["RJ", "Saquarema"],
+    ["RJ", "Cabo Frio", "Região dos Lagos"],
+    ["RJ", "Armação dos Búzios", "Região dos Lagos"],
+    ["RJ", "Arraial do Cabo", "Região dos Lagos"],
+    ["RJ", "Araruama", "Região dos Lagos"],
+    ["RJ", "Iguaba Grande", "Região dos Lagos"],
+    ["RJ", "São Pedro da Aldeia", "Região dos Lagos"],
+    ["RJ", "Rio das Ostras", "Região dos Lagos"],
+    ["RJ", "Casimiro de Abreu", "Região dos Lagos"],
+    ["RJ", "Saquarema", "Região dos Lagos"],
     // Minas Gerais
-    ["MG", "Belo Horizonte"],
-    ["MG", "Uberlândia"],
-    ["MG", "Juiz de Fora"],
+    ["MG", "Belo Horizonte", "Minas Gerais"],
+    ["MG", "Uberlândia", "Minas Gerais"],
+    ["MG", "Juiz de Fora", "Minas Gerais"],
+    // Capitais - um estado cada, só a capital por enquanto (ver lib/estados.ts)
+    ["SC", "Florianópolis", "Santa Catarina"],
+    ["PE", "Recife", "Pernambuco"],
+    ["BA", "Salvador", "Bahia"],
+    ["RS", "Porto Alegre", "Rio Grande do Sul"],
+    ["PR", "Curitiba", "Paraná"],
+    ["DF", "Brasília", "Distrito Federal"],
   ]) {
     const { rows } = await pool.query<{ id: number }>(
-      `INSERT INTO cidades (estado, nome) VALUES ($1, $2) RETURNING id`,
-      [estado, nome]
+      `INSERT INTO cidades (estado, nome, macrorregiao) VALUES ($1, $2, $3) RETURNING id`,
+      [estado, nome, macrorregiao]
     );
     cidades[nome] = rows[0].id;
   }

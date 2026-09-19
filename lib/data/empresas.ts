@@ -74,19 +74,34 @@ const EMPRESA_CARD_SELECT = `
   LEFT JOIN empresa_avaliacoes_google g ON g.empresa_id = e.usuario_id
 `;
 
-export async function getEmpresasDestaque(limit = 4): Promise<EmpresaCard[]> {
+/** `estado` (sigla, ex: "RJ") é opcional - vem do filtro de região da barra
+ * utilitária (ver lib/actions/regiao.ts). Passa pelas mesmas cidades de
+ * `empresa_areas_atuacao`, só filtrando pelo estado da cidade em vez do id
+ * exato - por isso precisa do JOIN extra com `cidades` que o filtro por
+ * cidadeId (em searchEmpresas) não precisa. */
+export async function getEmpresasDestaque(limit = 4, estado?: string): Promise<EmpresaCard[]> {
+  const params: unknown[] = [limit];
+  let condicaoEstado = "";
+  if (estado) {
+    params.push(estado);
+    condicaoEstado = `AND EXISTS (
+      SELECT 1 FROM empresa_areas_atuacao ea JOIN cidades ci ON ci.id = ea.cidade_id
+      WHERE ea.empresa_id = e.usuario_id AND ci.estado = $${params.length}
+    )`;
+  }
   return query<EmpresaCard>(
     `${EMPRESA_CARD_SELECT}
-     WHERE (e.aprovada_para_destaque = true OR e.elegivel_destaque = true)
+     WHERE (e.aprovada_para_destaque = true OR e.elegivel_destaque = true) ${condicaoEstado}
      ORDER BY random()
      LIMIT $1`,
-    [limit]
+    params
   );
 }
 
 export type BuscaFiltros = {
   categoriaSlug?: string;
   cidadeId?: number;
+  estado?: string;
   faixa?: "ate_700" | "700_3000" | "3000_8000" | "acima_8000";
 };
 
@@ -104,6 +119,13 @@ export async function searchEmpresas(filtros: BuscaFiltros): Promise<EmpresaCard
     params.push(filtros.cidadeId);
     conditions.push(
       `EXISTS (SELECT 1 FROM empresa_areas_atuacao ea WHERE ea.empresa_id = e.usuario_id AND ea.cidade_id = $${params.length})`
+    );
+  } else if (filtros.estado) {
+    // só entra quando não há cidade específica escolhida - cidade é mais
+    // específica que o filtro de região da barra utilitária, tem prioridade.
+    params.push(filtros.estado);
+    conditions.push(
+      `EXISTS (SELECT 1 FROM empresa_areas_atuacao ea JOIN cidades ci ON ci.id = ea.cidade_id WHERE ea.empresa_id = e.usuario_id AND ci.estado = $${params.length})`
     );
   }
   if (filtros.faixa === "ate_700") {
