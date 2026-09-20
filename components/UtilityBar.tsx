@@ -11,7 +11,7 @@ import AccessMenu from "@/components/AccessMenu";
  * que caber esses botões também (era a causa do "Entrar/Cadastrar"
  * desaparecer em telas de notebook). Fundo escuro (var(--color-text), o
  * mesmo tom de tinta usado no texto do site) e altura bem reduzida
- * (py-[1px]) pra ficar visualmente bem menor/subordinada ao cabeçalho
+ * (py-[1.65px]) pra ficar visualmente bem menor/subordinada ao cabeçalho
  * principal, como em referências de e-commerce (Revo etc.). Tudo alinhado
  * à direita (região + login), sem nada solto à esquerda. */
 export default async function UtilityBar() {
@@ -19,7 +19,7 @@ export default async function UtilityBar() {
 
   return (
     <div className="hidden bg-[var(--color-text)] md:block">
-      <div className="mx-auto flex max-w-6xl items-center justify-end gap-8 px-6 py-[1px]">
+      <div className="mx-auto flex max-w-6xl items-center justify-end gap-8 px-6 py-[1.65px]">
         <RegionPicker regiaoAtual={regiaoAtual} />
 
         <div className="flex items-center gap-4">
