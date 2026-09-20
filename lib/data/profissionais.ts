@@ -196,10 +196,13 @@ export async function listProfissionaisCompativeis(
     `SELECT * FROM (
        SELECT DISTINCT
           p.usuario_id, p.slug, p.nome,
-          COALESCE(
+          CASE WHEN COALESCE(
             p.foto_perfil_url,
             (SELECT url FROM profissional_galeria g WHERE g.profissional_id = p.usuario_id AND g.tipo = 'foto' ORDER BY g.ordem ASC LIMIT 1)
-          ) AS foto,
+          ) LIKE 'data:%' THEN '/api/profissional/' || p.usuario_id || '/foto' ELSE COALESCE(
+            p.foto_perfil_url,
+            (SELECT url FROM profissional_galeria g WHERE g.profissional_id = p.usuario_id AND g.tipo = 'foto' ORDER BY g.ordem ASC LIMIT 1)
+          ) END AS foto,
           b.nome AS bairro_nome, ci.nome AS cidade_nome,
           (
             SELECT cp2.nome FROM profissional_categorias pc2

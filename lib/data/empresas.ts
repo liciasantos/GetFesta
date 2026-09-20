@@ -46,7 +46,7 @@ const EMPRESA_CARD_SELECT = `
     e.usuario_id,
     e.slug,
     e.nome_fantasia,
-    e.logo_url,
+    CASE WHEN e.logo_url LIKE 'data:%' THEN '/api/empresa/' || e.usuario_id || '/logo' ELSE e.logo_url END AS logo_url,
     e.razao_social,
     e.descricao,
     e.instagram,
@@ -57,7 +57,8 @@ const EMPRESA_CARD_SELECT = `
     e.aprovada_para_destaque,
     e.tempo_resposta_medio_minutos,
     e.perfil_reivindicado,
-    (SELECT url FROM empresa_galeria WHERE empresa_id = e.usuario_id ORDER BY ordem ASC LIMIT 1) AS foto_capa,
+    (SELECT CASE WHEN url LIKE 'data:%' THEN '/api/empresa/' || e.usuario_id || '/foto-capa' ELSE url END
+       FROM empresa_galeria WHERE empresa_id = e.usuario_id ORDER BY ordem ASC LIMIT 1) AS foto_capa,
     COALESCE(
       (SELECT array_agg(c.nome ORDER BY c.nome) FROM empresa_categorias ec JOIN categorias c ON c.id = ec.categoria_id WHERE ec.empresa_id = e.usuario_id),
       ARRAY[]::text[]

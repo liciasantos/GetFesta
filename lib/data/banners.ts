@@ -16,7 +16,8 @@ export type BannerCategoria = {
 export async function listBannersAtivos(): Promise<BannerCategoria[]> {
   return query<BannerCategoria>(
     `SELECT b.id, c.nome AS categoria_nome, e.usuario_id AS empresa_id, e.slug AS empresa_slug, e.nome_fantasia, e.telefone_contato,
-       (SELECT url FROM empresa_galeria WHERE empresa_id = e.usuario_id ORDER BY ordem ASC LIMIT 1) AS foto_capa
+       (SELECT CASE WHEN url LIKE 'data:%' THEN '/api/empresa/' || e.usuario_id || '/foto-capa' ELSE url END
+          FROM empresa_galeria WHERE empresa_id = e.usuario_id ORDER BY ordem ASC LIMIT 1) AS foto_capa
      FROM banners_categoria b
      JOIN categorias c ON c.id = b.categoria_id
      JOIN empresas e ON e.usuario_id = b.empresa_id
@@ -38,24 +39,21 @@ export type HeroBanner = {
   imagem_fundo_mobile: string | null;
 };
 
-const HERO_BANNER_CAMPOS =
-  "id, empresa_id, titulo, texto, botao_label, botao_url, botao2_label, botao2_url, imagem_fundo, imagem_fundo_mobile";
-
 /** Troca o data URI guardado no banco (upload do admin) pelo link do endpoint
  * que serve a imagem de verdade (ver app/api/hero-banner/[id]/imagem/[variant]/route.ts)
  * - assim o navegador baixa como arquivo separado e cacheavel, e o next/image
  * consegue otimizar, em vez de vir tudo embutido no HTML da home. Banners
  * mais antigos usam um caminho estatico direto (ex.: /banner_x.webp) - esses
- * ja sao um arquivo de verdade e ficam como estao. */
-function comLinksDeImagem(row: HeroBanner): HeroBanner {
-  return {
-    ...row,
-    imagem_fundo: row.imagem_fundo.startsWith("data:") ? `/api/hero-banner/${row.id}/imagem/desktop` : row.imagem_fundo,
-    imagem_fundo_mobile: row.imagem_fundo_mobile?.startsWith("data:")
-      ? `/api/hero-banner/${row.id}/imagem/mobile`
-      : row.imagem_fundo_mobile,
-  };
-}
+ * ja sao um arquivo de verdade e ficam como estao. Feito aqui no próprio SQL
+ * (em vez de checar `.startsWith("data:")` em JS) pra nunca trazer o base64
+ * inteiro pra fora do Postgres só pra descartar em seguida - isso sozinho
+ * dobrava a transferência de rede da home (banner buscado 2x: uma vez aqui,
+ * outra na rota /api/hero-banner que realmente serve os bytes). */
+const HERO_BANNER_CAMPOS = `
+  id, empresa_id, titulo, texto, botao_label, botao_url, botao2_label, botao2_url,
+  CASE WHEN imagem_fundo LIKE 'data:%' THEN '/api/hero-banner/' || id || '/imagem/desktop' ELSE imagem_fundo END AS imagem_fundo,
+  CASE WHEN imagem_fundo_mobile LIKE 'data:%' THEN '/api/hero-banner/' || id || '/imagem/mobile' ELSE imagem_fundo_mobile END AS imagem_fundo_mobile
+`;
 
 /** Banner principal (topo da home) - conteudo 100% administrado (titulo/
  * texto/botao/imagem livres), mas pode opcionalmente ser atribuido a uma
@@ -72,14 +70,13 @@ export async function listHeroBannersAtivos(regiaoVisitante?: string | null): Pr
       `SELECT ${HERO_BANNER_CAMPOS} FROM banners_hero WHERE ativo = true AND regiao_alvo = $1 ORDER BY ordem ASC, id ASC`,
       [regiaoVisitante]
     );
-    if (doEstado.length > 0) return doEstado.map(comLinksDeImagem);
+    if (doEstado.length > 0) return doEstado;
   }
-  const rows = await query<HeroBanner>(
+  return query<HeroBanner>(
     `SELECT ${HERO_BANNER_CAMPOS} FROM banners_hero
      WHERE ativo = true AND (regiao_alvo = 'RJ' OR regiao_alvo IS NULL)
      ORDER BY ordem ASC, id ASC`
   );
-  return rows.map(comLinksDeImagem);
 }
 
 /** Registra 1 visualização por empresa que tem um banner_categoria (Destaques

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { queryOne } from "@/lib/db";
-
-const DATA_URI_REGEX = /^data:([^;]+);base64,([\s\S]+)$/;
+import { parseDataUri } from "@/lib/data-uri";
 
 /** Serve a imagem do banner hero (guardada como data URI em banners_hero,
  * mesmo esquema de upload sem storage externo usado em todo o site) como um
@@ -20,15 +19,12 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   if (!banner) return new NextResponse("Não encontrado", { status: 404 });
 
   const dataUri = (variant === "mobile" ? banner.imagem_fundo_mobile : null) ?? banner.imagem_fundo;
-  const match = dataUri.match(DATA_URI_REGEX);
-  if (!match) return new NextResponse("Imagem inválida", { status: 500 });
+  const parsed = parseDataUri(dataUri);
+  if (!parsed) return new NextResponse("Imagem inválida", { status: 500 });
 
-  const [, mime, base64] = match;
-  const bytes = Buffer.from(base64, "base64");
-
-  return new NextResponse(bytes, {
+  return new NextResponse(parsed.bytes, {
     headers: {
-      "Content-Type": mime,
+      "Content-Type": parsed.mime,
       "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
     },
   });
