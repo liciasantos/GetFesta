@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { after } from "next/server";
 import { getSession } from "@/lib/auth";
 import { listMeusPedidos } from "@/lib/data/pedidos";
 import { getMeuPerfilCliente } from "@/lib/data/clientes";
@@ -37,7 +36,7 @@ export default async function MeusPedidosPage() {
     getMeuPerfilCliente(session.usuarioId),
     listBannersAtivos(),
   ]);
-  after(() => registrarVisualizacoesBannerCategoria(banners));
+  await registrarVisualizacoesBannerCategoria(banners);
 
   const pedidosAtivos = pedidos.filter((p) => p.status === "aberto" || p.status === "em_andamento").length;
   const propostasRecebidas = pedidos.reduce((soma, p) => soma + p.empresasInteressadas.length, 0);
