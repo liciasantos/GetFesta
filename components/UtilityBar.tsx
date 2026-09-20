@@ -19,10 +19,10 @@ export default async function UtilityBar() {
 
   return (
     <div className="hidden bg-[var(--color-text)] md:block">
-      <div className="mx-auto flex max-w-6xl items-center justify-end gap-5 px-6 py-[1px]">
+      <div className="mx-auto flex max-w-6xl items-center justify-end gap-8 px-6 py-[1px]">
         <RegionPicker regiaoAtual={regiaoAtual} />
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-4">
           {session?.tipo === "empresa" && (
             <>
               <Link href="/painel" className="text-[12px] font-bold text-white hover:underline">
