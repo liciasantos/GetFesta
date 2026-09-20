@@ -48,6 +48,16 @@ export default async function SiteHeader() {
           </form>
         </>
       )}
+      {session?.tipo === "admin" && (
+        <>
+          <Link href="/admin" className={buttonClass("secondary", "sm")}>
+            Admin
+          </Link>
+          <form action={logoutAction}>
+            <button className={buttonClass("ghost", "sm")}>Sair</button>
+          </form>
+        </>
+      )}
     </>
   );
 

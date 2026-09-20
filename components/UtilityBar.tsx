@@ -53,6 +53,16 @@ export default async function UtilityBar() {
               </form>
             </>
           )}
+          {session?.tipo === "admin" && (
+            <>
+              <Link href="/admin" className="text-[12px] font-bold text-white hover:underline">
+                Admin
+              </Link>
+              <form action={logoutAction}>
+                <button className="text-[12px] font-semibold text-white/70 hover:text-white">Sair</button>
+              </form>
+            </>
+          )}
           {!session && <AccessMenu />}
         </div>
       </div>
