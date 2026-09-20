@@ -6,6 +6,11 @@ declare global {
   var __pgPool: Pool | undefined;
 }
 
+// Reaproveitado também em produção - sem isso, cada nova instância de função
+// serverless na Vercel cria seu próprio pool (até `max` conexões cada), o
+// que esgota o limite de conexões do Neon conforme o tráfego cresce (erro
+// Postgres 53000 - insufficient_resources). O global sobrevive entre
+// invocações num mesmo container "morno" da função.
 export const pool =
   global.__pgPool ??
   new Pool({
@@ -13,9 +18,7 @@ export const pool =
     max: 10,
   });
 
-if (process.env.NODE_ENV !== "production") {
-  global.__pgPool = pool;
-}
+global.__pgPool = pool;
 
 /** Helper tipado para SELECT/INSERT...RETURNING */
 export async function query<T extends QueryResultRow = QueryResultRow>(
