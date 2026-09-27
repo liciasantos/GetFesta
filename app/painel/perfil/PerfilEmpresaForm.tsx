@@ -4,12 +4,32 @@ import { useActionState } from "react";
 import { atualizarPerfilEmpresa, type PerfilActionState } from "@/lib/actions/perfil";
 import { buttonClass } from "@/components/ui";
 import type { EmpresaPerfil } from "@/lib/data/empresas";
+import type { Categoria } from "@/lib/data/geo";
 
-export default function PerfilEmpresaForm({ empresa }: { empresa: EmpresaPerfil }) {
+export default function PerfilEmpresaForm({
+  empresa,
+  categorias,
+  categoriaIdsAtuais,
+}: {
+  empresa: EmpresaPerfil;
+  categorias: Categoria[];
+  categoriaIdsAtuais: number[];
+}) {
   const [state, formAction, pending] = useActionState<PerfilActionState, FormData>(atualizarPerfilEmpresa, undefined);
+  const categoriasSelecionadas = new Set(categoriaIdsAtuais);
 
   return (
     <form action={formAction} className="flex flex-col gap-3">
+      <Field label="Categorias de serviço">
+        <div className="grid grid-cols-2 gap-1.5 rounded-md border border-border p-2.5">
+          {categorias.map((c) => (
+            <label key={c.id} className="flex items-center gap-1.5 text-[12.5px]">
+              <input type="checkbox" name="categoriaIds" value={c.id} defaultChecked={categoriasSelecionadas.has(c.id)} />
+              {c.nome}
+            </label>
+          ))}
+        </div>
+      </Field>
       <Field label="Descrição">
         <textarea
           name="descricao"

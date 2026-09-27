@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
-import { getEmpresaById, getAvaliacaoGoogle } from "@/lib/data/empresas";
+import { getEmpresaById, getAvaliacaoGoogle, listCategoriaIdsEmpresa } from "@/lib/data/empresas";
 import { listVagasConcluidasEmpresa } from "@/lib/data/vagas";
+import { listCategorias } from "@/lib/data/geo";
 import AvatarUpload from "@/components/AvatarUpload";
 import GaleriaManager from "@/components/GaleriaManager";
 import AlterarSenhaForm from "@/components/AlterarSenhaForm";
@@ -20,10 +21,12 @@ export default async function PainelPerfilPage() {
   const session = await getSession();
   if (!session || session.tipo !== "empresa") redirect("/entrar");
 
-  const [empresa, avaliacaoGoogle, vagasConcluidas] = await Promise.all([
+  const [empresa, avaliacaoGoogle, vagasConcluidas, categorias, categoriaIdsAtuais] = await Promise.all([
     getEmpresaById(session.usuarioId),
     getAvaliacaoGoogle(session.usuarioId),
     listVagasConcluidasEmpresa(session.usuarioId, { limit: VAGAS_CONCLUIDAS_RESUMO }),
+    listCategorias(),
+    listCategoriaIdsEmpresa(session.usuarioId),
   ]);
   if (!empresa) redirect("/entrar");
 
@@ -57,7 +60,7 @@ export default async function PainelPerfilPage() {
 
       <div className="mt-5 rounded-xl border border-border bg-surface p-5">
         <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Dados do perfil</h2>
-        <PerfilEmpresaForm empresa={empresa} />
+        <PerfilEmpresaForm empresa={empresa} categorias={categorias} categoriaIdsAtuais={categoriaIdsAtuais} />
       </div>
 
       <div className="mt-5 rounded-xl border border-border bg-surface p-5">

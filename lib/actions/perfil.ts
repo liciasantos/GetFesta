@@ -258,6 +258,7 @@ export async function atualizarPerfilEmpresa(_prevState: PerfilActionState, form
     precoAPartirDe: formData.get("precoAPartirDe") || undefined,
     instagram: formData.get("instagram") || undefined,
     telefoneContato: formData.get("telefoneContato"),
+    categoriaIds: formData.getAll("categoriaIds"),
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
 
@@ -285,8 +286,17 @@ export async function atualizarPerfilEmpresa(_prevState: PerfilActionState, form
     ]
   );
 
+  await query(`DELETE FROM empresa_categorias WHERE empresa_id = $1`, [session.usuarioId]);
+  for (const categoriaId of parsed.data.categoriaIds) {
+    await query(`INSERT INTO empresa_categorias (empresa_id, categoria_id) VALUES ($1,$2)`, [
+      session.usuarioId,
+      categoriaId,
+    ]);
+  }
+
   revalidatePath("/painel/perfil");
   revalidatePath(`/empresa/${session.usuarioId}`);
+  revalidatePath("/busca");
   return { success: true };
 }
 

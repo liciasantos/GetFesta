@@ -129,6 +129,7 @@ export const atualizarPerfilEmpresaSchema = z.object({
   precoAPartirDe: z.coerce.number().optional().nullable(),
   instagram: z.string().max(100).optional(),
   telefoneContato: z.string().min(10, "Telefone inválido"),
+  categoriaIds: z.array(z.coerce.number()).min(1, "Selecione ao menos uma categoria"),
 });
 
 export const avaliacaoGoogleSchema = z.object({

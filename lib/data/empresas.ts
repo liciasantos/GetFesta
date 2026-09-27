@@ -194,6 +194,17 @@ export async function getEmpresaById(idOuSlug: string): Promise<EmpresaPerfil | 
   };
 }
 
+/** Ids das categorias já selecionadas pela empresa - usado só pra
+ * pré-marcar os checkboxes na edição de perfil (a listagem/busca usa
+ * EmpresaCard.categorias, que traz só os nomes). */
+export async function listCategoriaIdsEmpresa(empresaId: string): Promise<number[]> {
+  const rows = await query<{ categoria_id: number }>(
+    `SELECT categoria_id FROM empresa_categorias WHERE empresa_id = $1`,
+    [empresaId]
+  );
+  return rows.map((r) => r.categoria_id);
+}
+
 export type AvaliacaoEmpresa = { nota: number; comentario: string | null; criado_em: string };
 
 /** Histórico paginado de avaliações recebidas (painel da empresa, "Avaliações")
