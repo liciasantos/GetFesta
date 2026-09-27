@@ -63,6 +63,9 @@ export default async function SiteHeader() {
 
   const navLinksMobile = (
     <>
+      <Link href="/" className="hover:text-text">
+        Início
+      </Link>
       <Link href="/busca" className="hover:text-text">
         Buscar fornecedores
       </Link>
@@ -92,6 +95,9 @@ export default async function SiteHeader() {
         <Logo />
 
         <nav className="hidden items-center gap-7 text-[13.5px] font-semibold text-muted md:flex">
+          <Link href="/" className="hover:text-text">
+            Início
+          </Link>
           <Link href="/busca" className="hover:text-text">
             Buscar fornecedores
           </Link>

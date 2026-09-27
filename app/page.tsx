@@ -29,6 +29,7 @@ import MiniPedidoForm from "@/components/MiniPedidoForm";
 import PedidosCarousel from "@/components/PedidosCarousel";
 import DestaquesGrid, { DestaquesKicker } from "@/components/DestaquesGrid";
 import HelpIcon from "@/components/HelpIcon";
+import ComoFuncionaClienteReels from "@/components/ComoFuncionaClienteReels";
 
 export const dynamic = "force-dynamic";
 
@@ -114,6 +115,23 @@ export default async function HomePage() {
               <MiniPedidoForm cidades={cidades} />
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* VÍDEO EXPLICATIVO — mockup estilo Reels/Stories, formato vertical,
+          pra passar o "como funciona" de um jeito rápido e visual antes do
+          feed de pedidos. Autoplay com barra de progresso tipo Stories;
+          pausa no hover e aceita navegação manual (toque nas laterais). */}
+      <section className="border-b border-border bg-surface-alt/60 px-6 py-16 sm:py-20">
+        <div className="mx-auto flex max-w-6xl flex-col items-center gap-8 lg:flex-row lg:items-center lg:justify-between lg:gap-16">
+          <div className="max-w-md text-center lg:text-left">
+            <span className="section-kicker justify-center lg:justify-start">Como funciona, em 1 minuto</span>
+            <h2 className="mt-3 text-2xl font-extrabold sm:text-[26px]">Veja a GetFesta funcionando na prática</h2>
+            <p className="mt-1.5 text-[13.5px] text-muted">
+              Publique o pedido, receba propostas de fornecedores da sua região e combine tudo direto no WhatsApp.
+            </p>
+          </div>
+          <ComoFuncionaClienteReels />
         </div>
       </section>
 

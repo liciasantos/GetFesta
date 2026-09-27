@@ -12,6 +12,7 @@ import { PLANOS_BENEFICIOS, formatPrecoPlano } from "@/lib/planos-beneficios";
 import { buttonClass, Badge } from "@/components/ui";
 import { hexToRgba } from "@/lib/color";
 import BgImage from "@/components/BgImage";
+import ComoFuncionaEmpresaReels from "@/components/ComoFuncionaEmpresaReels";
 
 export default async function EmpresasPage() {
   const [session, planosEmpresa, config] = await Promise.all([getSession(), listPlanosEmpresa(), getConfiguracoesSite()]);
@@ -53,9 +54,25 @@ export default async function EmpresasPage() {
         </div>
       </section>
 
-      {/* COMO FUNCIONA */}
+      {/* COMO FUNCIONA — versão animada estilo Reels/Stories, mesmo padrão
+          da home (ver components/ComoFuncionaReels.tsx), com conteúdo
+          específico pra empresa em vez do fluxo do cliente. */}
+      <section className="border-b border-border bg-surface-alt/60 px-6 py-16 sm:py-20">
+        <div className="mx-auto flex max-w-6xl flex-col items-center gap-8 lg:flex-row lg:items-center lg:justify-between lg:gap-16">
+          <div className="max-w-md text-center lg:text-left">
+            <span className="section-kicker justify-center lg:justify-start">Como funciona, em 1 minuto</span>
+            <h2 className="mt-3 text-2xl font-extrabold sm:text-[26px]">Veja como é receber pedidos pela GetFesta</h2>
+            <p className="mt-1.5 text-[13.5px] text-muted">
+              Cadastre sua empresa, receba pedidos de clientes da sua região e feche negócio direto no WhatsApp.
+            </p>
+          </div>
+          <ComoFuncionaEmpresaReels />
+        </div>
+      </section>
+
+      {/* COMO FUNCIONA — detalhamento em passos */}
       <section className="mx-auto max-w-5xl px-6 py-16 sm:py-20">
-        <span className="section-kicker">Como funciona</span>
+        <span className="section-kicker">Passo a passo</span>
         <h2 className="mt-3 text-2xl font-extrabold sm:text-[26px]">Do cadastro ao contato liberado</h2>
         <div className="mt-9 grid grid-cols-1 gap-6 sm:grid-cols-4">
           <PassoCard n="1" titulo="Cadastre sua empresa" texto="Escolha suas categorias e a região onde atende — leva poucos minutos." />

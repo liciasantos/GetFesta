@@ -9,6 +9,7 @@ import {
   CONFIG_PROFISSIONAIS_HERO_SUBTITULO,
 } from "@/lib/data/config";
 import BgImage from "@/components/BgImage";
+import ComoFuncionaProfissionalReels from "@/components/ComoFuncionaProfissionalReels";
 
 export default async function ProfissionaisPage() {
   const [session, config] = await Promise.all([getSession(), getConfiguracoesSite()]);
@@ -53,9 +54,25 @@ export default async function ProfissionaisPage() {
         </div>
       </section>
 
-      {/* COMO FUNCIONA */}
+      {/* COMO FUNCIONA — versão animada estilo Reels/Stories, mesmo padrão
+          da home (ver components/ComoFuncionaReels.tsx), com conteúdo
+          específico pro profissional em vez do fluxo do cliente. */}
+      <section className="border-b border-border bg-surface-alt/60 px-6 py-16 sm:py-20">
+        <div className="mx-auto flex max-w-6xl flex-col items-center gap-8 lg:flex-row lg:items-center lg:justify-between lg:gap-16">
+          <div className="max-w-md text-center lg:text-left">
+            <span className="section-kicker justify-center lg:justify-start">Como funciona, em 1 minuto</span>
+            <h2 className="mt-3 text-2xl font-extrabold sm:text-[26px]">Veja como é conseguir freelas pela GetFesta</h2>
+            <p className="mt-1.5 text-[13.5px] text-muted">
+              Monte seu catálogo, apareça pras empresas certas e feche o job direto no WhatsApp.
+            </p>
+          </div>
+          <ComoFuncionaProfissionalReels />
+        </div>
+      </section>
+
+      {/* COMO FUNCIONA — detalhamento em passos */}
       <section className="mx-auto max-w-5xl px-6 py-16 sm:py-20">
-        <span className="section-kicker">Como funciona</span>
+        <span className="section-kicker">Passo a passo</span>
         <h2 className="mt-3 text-2xl font-extrabold sm:text-[26px]">Do catálogo ao primeiro job</h2>
         <div className="mt-9 grid grid-cols-1 gap-6 sm:grid-cols-4">
           <PassoCard n="1" titulo="Monte seu catálogo" texto="Fotos, funções que você exerce e, se quiser, medidas pra personagem." />

@@ -709,6 +709,13 @@ CREATE TABLE eventos_rsvp (
     titulo       VARCHAR(180) NOT NULL,
     data_evento  DATE NOT NULL,
     slug_publico VARCHAR(80) UNIQUE NOT NULL,
+    -- personalização da página pública /rsvp/[slug] (ver
+    -- components/rsvp/AparenciaEventoRsvpForm.tsx) - ambos opcionais, nulo =
+    -- usa o visual padrão do site. imagem_capa segue o mesmo padrão de
+    -- data URI comprimida no client já usado em banners_hero.imagem_fundo,
+    -- sem storage externo.
+    cor_fundo    VARCHAR(7),
+    imagem_capa  TEXT,
     criado_em    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -718,6 +725,11 @@ CREATE TABLE rsvp_convidados (
     nome              VARCHAR(180) NOT NULL,
     telefone          VARCHAR(20),
     tipo_convidado    VARCHAR(10) NOT NULL DEFAULT 'adulto' CHECK (tipo_convidado IN ('adulto','crianca')),
+    -- só preenchido quando tipo_convidado = 'crianca' - varios buffets tem
+    -- isencao de cobranca ate uma certa idade (ex.: ate 7 anos), entao o
+    -- anfitriao precisa dessa informacao por crianca pra negociar/planejar
+    -- com o fornecedor, nao só o total de "criancas" da lista.
+    idade_anos        SMALLINT CHECK (idade_anos IS NULL OR idade_anos BETWEEN 0 AND 17),
     confirmado        BOOLEAN,
     respondido_em     TIMESTAMPTZ
 );

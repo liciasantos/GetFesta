@@ -307,3 +307,55 @@ const produtoAfiliadoCampos = {
 
 export const criarProdutoAfiliadoSchema = z.object(produtoAfiliadoCampos);
 export const atualizarProdutoAfiliadoSchema = z.object({ id: z.string().uuid(), ...produtoAfiliadoCampos });
+
+export const criarEventoRsvpSchema = z.object({
+  titulo: z.string().min(2, "Dê um nome pra festa").max(180),
+  dataEvento: z.string().min(8, "Informe a data do evento"),
+});
+
+/** Só é usada quando tipoConvidado = "crianca" - muitos buffets isentam
+ * cobrança até uma certa idade, então o anfitrião precisa saber a idade de
+ * cada criança, não só a contagem total. */
+const idadeAnosSchema = z.coerce.number().int().min(0, "Idade inválida").max(17, "Idade inválida").optional().nullable();
+
+export const adicionarConvidadoSchema = z.object({
+  eventoRsvpId: z.string().uuid(),
+  nome: z.string().min(2, "Informe o nome do convidado").max(180),
+  telefone: z.string().max(20).optional(),
+  tipoConvidado: z.enum(["adulto", "crianca"]),
+  idadeAnos: idadeAnosSchema,
+});
+
+/** Usado tanto pra um convidado que não estava na lista se confirmar sozinho
+ * (contexto "principal") quanto pra registrar um acompanhante dele (contexto
+ * "acompanhante"). Telefone só é obrigatório no primeiro caso: é o lead novo
+ * que a GetFesta ainda não tinha contato nenhum. Pro acompanhante, o convidado
+ * principal já deixou um telefone de contato da família, então pedir de novo
+ * por pessoa só cria fricção sem necessidade. */
+export const confirmarConvidadoPublicoSchema = z
+  .object({
+    slug: z.string().min(1),
+    contexto: z.enum(["principal", "acompanhante"]),
+    nome: z.string().min(2, "Informe o nome").max(180),
+    telefone: z.string().max(20).optional(),
+    tipoConvidado: z.enum(["adulto", "crianca"]),
+    idadeAnos: idadeAnosSchema,
+  })
+  .refine((v) => v.contexto !== "principal" || (v.telefone && v.telefone.length >= 10), {
+    message: "Informe um telefone válido",
+    path: ["telefone"],
+  });
+
+export const buscarConvidadoPublicoSchema = z.object({
+  slug: z.string().min(1),
+  telefone: z.string().min(10, "Informe um telefone válido").max(20),
+});
+
+export const atualizarAparenciaEventoRsvpSchema = z.object({
+  eventoRsvpId: z.string().uuid(),
+  corFundo: z
+    .string()
+    .optional()
+    .refine((v) => !v || /^#[0-9a-fA-F]{6}$/.test(v), "Cor inválida"),
+  imagemCapa: z.string().optional(),
+});

@@ -24,7 +24,6 @@ const STATUS_LABEL: Record<string, string> = {
 
 const DICAS = [
   { icone: "convite", titulo: "Faça seu convite", desc: "Monte um convite online com foto, data e local em minutos." },
-  { icone: "confirmacao", titulo: "Confirmação de presença (RSVP)", desc: "Saiba quantos adultos e crianças confirmaram presença." },
 ];
 
 export default async function MeusPedidosPage() {
@@ -81,6 +80,51 @@ export default async function MeusPedidosPage() {
           </Link>
         </div>
       )}
+
+      {/* FERRAMENTAS DISPONÍVEIS - destaque pras funcionalidades que já
+          funcionam de verdade, separadas das "dicas" (que incluem coisa
+          ainda "em breve") pra não passar a impressão de que também são
+          promessa futura. */}
+      <div className="mt-6">
+        <h2 className="text-[13px] font-bold uppercase tracking-wide text-muted-2">Ferramentas da sua festa</h2>
+        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Link
+            href="/calculadora-eventos"
+            className="flex items-center gap-4 rounded-xl border-2 border-accent-soft-2 bg-accent-soft p-4 transition-colors hover:border-accent"
+          >
+            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white text-accent-dark shadow-sm">
+              <DicaIcon slug="calculadora" className="h-7 w-7" />
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[14px] font-extrabold">Calculadora de festa</span>
+                <Badge tone="ok">Disponível</Badge>
+              </div>
+              <p className="mt-0.5 text-[12px] leading-relaxed text-muted">
+                Informe os convidados e descubra quanto comprar de comida e bebida.
+              </p>
+            </div>
+          </Link>
+
+          <Link
+            href="/lista-convidados"
+            className="flex items-center gap-4 rounded-xl border-2 border-accent-soft-2 bg-accent-soft p-4 transition-colors hover:border-accent"
+          >
+            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white text-accent-dark shadow-sm">
+              <DicaIcon slug="confirmacao" className="h-7 w-7" />
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[14px] font-extrabold">Lista de convidados</span>
+                <Badge tone="ok">Disponível</Badge>
+              </div>
+              <p className="mt-0.5 text-[12px] leading-relaxed text-muted">
+                Monte sua lista, compartilhe o link e acompanhe quem confirmou presença.
+              </p>
+            </div>
+          </Link>
+        </div>
+      </div>
 
       {/* DESTAQUES DA SEMANA */}
       {banners.length > 0 && (
@@ -169,20 +213,7 @@ export default async function MeusPedidosPage() {
       {/* DICAS PARA A FESTA */}
       <div className="mt-8">
         <h2 className="text-[13px] font-bold uppercase tracking-wide text-muted-2">Dicas para sua festa</h2>
-        <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
-          <Link href="/calculadora-eventos" className="rounded-lg border border-border bg-surface p-3.5 hover:border-border-strong">
-            <div className="flex items-start justify-between gap-2">
-              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-accent-soft text-accent-dark">
-                <DicaIcon slug="calculadora" className="h-6 w-6" />
-              </span>
-              <Badge tone="ok">Usar agora</Badge>
-            </div>
-            <div className="mt-2 text-[12.5px] font-bold">Calculadora de festa</div>
-            <p className="mt-1 text-[11.5px] leading-relaxed text-muted">
-              Informe os convidados e descubra quanto comprar de comida e bebida.
-            </p>
-          </Link>
-
+        <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
           {DICAS.map((d) => (
             <div key={d.titulo} className="rounded-lg border border-border bg-surface p-3.5">
               <div className="flex items-start justify-between gap-2">

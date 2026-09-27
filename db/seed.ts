@@ -282,6 +282,10 @@ async function main() {
     ["dj", "DJ"],
     ["mestre_de_cerimonia", "Mestre de cerimônia"],
     ["seguranca", "Segurança"],
+    ["pintura_facial_maquiagem", "Pintura Facial/Maquiagem"],
+    ["assistente_eventos", "Assistente de Eventos"],
+    ["atendente_estacao", "Atendente de Estação"],
+    ["copeiro", "Copeiro(a)"],
   ];
   const categoriasProf: Record<string, number> = {};
   for (const [slug, nome] of categoriaProfSeed) {
