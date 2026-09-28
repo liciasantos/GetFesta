@@ -12,7 +12,7 @@ export function Equilibrio({ meu, dele }: { meu: number; dele: number }) {
   const tolerancia = Math.max(100, Math.max(meu, dele) * 0.05);
   const [cls, txt] =
     Math.abs(diff) <= tolerancia
-      ? ["bg-ok-soft text-ok", "Equilibrado — os dois lados têm praticamente o mesmo valor de referência."]
+      ? ["bg-ok-soft text-ok", "Equilibrado — os dois serviços têm praticamente o mesmo preço normal."]
       : diff < 0
         ? ["bg-note-bg text-note-text", `${brl(-diff)} a mais do lado do parceiro. Proponha como compensar.`]
         : ["bg-info-soft text-info-dark", `${brl(diff)} a mais do seu lado. Você pode pedir um complemento.`];

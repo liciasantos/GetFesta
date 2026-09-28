@@ -254,7 +254,7 @@ function EntregaCard({
         <dd>{formatDataCurta(e.data_evento)}</dd>
         <dt className="text-muted">Local</dt>
         <dd>{e.local_evento || "A combinar"}</dd>
-        <dt className="text-muted">Valor de ref.</dt>
+        <dt className="text-muted">Preço normal</dt>
         <dd>{formatValor(e.valor_referencia)}</dd>
         {e.escopo && (
           <>

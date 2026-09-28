@@ -78,7 +78,7 @@ function OfertaForm({
           name="titulo"
           required
           defaultValue={oferta?.titulo ?? ""}
-          placeholder='Ex: "Buffet infantil para 60 pessoas", "4 h de DJ"'
+          placeholder='Ex: "Personagem vivo por 2 h", "Buffet infantil para 60 pessoas"'
           className="mt-1 w-full rounded-md border border-border bg-surface px-3 py-2.5 text-sm font-normal"
         />
       </label>
@@ -99,17 +99,23 @@ function OfertaForm({
           </select>
         </label>
         <label className="text-[12px] font-bold">
-          Valor de referência (R$)
+          Preço normal deste serviço (R$)
           <input
             name="valor"
             required
             inputMode="decimal"
             defaultValue={oferta ? String(oferta.valor_referencia) : ""}
-            placeholder="2400"
+            placeholder="Ex: 800"
+            aria-describedby="ajuda-valor"
             className="mt-1 w-full rounded-md border border-border bg-surface px-3 py-2.5 text-sm font-normal"
           />
         </label>
       </div>
+      <p id="ajuda-valor" className="-mt-1 rounded-md bg-surface-alt px-3 py-2 text-[12px] leading-relaxed text-muted">
+        Quanto um cliente pagaria por <b className="text-text">exatamente este serviço</b>, do jeito que está descrito —
+        não é o valor total da troca. Na hora da proposta o site compara o seu preço com o do serviço que você vai
+        receber e mostra se a troca está equilibrada.
+      </p>
       <label className="text-[12px] font-bold">
         O que está incluso (opcional)
         <textarea

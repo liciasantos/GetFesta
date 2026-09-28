@@ -45,8 +45,8 @@ export default async function MinhasOfertasPage({ searchParams }: { searchParams
       <section className="rounded-xl border border-border bg-surface p-5">
         <h2 className="text-[15px] font-extrabold">O que você oferece</h2>
         <p className="mt-1 text-[12.5px] text-muted">
-          Seu serviço é a moeda da troca. Informe um valor de referência de mercado — ele aparece na proposta para
-          equilibrar os dois lados.
+          Seu serviço é a moeda da troca. Cadastre cada serviço que topa oferecer, com o preço que você cobraria de um
+          cliente por ele — é assim que as duas empresas veem se a troca está equilibrada.
         </p>
         <div className="mt-4">
           <OfertasManager ofertas={ofertas} categorias={categorias} />
