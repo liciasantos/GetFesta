@@ -40,9 +40,10 @@ export default async function AdminEmpresasPage() {
                 </Link>
                 {!e.ativo && <Badge tone="warn">Inativa</Badge>}
                 {!e.perfil_reivindicado && <Badge tone="muted">Perfil não confirmado</Badge>}
+                {e.cnpj_validado ? <Badge tone="ok">CNPJ validado</Badge> : <Badge tone="warn">CNPJ não validado</Badge>}
               </div>
               <p className="mt-1 text-[12px] text-muted">
-                {e.email ?? "sem e-mail"} · {e.cidades.join(", ") || "sem cidade"} · desde{" "}
+                {e.email ?? "sem e-mail"} · CNPJ {e.cnpj} · {e.cidades.join(", ") || "sem cidade"} · desde{" "}
                 {new Date(e.criado_em).toLocaleDateString("pt-BR")}
               </p>
             </div>
@@ -51,6 +52,7 @@ export default async function AdminEmpresasPage() {
               nomeFantasia={e.nome_fantasia}
               seloVerificado={e.selo_verificado}
               aprovadaParaDestaque={e.aprovada_para_destaque}
+              cnpjValidado={e.cnpj_validado}
             />
           </div>
         ))}

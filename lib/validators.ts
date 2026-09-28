@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { cnpjValido } from "@/lib/cnpj";
 import { isValidCPF } from "@/lib/cpf";
 
 const aceitouTermosSchema = z
@@ -39,7 +40,8 @@ export const registrarEmpresaSchema = z.object({
   cnpj: z
     .string()
     .min(14, "CNPJ inválido")
-    .refine((v) => v.replace(/\D/g, "").length === 14, "CNPJ deve ter 14 dígitos"),
+    .refine((v) => v.replace(/\D/g, "").length === 14, "CNPJ deve ter 14 dígitos")
+    .refine((v) => cnpjValido(v), "CNPJ inválido — confira os números digitados"),
   email: z.string().email("E-mail inválido"),
   telefoneContato: z.string().min(10, "Telefone inválido"),
   instagram: z.string().optional(),
@@ -59,7 +61,8 @@ export const criarEmpresaManualSchema = z.object({
   cnpj: z
     .string()
     .min(14, "CNPJ inválido")
-    .refine((v) => v.replace(/\D/g, "").length === 14, "CNPJ deve ter 14 dígitos"),
+    .refine((v) => v.replace(/\D/g, "").length === 14, "CNPJ deve ter 14 dígitos")
+    .refine((v) => cnpjValido(v), "CNPJ inválido — confira os números digitados"),
   email: z.string().email("E-mail inválido"),
   telefoneContato: z.string().min(10, "Telefone inválido"),
   instagram: z.string().optional(),

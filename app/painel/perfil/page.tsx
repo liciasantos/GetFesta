@@ -13,6 +13,8 @@ import { excluirContaEmpresa } from "@/lib/actions/conta";
 import { formatCurrencyBRL, formatDateBR } from "@/lib/format";
 import PerfilEmpresaForm from "./PerfilEmpresaForm";
 import AvaliacaoGoogleForm from "./AvaliacaoGoogleForm";
+import ValidarCnpjCard from "@/components/ValidarCnpjCard";
+import { queryOne } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 const VAGAS_CONCLUIDAS_RESUMO = 5;
@@ -29,6 +31,10 @@ export default async function PainelPerfilPage() {
     listCategoriaIdsEmpresa(session.usuarioId),
   ]);
   if (!empresa) redirect("/entrar");
+  const cnpjInfo = await queryOne<{ cnpj: string; cnpj_validado: boolean; cnpj_validado_em: string | null }>(
+    `SELECT cnpj, cnpj_validado, cnpj_validado_em FROM empresas WHERE usuario_id = $1`,
+    [session.usuarioId]
+  );
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-10">
@@ -41,6 +47,13 @@ export default async function PainelPerfilPage() {
       <p className="text-sm text-muted">
         Essas informações aparecem na sua página pública ({empresa.nome_fantasia}) e ajudam o cliente a decidir.
       </p>
+
+      {cnpjInfo && (
+        <div id="cnpj" className="mt-6 rounded-xl border border-border bg-surface p-5">
+          <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Validação do CNPJ</h2>
+          <ValidarCnpjCard cnpj={cnpjInfo.cnpj} validado={cnpjInfo.cnpj_validado} validadoEm={cnpjInfo.cnpj_validado_em} />
+        </div>
+      )}
 
       <div className="mt-6 rounded-xl border border-border bg-surface p-5">
         <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Logo</h2>

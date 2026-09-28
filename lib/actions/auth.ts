@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { query, queryOne } from "@/lib/db";
 import { createSession, destroySession, getSession, hashPassword, verifyPassword } from "@/lib/auth";
+import { validarCnpjDaEmpresa } from "@/lib/cnpj-validacao";
 import {
   alterarSenhaSchema,
   esqueciSenhaSchema,
@@ -195,6 +196,10 @@ export async function registrarEmpresa(_prevState: ActionState, formData: FormDa
   for (const categoriaId of parsed.data.categoriaIds) {
     await query(`INSERT INTO empresa_categorias (empresa_id, categoria_id) VALUES ($1,$2)`, [usuario.id, categoriaId]);
   }
+  // consulta a situação do CNPJ na Receita (BrasilAPI); se a API estiver
+  // fora do ar a conta é criada do mesmo jeito e a empresa valida depois
+  // pelo botão em Perfil da empresa
+  await validarCnpjDaEmpresa(usuario.id, 5000);
   await query(`INSERT INTO empresa_areas_atuacao (empresa_id, cidade_id, bairro_id) VALUES ($1,$2,NULL)`, [
     usuario.id,
     parsed.data.cidadeId,

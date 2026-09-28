@@ -54,7 +54,7 @@ export default async function PermutasPage() {
               <li key={p}>{p}</li>
             ))}
           </ul>
-          <Link href="/painel/perfil" className="mt-2 inline-block font-bold underline">
+          <Link href={perfil.cnpjValidado ? "/painel/perfil" : "/painel/perfil#cnpj"} className="mt-2 inline-block font-bold underline">
             Completar perfil
           </Link>
         </div>

@@ -3,17 +3,20 @@
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { alternarAprovadaDestaque, alternarSeloVerificado, removerEmpresa } from "@/lib/actions/admin";
+import { alternarCnpjValidadoAdmin, revalidarCnpjAdmin } from "@/lib/actions/cnpj";
 
 export default function EmpresaRowActions({
   empresaId,
   nomeFantasia,
   seloVerificado,
   aprovadaParaDestaque,
+  cnpjValidado,
 }: {
   empresaId: string;
   nomeFantasia: string;
   seloVerificado: boolean;
   aprovadaParaDestaque: boolean;
+  cnpjValidado: boolean;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -28,6 +31,33 @@ export default function EmpresaRowActions({
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
+      <button
+        type="button"
+        disabled={isPending}
+        onClick={() =>
+          startTransition(async () => {
+            const res = await revalidarCnpjAdmin(empresaId);
+            window.alert(res.error ?? res.mensagem ?? "Consulta feita.");
+            router.refresh();
+          })
+        }
+        className="rounded-md border border-border-strong px-2.5 py-1 text-[11.5px] font-bold hover:bg-surface-alt disabled:opacity-50"
+      >
+        Consultar CNPJ na Receita
+      </button>
+      <button
+        type="button"
+        disabled={isPending}
+        onClick={() => {
+          if (window.confirm(cnpjValidado ? "Desmarcar o CNPJ como validado?" : "Marcar o CNPJ como validado manualmente?"))
+            run(() => alternarCnpjValidadoAdmin(empresaId));
+        }}
+        className={`rounded-md border px-2.5 py-1 text-[11.5px] font-bold disabled:opacity-50 ${
+          cnpjValidado ? "border-ok bg-ok-soft text-ok" : "border-border-strong hover:bg-surface-alt"
+        }`}
+      >
+        {cnpjValidado ? "✓ CNPJ validado" : "Validar CNPJ manualmente"}
+      </button>
       <button
         type="button"
         disabled={isPending}

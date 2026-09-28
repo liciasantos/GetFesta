@@ -18,6 +18,7 @@ import {
   trocarPlanoManualSchema,
 } from "@/lib/validators";
 import { gerarSlugUnicoEmpresa, gerarSlugUnicoProdutoAfiliado } from "@/lib/slug";
+import { validarCnpjDaEmpresa } from "@/lib/cnpj-validacao";
 
 async function requireAdmin() {
   const session = await getSession();
@@ -626,6 +627,7 @@ export async function criarEmpresaManual(_prevState: BannerActionState, formData
       planoGratis.id,
     ]);
   }
+  await validarCnpjDaEmpresa(usuario.id, 5000);
 
   revalidatePath("/admin/empresas");
   redirect("/admin/empresas");

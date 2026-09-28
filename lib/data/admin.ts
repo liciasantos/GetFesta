@@ -87,6 +87,8 @@ export type EmpresaAdmin = {
   selo_verificado: boolean;
   aprovada_para_destaque: boolean;
   perfil_reivindicado: boolean;
+  cnpj: string;
+  cnpj_validado: boolean;
   ativo: boolean;
   criado_em: string;
 };
@@ -274,7 +276,7 @@ export async function listEmpresasAdmin(): Promise<EmpresaAdmin[]> {
   return query<EmpresaAdmin>(
     `SELECT
        e.usuario_id, e.slug, e.nome_fantasia, u.email, u.ativo, u.criado_em,
-       e.selo_verificado, e.aprovada_para_destaque, e.perfil_reivindicado,
+       e.selo_verificado, e.aprovada_para_destaque, e.perfil_reivindicado, e.cnpj, e.cnpj_validado,
        COALESCE(
          (SELECT array_agg(DISTINCT ci.nome) FROM empresa_areas_atuacao ea JOIN cidades ci ON ci.id = ea.cidade_id WHERE ea.empresa_id = e.usuario_id),
          ARRAY[]::text[]
