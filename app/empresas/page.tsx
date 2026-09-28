@@ -9,13 +9,20 @@ import {
   CONFIG_EMPRESAS_HERO_SUBTITULO,
 } from "@/lib/data/config";
 import { PLANOS_BENEFICIOS, formatPrecoPlano } from "@/lib/planos-beneficios";
+import { getPermutaConfig } from "@/lib/data/permuta";
+import { beneficioPermutaDoPlano } from "@/lib/permuta/regras";
 import { buttonClass, Badge } from "@/components/ui";
 import { hexToRgba } from "@/lib/color";
 import BgImage from "@/components/BgImage";
 import ComoFuncionaEmpresaReels from "@/components/ComoFuncionaEmpresaReels";
 
 export default async function EmpresasPage() {
-  const [session, planosEmpresa, config] = await Promise.all([getSession(), listPlanosEmpresa(), getConfiguracoesSite()]);
+  const [session, planosEmpresa, config, permuta] = await Promise.all([
+    getSession(),
+    listPlanosEmpresa(),
+    getConfiguracoesSite(),
+    getPermutaConfig(),
+  ]);
   const empresaLogada = session?.tipo === "empresa";
 
   return (
@@ -124,6 +131,34 @@ export default async function EmpresasPage() {
         </div>
       </section>
 
+      {/* REDE DE PERMUTAS — troca de serviços entre empresas (texto e
+          visibilidade editáveis em /admin/permutas › Regras) */}
+      {permuta.ativa && permuta.secaoEmpresasVisivel && (
+        <section className="border-t border-border bg-surface-alt px-6 py-16 sm:py-20">
+          <div className="mx-auto max-w-5xl">
+            <span className="section-kicker">Rede de permutas</span>
+            <h2 className="mt-3 text-2xl font-extrabold sm:text-[26px]">{permuta.secaoEmpresasTitulo}</h2>
+            <p className="mt-2 max-w-2xl text-[13.5px] leading-relaxed text-muted">{permuta.secaoEmpresasTexto}</p>
+            <div className="mt-9 grid grid-cols-1 gap-6 sm:grid-cols-4">
+              <PassoCard n="1" titulo="Diga o que oferece" texto='Ex: "buffet para 60 pessoas" ou "4 h de DJ", com um valor de referência.' />
+              <PassoCard n="2" titulo="Encontre quem combina" texto="A vitrine cruza o que você oferece com o que outras empresas buscam." />
+              <PassoCard n="3" titulo="Feche um acordo digital" texto="Datas, escopo e responsabilidades assinados pelas duas empresas." />
+              <PassoCard n="4" titulo="Cada um entrega e avalia" texto="Check-in e avaliação de cada evento: você sempre sabe quem já fez o evento de quem." />
+            </div>
+            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-[12.5px] text-muted">
+              <span>✓ Só empresas verificadas — clientes não veem a rede</span>
+              <span>✓ Sem dinheiro envolvido: seu serviço é a moeda</span>
+              <span>✓ Boas trocas rendem selo de confiança no seu perfil</span>
+            </div>
+            <div className="mt-7">
+              <Link href={empresaLogada ? "/painel/permutas" : "/cadastro/empresa"} className={buttonClass("ghost")}>
+                {empresaLogada ? "Abrir a rede de permutas" : "Cadastrar minha empresa e participar"}
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* PLANOS */}
       <section className="border-t border-border bg-surface-alt/60 px-6 py-16 sm:py-20">
         <div className="mx-auto max-w-6xl">
@@ -164,7 +199,7 @@ export default async function EmpresasPage() {
                     {!gratis && <span className="text-[12px] text-muted">/mês</span>}
                   </div>
                   <ul className="mt-5 flex flex-col gap-2.5 text-[12.5px] leading-relaxed">
-                    {p.beneficios.map((b) => (
+                    {[...p.beneficios, beneficioPermutaDoPlano(p.nome, permuta)].filter((b): b is string => !!b).map((b) => (
                       <li key={b} className="flex items-start gap-2">
                         <span className="mt-0.5 text-ok">✓</span>
                         <span>{b}</span>

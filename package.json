@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed": "tsx db/seed.ts"
+    "seed": "tsx db/seed.ts",
+    "permuta:setup": "tsx db/permuta-setup.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

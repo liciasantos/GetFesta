@@ -121,6 +121,12 @@ const GRUPOS: Grupo[] = [
     titulo: "Moderação",
     itens: [
       {
+        href: "/admin/permutas",
+        label: "Permuta B2B",
+        match: (p) => p.startsWith("/admin/permutas"),
+        icon: `<path d="M4 8h13l-3-3"/><path d="M20 16H7l3 3"/>`,
+      },
+      {
         href: "/admin/pedidos",
         label: "Pedidos",
         match: (p) => p.startsWith("/admin/pedidos"),

@@ -3,6 +3,8 @@ import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { listPeriodosEmpresa, listPlanosEmpresa } from "@/lib/data/painel";
 import { PLANOS_BENEFICIOS } from "@/lib/planos-beneficios";
+import { getPermutaConfig } from "@/lib/data/permuta";
+import { beneficioPermutaDoPlano } from "@/lib/permuta/regras";
 import ResumoContratacaoForm from "@/components/ResumoContratacaoForm";
 
 export const dynamic = "force-dynamic";
@@ -22,7 +24,7 @@ export default async function ContratarEmpresaPage({
   }
 
   const planoId = sp.plano ? Number(sp.plano) : null;
-  const [planos, periodosTodos] = await Promise.all([listPlanosEmpresa(), listPeriodosEmpresa()]);
+  const [planos, periodosTodos, permuta] = await Promise.all([listPlanosEmpresa(), listPeriodosEmpresa(), getPermutaConfig()]);
   const plano = planoId ? planos.find((p) => p.id === planoId) : undefined;
 
   // sem plano valido ou plano gratis (nao tem periodo/cobranca) - manda pro
@@ -32,7 +34,11 @@ export default async function ContratarEmpresaPage({
   }
 
   const periodos = periodosTodos.filter((p) => p.plano_id === plano.id);
-  const beneficios = PLANOS_BENEFICIOS.find((p) => p.nome === plano.nome)?.beneficios ?? [];
+  const linhaPermuta = beneficioPermutaDoPlano(plano.nome, permuta);
+  const beneficios = [
+    ...(PLANOS_BENEFICIOS.find((p) => p.nome === plano.nome)?.beneficios ?? []),
+    ...(linhaPermuta ? [linhaPermuta] : []),
+  ];
 
   return (
     <div className="mx-auto max-w-md px-6 py-12">

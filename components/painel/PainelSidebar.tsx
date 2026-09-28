@@ -23,6 +23,12 @@ const ITENS: Array<{ href: string; label: string; icon: string; match: (p: strin
     icon: `<rect x="3" y="8" width="18" height="12" rx="2"/><path d="M8.5 8V6a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v2"/><path d="M3 13h18"/>`,
   },
   {
+    href: "/painel/permutas",
+    label: "Permutas",
+    match: (p) => p.startsWith("/painel/permutas"),
+    icon: `<path d="M4 8h13l-3-3"/><path d="M20 16H7l3 3"/>`,
+  },
+  {
     href: "/painel/anuncios",
     label: "Meus anúncios",
     match: (p) => p.startsWith("/painel/anuncios"),

@@ -73,6 +73,12 @@ export default async function AdminPage() {
             Cadastrar e gerenciar fantasias e acessórios afiliados do Mercado Livre.
           </p>
         </Link>
+        <Link href="/admin/permutas" className="card-hover rounded-xl border border-border bg-surface p-5">
+          <div className="text-[14px] font-bold">Permuta B2B</div>
+          <p className="mt-1 text-[12.5px] text-muted">
+            Acordos de troca entre empresas, disputas, níveis de confiança e todas as regras da rede.
+          </p>
+        </Link>
         <Link href="/admin/empresas" className="card-hover rounded-xl border border-border bg-surface p-5">
           <div className="text-[14px] font-bold">Empresas cadastradas</div>
           <p className="mt-1 text-[12.5px] text-muted">Dar selo de verificado, aprovar pra destaque, ou remover uma conta.</p>

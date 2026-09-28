@@ -30,6 +30,8 @@ import PedidosCarousel from "@/components/PedidosCarousel";
 import DestaquesGrid, { DestaquesKicker } from "@/components/DestaquesGrid";
 import HelpIcon from "@/components/HelpIcon";
 import ComoFuncionaClienteReels from "@/components/ComoFuncionaClienteReels";
+import { getPermutaConfig } from "@/lib/data/permuta";
+import { beneficioPermutaDoPlano } from "@/lib/permuta/regras";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +44,7 @@ export default async function HomePage() {
   // diferente de regiaoVisitante (geolocalização por IP, só pro banner hero).
   const regiaoEscolhida = await getRegiaoAtual();
 
-  const [categorias, cidades, empresasDestaque, pedidos, banners, heroBanners, config, session, planosEmpresa, produtosDestaque] =
+  const [categorias, cidades, empresasDestaque, pedidos, banners, heroBanners, config, session, planosEmpresa, produtosDestaque, permuta] =
     await Promise.all([
       listCategorias(),
       listCidades(),
@@ -54,6 +56,7 @@ export default async function HomePage() {
       getSession(),
       listPlanosEmpresa(),
       listProdutosDestaque(8),
+      getPermutaConfig(),
     ]);
 
   // registra 1 visualização por empresa anunciante presente nessa carga da
@@ -351,7 +354,7 @@ export default async function HomePage() {
                   {!gratis && <span className="text-[12px] text-muted">/mês</span>}
                 </div>
                 <ul className="mt-5 flex flex-col gap-2.5 text-[12.5px] leading-relaxed">
-                  {p.beneficios.map((b) => (
+                  {[...p.beneficios, beneficioPermutaDoPlano(p.nome, permuta)].filter((b): b is string => !!b).map((b) => (
                     <li key={b} className="flex items-start gap-2">
                       <span className="mt-0.5 text-ok">✓</span>
                       <span>{b}</span>

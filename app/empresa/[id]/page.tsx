@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { contatoLiberadoParaCliente, getEmpresaById, registrarVisualizacaoPerfil } from "@/lib/data/empresas";
+import { getSeloPermutaPublico } from "@/lib/data/permuta";
+import { NIVEL_LABEL } from "@/lib/permuta/regras";
 import { getLimitesProfissional } from "@/lib/data/limites-profissional";
 import { Badge, buttonClass, Chip, PlaceholderImg } from "@/components/ui";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
@@ -44,6 +46,17 @@ export default async function EmpresaPerfilPage({ params }: { params: Promise<{ 
   const limitesProfissional = session?.tipo === "profissional" ? await getLimitesProfissional(session.usuarioId) : null;
   const podeContatarComoProfissional = limitesProfissional?.podeContatarEmpresa ?? false;
   const isDono = session?.tipo === "empresa" && session.usuarioId === empresa.usuario_id;
+  // selo da rede de permutas B2B (so com permuta concluida; liga/desliga em /admin/permutas)
+  const seloPermuta = await getSeloPermutaPublico(empresa.usuario_id);
+  const seloPermutaBadge = seloPermuta && (
+    <span
+      title={`Outras empresas de eventos trocaram serviços com esta pela rede GetFesta: ${seloPermuta.concluidas} permuta(s) concluída(s) com ${seloPermuta.parceiros} fornecedor(es).`}
+      className="inline-flex items-center gap-1 rounded-full bg-text px-2.5 py-0.5 text-[11px] font-bold text-white"
+    >
+      {seloPermuta.nivel !== "novo" ? `${NIVEL_LABEL[seloPermuta.nivel]} · ` : ""}
+      {seloPermuta.concluidas} permuta{seloPermuta.concluidas > 1 ? "s" : ""} com fornecedores
+    </span>
+  );
 
   // Efeito colateral: registra a visualizacao (KPI real do painel do fornecedor).
   await registrarVisualizacaoPerfil(empresa.usuario_id);
@@ -129,6 +142,7 @@ export default async function EmpresaPerfilPage({ params }: { params: Promise<{ 
             <h1 className="text-lg font-extrabold">{empresa.nome_fantasia}</h1>
             {empresa.selo_verificado && <Badge tone="ok">✓ Selo verificado</Badge>}
             {empresa.aprovada_para_destaque && <Badge tone="ad">Destaque</Badge>}
+            {seloPermutaBadge}
           </div>
           <p className="mt-1.5 text-[12.5px] text-muted">
             {[empresa.categorias[0], empresa.cidades.length > 0 ? `📍 ${empresa.cidades.join(", ")}` : null]
@@ -194,6 +208,7 @@ export default async function EmpresaPerfilPage({ params }: { params: Promise<{ 
                   <h1 className="text-xl font-extrabold sm:text-2xl">{empresa.nome_fantasia}</h1>
                   {empresa.selo_verificado && <Badge tone="ok">✓ Selo verificado</Badge>}
                   {empresa.aprovada_para_destaque && <Badge tone="ad">Destaque</Badge>}
+                  {seloPermutaBadge}
                 </div>
                 <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-[12.5px] text-muted">
                   {empresa.nota_exibida ? (
