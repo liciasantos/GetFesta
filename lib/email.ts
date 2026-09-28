@@ -42,7 +42,7 @@ export async function sendEmail({ to, subject, html }: { to: string; subject: st
  * rodape) - HTML com tabelas e estilo inline, do jeito exigido pra renderizar
  * de forma consistente em clientes de email (Gmail, Outlook etc, que ignoram
  * <style> e boa parte do CSS moderno). */
-function emailShell({
+export function emailShell({
   preheader,
   heading,
   bodyHtml,

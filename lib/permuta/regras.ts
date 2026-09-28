@@ -60,6 +60,8 @@ export type PermutaConfig = {
   furosParaSuspender: number;
   diasSuspensao: number;
   exibirSeloPerfilPublico: boolean;
+  /** e-mails de proposta, assinatura, confirmação e lembretes */
+  emailsAtivos: boolean;
   secaoEmpresasVisivel: boolean;
   secaoEmpresasTitulo: string;
   secaoEmpresasTexto: string;
@@ -83,6 +85,7 @@ export const PERMUTA_CONFIG_PADRAO: PermutaConfig = {
   furosParaSuspender: 1,
   diasSuspensao: 180,
   exibirSeloPerfilPublico: true,
+  emailsAtivos: true,
   secaoEmpresasVisivel: true,
   secaoEmpresasTitulo: "Troque serviços com outras empresas de eventos",
   secaoEmpresasTexto:

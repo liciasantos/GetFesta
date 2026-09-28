@@ -20,6 +20,7 @@ import { timeAgo } from "@/lib/format";
 import PlanoSelector from "@/components/PlanoSelector";
 import PedidoLeadRow from "@/components/PedidoLeadRow";
 import CompartilharPerfilButton from "@/components/CompartilharPerfilButton";
+import PermutaResumoCard, { getResumoPermutaPainel } from "@/components/permuta/PermutaResumoCard";
 
 export const dynamic = "force-dynamic";
 const PEDIDOS_RECENTES_LIMITE = 10;
@@ -37,7 +38,7 @@ export default async function PainelPage() {
   const session = await getSession();
   if (!session || session.tipo !== "empresa") redirect("/entrar");
 
-  const [kpis, assinatura, vinculos, header, leads, planos, periodos, config, atividades] = await Promise.all([
+  const [kpis, assinatura, vinculos, header, leads, planos, periodos, config, atividades, resumoPermuta] = await Promise.all([
     getPainelKpis(session.usuarioId),
     getAssinaturaAtiva(session.usuarioId),
     listVinculos(session.usuarioId),
@@ -47,6 +48,7 @@ export default async function PainelPage() {
     listPeriodosEmpresa(),
     getConfiguracoesSite(),
     getAtividadesRecentes(session.usuarioId, 8),
+    getResumoPermutaPainel(session.usuarioId),
   ]);
   const nomeFantasia = header?.nomeFantasia ?? null;
   const slug = header?.slug ?? null;
@@ -163,6 +165,11 @@ export default async function PainelPage() {
           </>
         )}
 
+        {/* card da permuta no mobile/tablet - no desktop ele fica na coluna direita */}
+        <div className="mb-5 lg:hidden">
+          <PermutaResumoCard resumo={resumoPermuta} />
+        </div>
+
         <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
           <Kpi value={kpis.visualizacoes} variacaoPct={kpis.visualizacoesVariacaoPct} label="Visualizações do perfil" />
           <Kpi value={kpis.cliquesWhatsapp} variacaoPct={kpis.cliquesWhatsappVariacaoPct} label="Cliques no WhatsApp" />
@@ -236,6 +243,8 @@ export default async function PainelPage() {
             </div>
           </div>
         )}
+
+        <PermutaResumoCard resumo={resumoPermuta} />
 
         <div className="rounded-xl border border-accent bg-accent-soft p-4">
           <p className="text-[13px] font-bold text-accent-dark">📣 Destaque seu perfil</p>

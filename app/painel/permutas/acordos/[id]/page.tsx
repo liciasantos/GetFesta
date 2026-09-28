@@ -10,6 +10,10 @@ import {
   getPermutaConfig,
   hojeISO,
   listMensagensAcordo,
+  listFotosAcordo,
+  contarFotosGaleria,
+  MAX_FOTOS_POR_ENTREGA,
+  type FotoEntrega,
   visaoDoAcordo,
   type EntregaPermuta,
 } from "@/lib/data/permuta";
@@ -22,6 +26,7 @@ import {
   MensagemForm,
 } from "@/components/permuta/AcordoClient";
 import { Equilibrio } from "@/components/permuta/PropostaForm";
+import FotosEntrega from "@/components/permuta/FotosEntrega";
 import { EmpresaAvatar, NivelBadge, StatusAcordo, StatusEntrega, formatValor } from "@/components/permuta/ui";
 
 export const dynamic = "force-dynamic";
@@ -38,10 +43,12 @@ export default async function AcordoPage({ params }: { params: Promise<{ id: str
 
   const cfg = await getPermutaConfig();
   const assinado = !!(a.assinado_proponente_em && a.assinado_destinatario_em);
-  const [mensagens, perfilParceiro, contato] = await Promise.all([
+  const [mensagens, perfilParceiro, contato, fotos, fotosGaleria] = await Promise.all([
     listMensagensAcordo(id),
     getPerfilPermuta(a.parceiroId, cfg),
     assinado ? getContatoEmpresa(a.parceiroId) : Promise.resolve(null),
+    listFotosAcordo(id),
+    contarFotosGaleria(session.usuarioId),
   ]);
 
   const entregas = [...a.entregas].sort((x, y) => x.ordem - y.ordem);
@@ -118,6 +125,8 @@ export default async function AcordoPage({ params }: { params: Promise<{ id: str
             status={a.status}
             hoje={hoje}
             horas={cfg.horasConfirmacaoAutomatica}
+            fotos={fotos.filter((f) => f.entrega_id === e.id)}
+            vagasGaleria={Math.max(0, 12 - fotosGaleria)}
           />
         ))}
       </div>
@@ -227,6 +236,8 @@ function EntregaCard({
   status,
   hoje,
   horas,
+  fotos,
+  vagasGaleria,
 }: {
   e: EntregaPermuta;
   eu: boolean;
@@ -234,6 +245,8 @@ function EntregaCard({
   status: string;
   hoje: string;
   horas: number;
+  fotos: FotoEntrega[];
+  vagasGaleria: number;
 }) {
   const recebo = !eu;
   const podeConfirmar = recebo && status === "em_execucao" && e.status === "agendada" && e.data_evento <= hoje;
@@ -281,6 +294,16 @@ function EntregaCard({
         </p>
       )}
       {(podeConfirmar || podeAvaliar) && <ConfirmarEntregaForm entregaId={e.id} jaConfirmada={e.status === "confirmada"} />}
+      {e.status === "confirmada" && (
+        <FotosEntrega
+          entregaId={e.id}
+          modo={recebo ? "enviar" : "receber"}
+          fotos={fotos}
+          parceiroNome={parceiro}
+          limite={MAX_FOTOS_POR_ENTREGA}
+          vagasGaleria={vagasGaleria}
+        />
+      )}
     </section>
   );
 }

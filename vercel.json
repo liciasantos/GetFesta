@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/downgrade-inadimplentes",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/permutas",
+      "schedule": "0 12 * * *"
     }
   ]
 }

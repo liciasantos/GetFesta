@@ -156,6 +156,12 @@ export function PermutaConfigForm({ cfg }: { cfg: PermutaConfig }) {
       </Bloco>
 
       <Bloco titulo="Divulgação no site">
+        <Check
+          name="emailsAtivos"
+          label="Enviar e-mails da permuta"
+          defaultChecked={cfg.emailsAtivos}
+          hint="Proposta recebida, contraproposta, acordo assinado, entrega confirmada, disputa e lembretes diários (confirmar entrega / entrega chegando)."
+        />
         <Check name="exibirSeloPerfilPublico" label="Mostrar selo de nível e nº de permutas no perfil público" defaultChecked={cfg.exibirSeloPerfilPublico} />
         <Check name="secaoEmpresasVisivel" label='Mostrar a seção sobre permuta na página "Para empresas" (/empresas)' defaultChecked={cfg.secaoEmpresasVisivel} />
         <label className={labelCls}>

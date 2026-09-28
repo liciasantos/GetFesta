@@ -1,11 +1,13 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { query, queryOne, pool } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { detectContactLeak } from "@/lib/contact-filter";
+import { avisarEmpresa, nomeEmpresa, type AvisoPermuta } from "@/lib/permuta/notificacoes";
 import {
   diasAte,
   getAcordo,
@@ -13,6 +15,7 @@ import {
   getPermutaConfig,
   getUsoPlanoPermuta,
   hojeISO,
+  MAX_FOTOS_POR_ENTREGA,
   sincronizarPermutas,
 } from "@/lib/data/permuta";
 import {
@@ -42,6 +45,11 @@ function revalidarPermutas(acordoId?: string) {
   revalidatePath("/painel/permutas", "layout");
   revalidatePath("/admin/permutas", "layout");
   if (acordoId) revalidatePath(`/painel/permutas/acordos/${acordoId}`);
+}
+
+/** Dispara o e-mail depois da resposta, sem atrasar a ação. */
+function avisar(empresaId: string, montar: () => Promise<AvisoPermuta>) {
+  after(async () => avisarEmpresa(empresaId, await montar()));
 }
 
 async function mensagemSistema(acordoId: string, texto: string) {
@@ -310,6 +318,8 @@ export async function criarProposta(_prev: PermutaActionState, formData: FormDat
   } finally {
     client.release();
   }
+  const idAcordo = acordoId;
+  avisar(d.destinatarioId, async () => ({ tipo: "proposta_recebida", acordoId: idAcordo, de: await nomeEmpresa(session.usuarioId) }));
   revalidarPermutas();
   redirect(`/painel/permutas/acordos/${acordoId}`);
 }
@@ -372,6 +382,7 @@ export async function editarTermos(_prev: PermutaActionState, formData: FormData
     [d.compensacao ?? null, session.usuarioId, souProponente, acordoId]
   );
   await mensagemSistema(acordoId, `Contraproposta: termos alterados (versão ${a.versao + 1}). A outra empresa precisa revisar e assinar.`);
+  avisar(parceiroId, async () => ({ tipo: "contraproposta", acordoId, de: await nomeEmpresa(session.usuarioId), versao: a.versao + 1 }));
   revalidarPermutas(acordoId);
   return { ok: true };
 }
@@ -419,6 +430,11 @@ export async function assinarAcordo(acordoId: string): Promise<PermutaActionStat
       ? "Acordo assinado pelas duas empresas. Contatos liberados — bom evento!"
       : "Acordo assinado. Aguardando a outra empresa."
   );
+  if (atualizado?.ambos) {
+    const parceiroId = souProponente ? a.destinatario_id : a.proponente_id;
+    avisar(parceiroId, async () => ({ tipo: "acordo_assinado", acordoId, com: await nomeEmpresa(session.usuarioId) }));
+    avisar(session.usuarioId, async () => ({ tipo: "acordo_assinado", acordoId, com: await nomeEmpresa(parceiroId) }));
+  }
   revalidarPermutas(acordoId);
   return { ok: true };
 }
@@ -437,6 +453,9 @@ export async function recusarProposta(acordoId: string, motivo: string): Promise
   );
   await query(`UPDATE permuta_entregas SET status = 'cancelada' WHERE acordo_id = $1`, [acordoId]);
   await mensagemSistema(acordoId, status === "recusado" ? "Proposta recusada." : "Proposta retirada pelo proponente.");
+  if (status === "recusado") {
+    avisar(a.proponente_id, async () => ({ tipo: "proposta_recusada", acordoId, por: await nomeEmpresa(session.usuarioId) }));
+  }
   revalidarPermutas(acordoId);
   return { ok: true };
 }
@@ -474,6 +493,8 @@ export async function cancelarAcordo(acordoId: string, motivo: string): Promise<
       ? `Acordo cancelado a ${proxima} dia(s) da entrega — fora da janela de ${cfg.janelaCancelamentoDias} dias.`
       : "Acordo cancelado dentro da janela, sem penalidade."
   );
+  const parceiroCancel = a.proponente_id === session.usuarioId ? a.destinatario_id : a.proponente_id;
+  avisar(parceiroCancel, async () => ({ tipo: "acordo_cancelado", acordoId, por: await nomeEmpresa(session.usuarioId) }));
   revalidarPermutas(acordoId);
   return { ok: true };
 }
@@ -518,12 +539,20 @@ export async function confirmarEntrega(_prev: PermutaActionState, formData: Form
   } else if (e.status !== "confirmada") {
     return { error: "Esta entrega não pode ser avaliada." };
   }
-  await query(
+  const inserida = await query(
     `INSERT INTO permuta_avaliacoes (entrega_id, avaliador_id, avaliado_id, nota, pontual, comentario)
-     VALUES ($1,$2,$3,$4,$5,$6) ON CONFLICT (entrega_id, avaliador_id) DO NOTHING`,
+     VALUES ($1,$2,$3,$4,$5,$6) ON CONFLICT (entrega_id, avaliador_id) DO NOTHING RETURNING id`,
     [d.entregaId, session.usuarioId, e.prestador_id, d.nota, d.pontual === "sim", d.comentario ?? null]
   );
   await mensagemSistema(e.acordo_id, `Entrega confirmada e avaliada com nota ${d.nota}.`);
+  if (inserida.length) {
+    avisar(e.prestador_id, async () => ({
+      tipo: "entrega_confirmada",
+      acordoId: e.acordo_id,
+      por: await nomeEmpresa(session.usuarioId),
+      nota: d.nota,
+    }));
+  }
   await sincronizarPermutas(await getPermutaConfig());
   revalidarPermutas(e.acordo_id);
   return { ok: true };
@@ -551,6 +580,8 @@ export async function abrirDisputa(_prev: PermutaActionState, formData: FormData
     ]);
   }
   await mensagemSistema(acordoId, "Disputa aberta. O acordo fica congelado até a equipe GetFesta analisar.");
+  const parceiroDisputa = a.proponente_id === session.usuarioId ? a.destinatario_id : a.proponente_id;
+  avisar(parceiroDisputa, async () => ({ tipo: "disputa_aberta", acordoId, por: await nomeEmpresa(session.usuarioId) }));
   revalidarPermutas(acordoId);
   return { ok: true };
 }
@@ -622,6 +653,7 @@ export async function salvarConfigPermuta(_prev: PermutaActionState, formData: F
     furosParaSuspender: num(formData, "furosParaSuspender", p.furosParaSuspender, 1, 100),
     diasSuspensao: num(formData, "diasSuspensao", p.diasSuspensao, 1, 3650),
     exibirSeloPerfilPublico: bool("exibirSeloPerfilPublico"),
+    emailsAtivos: bool("emailsAtivos"),
     secaoEmpresasVisivel: bool("secaoEmpresasVisivel"),
     secaoEmpresasTitulo: String(formData.get("secaoEmpresasTitulo") ?? "").trim() || p.secaoEmpresasTitulo,
     secaoEmpresasTexto: String(formData.get("secaoEmpresasTexto") ?? "").trim() || p.secaoEmpresasTexto,
@@ -741,5 +773,105 @@ export async function alternarOfertaAdmin(ofertaId: string): Promise<PermutaActi
   if (!session) return { error: "Sessão inválida." };
   await query(`UPDATE permuta_ofertas SET ativa = NOT ativa WHERE id = $1`, [ofertaId]);
   revalidarPermutas();
+  return { ok: true };
+}
+
+// ---------------------------------------------------------------------
+// FOTOS DA ENTREGA -> PORTFOLIO
+// ---------------------------------------------------------------------
+
+const MAX_FOTO_DATA_URL = 800_000;
+const MAX_FOTOS_GALERIA_EMPRESA = 12; // mesmo limite de lib/actions/perfil.ts
+
+/** Quem recebeu o serviço envia uma foto do evento (uma por chamada - o
+ * cliente redimensiona e manda em sequência). Só depois da entrega confirmada. */
+export async function enviarFotoEntrega(entregaId: string, dataUrl: string, autorizada: boolean): Promise<PermutaActionState> {
+  const session = await requireEmpresa();
+  if (!session) return { error: "Sessão inválida." };
+  if (!dataUrl.startsWith("data:image/") || dataUrl.length > MAX_FOTO_DATA_URL) return { error: "Imagem inválida ou muito grande." };
+  const e = await queryOne<{ acordo_id: string; status: string }>(
+    `SELECT acordo_id, status FROM permuta_entregas WHERE id = $1 AND beneficiario_id = $2`,
+    [entregaId, session.usuarioId]
+  );
+  if (!e) return { error: "Entrega não encontrada." };
+  if (e.status !== "confirmada") return { error: "As fotos podem ser enviadas depois que a entrega for confirmada." };
+  const atual = await queryOne<{ total: number }>(`SELECT count(*)::int AS total FROM permuta_entrega_fotos WHERE entrega_id = $1`, [entregaId]);
+  if ((atual?.total ?? 0) >= MAX_FOTOS_POR_ENTREGA) return { error: `Limite de ${MAX_FOTOS_POR_ENTREGA} fotos por entrega.` };
+  await query(
+    `INSERT INTO permuta_entrega_fotos (entrega_id, enviada_por, url, autorizada_portfolio) VALUES ($1,$2,$3,$4)`,
+    [entregaId, session.usuarioId, dataUrl, autorizada]
+  );
+  revalidarPermutas(e.acordo_id);
+  return { ok: true };
+}
+
+/** Chamado uma vez no fim do envio em lote - um e-mail só para quem prestou. */
+export async function avisarFotosEnviadas(entregaId: string, quantidade: number): Promise<PermutaActionState> {
+  const session = await requireEmpresa();
+  if (!session) return { error: "Sessão inválida." };
+  const e = await queryOne<{ acordo_id: string; prestador_id: string }>(
+    `SELECT acordo_id, prestador_id FROM permuta_entregas WHERE id = $1 AND beneficiario_id = $2`,
+    [entregaId, session.usuarioId]
+  );
+  if (!e || quantidade <= 0) return { ok: true };
+  const autorizadas = await queryOne<{ total: number }>(
+    `SELECT count(*)::int AS total FROM permuta_entrega_fotos WHERE entrega_id = $1 AND autorizada_portfolio`,
+    [entregaId]
+  );
+  await mensagemSistema(e.acordo_id, `${quantidade} foto(s) do evento enviada(s).`);
+  if ((autorizadas?.total ?? 0) > 0) {
+    avisar(e.prestador_id, async () => ({
+      tipo: "fotos_recebidas",
+      acordoId: e.acordo_id,
+      de: await nomeEmpresa(session.usuarioId),
+      quantidade,
+    }));
+  }
+  revalidarPermutas(e.acordo_id);
+  return { ok: true };
+}
+
+export async function removerFotoEntrega(fotoId: string): Promise<PermutaActionState> {
+  const session = await requireEmpresa();
+  if (!session) return { error: "Sessão inválida." };
+  const f = await queryOne<{ acordo_id: string; galeria_foto_id: string | null }>(
+    `SELECT e.acordo_id, f.galeria_foto_id FROM permuta_entrega_fotos f JOIN permuta_entregas e ON e.id = f.entrega_id
+      WHERE f.id = $1 AND f.enviada_por = $2`,
+    [fotoId, session.usuarioId]
+  );
+  if (!f) return { error: "Foto não encontrada." };
+  if (f.galeria_foto_id) return { error: "Essa foto já está no portfólio da outra empresa e não pode mais ser removida daqui." };
+  await query(`DELETE FROM permuta_entrega_fotos WHERE id = $1`, [fotoId]);
+  revalidarPermutas(f.acordo_id);
+  return { ok: true };
+}
+
+/** Quem prestou o serviço escolhe uma foto autorizada para a própria galeria. */
+export async function adicionarFotoEntregaNaGaleria(fotoId: string): Promise<PermutaActionState> {
+  const session = await requireEmpresa();
+  if (!session) return { error: "Sessão inválida." };
+  const f = await queryOne<{ url: string; entrega_id: string; acordo_id: string; autorizada_portfolio: boolean; galeria_foto_id: string | null }>(
+    `SELECT f.url, f.entrega_id, e.acordo_id, f.autorizada_portfolio, f.galeria_foto_id
+       FROM permuta_entrega_fotos f JOIN permuta_entregas e ON e.id = f.entrega_id
+      WHERE f.id = $1 AND e.prestador_id = $2`,
+    [fotoId, session.usuarioId]
+  );
+  if (!f) return { error: "Foto não encontrada." };
+  if (!f.autorizada_portfolio) return { error: "A outra empresa não autorizou o uso dessa foto no portfólio." };
+  if (f.galeria_foto_id) return { ok: true };
+  const total = await queryOne<{ total: number; max: number | null }>(
+    `SELECT count(*)::int AS total, max(ordem) AS max FROM empresa_galeria WHERE empresa_id = $1`,
+    [session.usuarioId]
+  );
+  if ((total?.total ?? 0) >= MAX_FOTOS_GALERIA_EMPRESA)
+    return { error: `Sua galeria já tem ${MAX_FOTOS_GALERIA_EMPRESA} fotos. Remova alguma em Perfil da empresa para adicionar esta.` };
+  const nova = await queryOne<{ id: string }>(
+    `INSERT INTO empresa_galeria (empresa_id, url, ordem, origem_entrega_id) VALUES ($1,$2,$3,$4) RETURNING id`,
+    [session.usuarioId, f.url, (total?.max ?? -1) + 1, f.entrega_id]
+  );
+  await query(`UPDATE permuta_entrega_fotos SET galeria_foto_id = $1 WHERE id = $2`, [nova?.id ?? null, fotoId]);
+  revalidarPermutas(f.acordo_id);
+  revalidatePath("/painel/perfil");
+  revalidatePath(`/empresa/${session.usuarioId}`);
   return { ok: true };
 }

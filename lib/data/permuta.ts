@@ -725,3 +725,37 @@ async function seloPermutaPublico(empresaId: string) {
   );
   return { nivel: perfil.nivel, concluidas: perfil.stats.concluidas, parceiros: parceiros?.total ?? 0 };
 }
+
+// ---------------------------------------------------------------------
+// FOTOS DA ENTREGA (portfolio)
+// ---------------------------------------------------------------------
+
+export const MAX_FOTOS_POR_ENTREGA = 6;
+
+export type FotoEntrega = {
+  id: string;
+  entrega_id: string;
+  url: string;
+  autorizada_portfolio: boolean;
+  galeria_foto_id: string | null;
+};
+
+export async function listFotosAcordo(acordoId: string): Promise<FotoEntrega[]> {
+  try {
+    return await query<FotoEntrega>(
+      `SELECT f.id, f.entrega_id, f.url, f.autorizada_portfolio, f.galeria_foto_id
+         FROM permuta_entrega_fotos f JOIN permuta_entregas e ON e.id = f.entrega_id
+        WHERE e.acordo_id = $1 ORDER BY f.criado_em`,
+      [acordoId]
+    );
+  } catch (e) {
+    // banco ainda sem a migração 2026-09-29 - a página do acordo segue sem fotos
+    if ((e as { code?: string }).code === "42P01") return [];
+    throw e;
+  }
+}
+
+export async function contarFotosGaleria(empresaId: string): Promise<number> {
+  const r = await queryOne<{ total: number }>(`SELECT count(*)::int AS total FROM empresa_galeria WHERE empresa_id = $1`, [empresaId]);
+  return r?.total ?? 0;
+}
