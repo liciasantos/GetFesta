@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { query, queryOne } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { avaliarProfissionalSchema, criarVagaSchema } from "@/lib/validators";
-import { sendEmail, buildVagaSelecionadaEmail } from "@/lib/email";
+import { sendEmail, buildVagaSelecionadaEmail, buildCandidatoDesistiuEmail } from "@/lib/email";
 
 export type VagaActionState = { error?: string; success?: boolean } | undefined;
 
@@ -153,6 +153,77 @@ export async function candidatarVaga(vagaId: string): Promise<CandidatarVagaResu
   );
 
   revalidatePath("/perfil-profissional");
+  return { ok: true };
+}
+
+/** Profissional retira a própria candidatura.
+ * - Ainda "candidatado": a candidatura é apagada (dá pra se candidatar de
+ *   novo enquanto a vaga estiver aberta).
+ * - Já "selecionado": é uma desistência - libera o bloqueio de agenda, reabre
+ *   a vaga se ela tinha fechado por estar completa (devolvendo quem foi
+ *   recusado pra 'candidatado', mesma regra de desfazerSelecaoCandidato) e
+ *   avisa a empresa por e-mail.
+ * Depois da data do evento não dá mais pra retirar. */
+export async function retirarCandidatura(vagaId: string): Promise<CandidatarVagaResult> {
+  const session = await getSession();
+  if (!session || session.tipo !== "profissional") return { error: "Sessão inválida." };
+
+  const c = await queryOne<{
+    status: string;
+    vaga_status: string;
+    evento_passou: boolean;
+    empresa_id: string;
+    data_evento: string;
+    categoria_nome: string;
+  }>(
+    `SELECT vc.status, v.status AS vaga_status, v.empresa_id, v.data_evento, cp.nome AS categoria_nome,
+            (v.data_evento < (now() AT TIME ZONE 'America/Sao_Paulo')::date) AS evento_passou
+       FROM vaga_candidaturas vc
+       JOIN vagas_profissionais v ON v.id = vc.vaga_id
+       JOIN categorias_profissionais cp ON cp.id = v.categoria_profissional_id
+      WHERE vc.vaga_id = $1 AND vc.profissional_id = $2`,
+    [vagaId, session.usuarioId]
+  );
+  if (!c) return { error: "Candidatura não encontrada." };
+  if (c.status === "recusado") return { error: "Essa candidatura já foi encerrada pela empresa." };
+  if (c.evento_passou) return { error: "O evento já aconteceu - não dá mais pra retirar a candidatura." };
+
+  await query(`DELETE FROM vaga_candidaturas WHERE vaga_id = $1 AND profissional_id = $2`, [vagaId, session.usuarioId]);
+
+  if (c.status === "selecionado") {
+    await query(`DELETE FROM profissional_dias_indisponiveis WHERE vaga_id = $1 AND profissional_id = $2`, [
+      vagaId,
+      session.usuarioId,
+    ]);
+    if (c.vaga_status === "preenchida") {
+      await query(`UPDATE vagas_profissionais SET status = 'aberta' WHERE id = $1`, [vagaId]);
+      await query(`UPDATE vaga_candidaturas SET status = 'candidatado' WHERE vaga_id = $1 AND status = 'recusado'`, [
+        vagaId,
+      ]);
+    }
+    const dados = await queryOne<{ email: string | null; nome_fantasia: string; profissional_nome: string }>(
+      `SELECT u.email, e.nome_fantasia, p.nome AS profissional_nome
+         FROM empresas e JOIN usuarios u ON u.id = e.usuario_id
+         JOIN profissionais p ON p.usuario_id = $2
+        WHERE e.usuario_id = $1`,
+      [c.empresa_id, session.usuarioId]
+    );
+    if (dados?.email) {
+      const { subject, html } = buildCandidatoDesistiuEmail(
+        dados.nome_fantasia,
+        dados.profissional_nome,
+        c.categoria_nome,
+        c.data_evento,
+        vagaId
+      );
+      await sendEmail({ to: dados.email, subject, html });
+    }
+  }
+
+  revalidatePath("/perfil-profissional");
+  revalidatePath(`/vaga/${vagaId}`);
+  revalidatePath("/painel/vagas");
+  revalidatePath(`/painel/vagas/${vagaId}`);
   return { ok: true };
 }
 

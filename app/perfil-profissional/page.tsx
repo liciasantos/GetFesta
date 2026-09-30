@@ -9,6 +9,7 @@ import AvatarUpload from "@/components/AvatarUpload";
 import GaleriaManager from "@/components/GaleriaManager";
 import DisponibilidadeCalendar from "@/components/DisponibilidadeCalendar";
 import CandidatarVagaButton from "@/components/CandidatarVagaButton";
+import RetirarCandidaturaButton from "@/components/RetirarCandidaturaButton";
 import CompartilharVagaButton from "@/components/CompartilharVagaButton";
 import AlterarSenhaForm from "@/components/AlterarSenhaForm";
 import ExcluirContaForm from "@/components/ExcluirContaForm";
@@ -222,6 +223,11 @@ export default async function PerfilProfissionalPage({
               ) : (
                 <CandidatarVagaButton vagaId={vaga.id} />
               )}
+              {(vaga.candidatura_status === "candidatado" || vaga.candidatura_status === "selecionado") &&
+                vaga.status !== "cancelada" &&
+                !eventoJaPassou(vaga.data_evento) && (
+                  <RetirarCandidaturaButton vagaId={vaga.id} selecionado={vaga.candidatura_status === "selecionado"} />
+                )}
               <CompartilharVagaButton
                 vagaId={vaga.id}
                 mensagem={`Vaga de ${vaga.categoria_nome} em ${vaga.cidade_nome} pra ${formatDateBR(vaga.data_evento)} - confira na GetFesta:`}
@@ -326,4 +332,12 @@ function PainelKpi({ value, label }: { value: string | number; label: string }) 
       <div className="mt-0.5 text-[10.5px] font-semibold text-muted">{label}</div>
     </div>
   );
+}
+
+/** data_evento vem do banco como Date (meia-noite UTC) ou string YYYY-MM-DD -
+ * compara só o dia, no fuso de Brasília. */
+function eventoJaPassou(dataEvento: string | Date): boolean {
+  const dia = (typeof dataEvento === "string" ? dataEvento : dataEvento.toISOString()).slice(0, 10);
+  const hoje = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
+  return dia < hoje;
 }

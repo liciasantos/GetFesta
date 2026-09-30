@@ -151,3 +151,30 @@ export function buildConfirmacaoCadastroEmail(nome: string, linkConfirmacao: str
     }),
   };
 }
+
+export function buildCandidatoDesistiuEmail(
+  empresaNome: string,
+  profissionalNome: string,
+  categoriaNome: string,
+  dataEvento: string,
+  vagaId: string
+): { subject: string; html: string } {
+  const dataFormatada = new Date(dataEvento).toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+  return {
+    subject: `${profissionalNome} desistiu da vaga de ${categoriaNome}`,
+    html: emailShell({
+      preheader: `A vaga de ${categoriaNome} de ${dataFormatada} voltou a aceitar candidatos.`,
+      heading: `Olá, ${empresaNome}`,
+      bodyHtml: `<p style="margin:0 0 12px;"><b>${profissionalNome}</b>, que tinha sido selecionado(a) para a vaga de <b>${categoriaNome}</b> do dia <b>${dataFormatada}</b>, informou que não vai mais poder participar.</p>
+                 <p style="margin:0 0 20px;">A vaga voltou a ficar aberta e os outros candidatos continuam disponíveis para você escolher.</p>`,
+      ctaLabel: "Ver candidatos",
+      ctaUrl: `${getAppUrl()}/painel/vagas/${vagaId}`,
+      footerNote: "Você pode selecionar outro candidato a qualquer momento pelo painel.",
+    }),
+  };
+}

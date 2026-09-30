@@ -6,6 +6,7 @@ import { getVagaPublica, getCandidaturaStatus } from "@/lib/data/vagas";
 import { formatCurrencyBRL, formatDateBR } from "@/lib/format";
 import { Badge, buttonClass } from "@/components/ui";
 import CandidatarVagaButton from "@/components/CandidatarVagaButton";
+import RetirarCandidaturaButton from "@/components/RetirarCandidaturaButton";
 import CompartilharVagaButton from "@/components/CompartilharVagaButton";
 import { paginaMetadata } from "@/lib/seo";
 
@@ -99,6 +100,11 @@ export default async function VagaPublicaPage({ params }: { params: Promise<{ id
               {!candidaturaStatus && <CandidatarVagaButton vagaId={vaga.id} />}
             </>
           )}
+          {session?.tipo === "profissional" &&
+            (candidaturaStatus === "candidatado" || candidaturaStatus === "selecionado") &&
+            vaga.status !== "cancelada" && (
+              <RetirarCandidaturaButton vagaId={vaga.id} selecionado={candidaturaStatus === "selecionado"} />
+            )}
 
           {vaga.status !== "aberta" && !candidaturaStatus && <Badge tone="muted">Vaga encerrada</Badge>}
 
