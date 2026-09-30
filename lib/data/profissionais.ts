@@ -67,7 +67,10 @@ export async function getMeuPerfilProfissional(idOuSlug: string): Promise<Perfil
     cpf: string | null;
     instagram: string | null;
   }>(
-    `SELECT p.usuario_id, p.slug, p.nome, p.foto_perfil_url, p.bairro_id, b.nome AS bairro_nome,
+    `SELECT p.usuario_id, p.slug, p.nome,
+            CASE WHEN p.foto_perfil_url LIKE 'data:%' THEN '/api/profissional/' || p.usuario_id || '/foto?v=' || length(p.foto_perfil_url)
+                 ELSE p.foto_perfil_url END AS foto_perfil_url,
+            p.bairro_id, b.nome AS bairro_nome,
             ci.id AS cidade_id, ci.nome AS cidade_nome, p.disponibilidade_status,
             p.sexo, p.medidas_habilitadas, p.altura_cm, p.peso_kg, p.cintura_cm, p.manequim, p.calcado, p.tem_tatuagem,
             p.tempo_experiencia_meses,
@@ -93,7 +96,8 @@ export async function getMeuPerfilProfissional(idOuSlug: string): Promise<Perfil
       [usuarioId]
     ),
     query<{ id: string; url: string }>(
-      `SELECT id, url FROM profissional_galeria WHERE profissional_id = $1 AND tipo = 'foto' ORDER BY ordem ASC`,
+      `SELECT id, CASE WHEN url LIKE 'data:%' THEN '/api/imagem/galeria-profissional/' || id ELSE url END AS url
+         FROM profissional_galeria WHERE profissional_id = $1 AND tipo = 'foto' ORDER BY ordem ASC`,
       [usuarioId]
     ),
     query<{ id: string; url: string }>(

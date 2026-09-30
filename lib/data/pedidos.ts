@@ -50,6 +50,9 @@ export async function listPedidosFeed(filtros: PedidosFeedFiltros = {}): Promise
   if (filtros.dataAPartirDe) {
     params.push(filtros.dataAPartirDe);
     conditions.push(`p.data_evento >= $${params.length}`);
+  } else {
+    // pedido "aberto" com festa que já passou não deve aparecer no feed público
+    conditions.push(`p.data_evento >= (now() AT TIME ZONE 'America/Sao_Paulo')::date`);
   }
 
   params.push(filtros.limit ?? 10);

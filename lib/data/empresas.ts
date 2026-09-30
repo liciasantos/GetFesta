@@ -46,7 +46,8 @@ const EMPRESA_CARD_SELECT = `
     e.usuario_id,
     e.slug,
     e.nome_fantasia,
-    CASE WHEN e.logo_url LIKE 'data:%' THEN '/api/empresa/' || e.usuario_id || '/logo' ELSE e.logo_url END AS logo_url,
+    -- ?v= muda quando a empresa troca o logo, senão o cache do navegador mostraria o antigo
+    CASE WHEN e.logo_url LIKE 'data:%' THEN '/api/empresa/' || e.usuario_id || '/logo?v=' || length(e.logo_url) ELSE e.logo_url END AS logo_url,
     e.razao_social,
     e.descricao,
     e.instagram,
@@ -172,7 +173,11 @@ export async function getEmpresaById(idOuSlug: string): Promise<EmpresaPerfil | 
   const [estruturaRows, galeria, pacotes, avaliacoes] = await Promise.all([
     query<{ item: string }>(`SELECT item FROM empresa_estrutura WHERE empresa_id = $1`, [id]),
     query<{ id: string; url: string; ordem: number }>(
-      `SELECT id, url, ordem FROM empresa_galeria WHERE empresa_id = $1 ORDER BY ordem ASC`,
+      // data URI vira endereço próprio (ver app/api/imagem/galeria-empresa) - não
+      // traz o base64 do banco nem embute no HTML do perfil
+      `SELECT id, ordem,
+              CASE WHEN url LIKE 'data:%' THEN '/api/imagem/galeria-empresa/' || id ELSE url END AS url
+         FROM empresa_galeria WHERE empresa_id = $1 ORDER BY ordem ASC`,
       [id]
     ),
     query<{ id: string; nome: string; descricao: string | null; preco: string | null }>(

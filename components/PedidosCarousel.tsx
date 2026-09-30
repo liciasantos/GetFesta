@@ -38,7 +38,7 @@ export default function PedidosCarousel({ pedidos }: { pedidos: PedidoFeedItem[]
             <h3 className="mt-3 text-[17px] font-bold leading-tight">{p.tipo_evento}</h3>
             <p className="mt-1 text-[11.5px] font-semibold text-muted">
               {p.bairro_nome ?? p.cidade_nome} ·{" "}
-              {new Date(p.data_evento).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", timeZone: "UTC" })}
+              {dataEventoCurta(p.data_evento)}
             </p>
             <p className="mt-2 line-clamp-3 text-[12px] leading-relaxed text-muted">{maskContactLeak(p.descricao)}</p>
             <div className="mt-3 flex flex-wrap items-center justify-between gap-1.5 border-t border-border pt-2.5">
@@ -72,4 +72,12 @@ export default function PedidosCarousel({ pedidos }: { pedidos: PedidoFeedItem[]
       </div>
     </div>
   );
+}
+
+/** "20 de mar." no ano corrente; "20 de mar. de 2027" se for em outro ano -
+ * sem o ano, uma festa do ano que vem parecia um pedido antigo. */
+function dataEventoCurta(data: string | Date) {
+  const d = new Date(data);
+  const outroAno = d.getUTCFullYear() !== new Date().getFullYear();
+  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", ...(outroAno ? { year: "numeric" } : {}), timeZone: "UTC" });
 }

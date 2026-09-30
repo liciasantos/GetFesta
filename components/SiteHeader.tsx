@@ -94,8 +94,10 @@ export default async function SiteHeader() {
       <div className="relative mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
         <Logo />
 
-        <nav className="hidden items-center gap-7 text-[13.5px] font-semibold text-muted md:flex">
-          <Link href="/" className="hover:text-text">
+        {/* entre 768 e 1024px os 5 itens não cabiam e o "Início" encostava no logo:
+            ali o espaçamento diminui e o "Início" some (o logo já leva pra home) */}
+        <nav className="ml-6 hidden items-center gap-4 whitespace-nowrap text-[13px] font-semibold text-muted md:flex lg:gap-7 lg:text-[13.5px]">
+          <Link href="/" className="hidden hover:text-text lg:inline">
             Início
           </Link>
           <Link href="/busca" className="hover:text-text">
@@ -103,12 +105,12 @@ export default async function SiteHeader() {
           </Link>
           <Link href="/produtos" className="inline-flex items-center gap-1.5 hover:text-text">
             Produtos para sua festa
-            <span className="rounded-full bg-gold-soft px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-[#8a6300]">
+            <span className="hidden rounded-full bg-gold-soft px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-[#8a6300] lg:inline">
               Novo
             </span>
           </Link>
           <AtendeMenu />
-          <div className="border-l border-border pl-6">
+          <div className="border-l border-border pl-4 lg:pl-6">
             <Link href="/publicar-pedido" className={buttonClass("primary", "sm")}>
               Publicar pedido
             </Link>

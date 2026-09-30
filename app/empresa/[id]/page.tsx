@@ -383,8 +383,8 @@ export default async function EmpresaPerfilPage({ params }: { params: Promise<{ 
               </div>
             ) : (
               <div className="rounded-lg border border-dashed border-border-strong bg-[#efece5] p-3.5 text-center text-[12px] text-muted">
-                🔒 Instagram e telefone ficam disponíveis depois que uma empresa que você contatou manifesta interesse no seu
-                pedido.
+                🔒 Para ver o Instagram e o telefone, publique seu pedido — é grátis. Quando {empresa.nome_fantasia} tiver
+                interesse, o contato é liberado para você.
                 <div className="mt-3 sm:mt-2">
                   <Link href="/publicar-pedido" className={`${buttonClass("primary")} w-full sm:hidden`}>
                     Publicar um pedido agora
@@ -402,6 +402,26 @@ export default async function EmpresaPerfilPage({ params }: { params: Promise<{ 
           </section>
         </div>
       </div>
+
+      {/* CTA fixo no celular. A barra de ícones do rodapé (MobileAccountNav) só
+          existe pra empresa e profissional logados - pra eles não mostra, senão
+          ficariam duas barras fixas uma em cima da outra. Visitante e cliente
+          (que não têm barra) veem: WhatsApp se o contato já foi liberado,
+          senão "Pedir orçamento". */}
+      {(!session || session.tipo === "cliente") && (
+        <>
+          <div className="h-20 sm:hidden" aria-hidden="true" />
+          <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface/95 px-4 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-3 shadow-[0_-4px_16px_rgba(31,41,51,0.08)] backdrop-blur-sm sm:hidden [&>a]:w-full">
+            {contatoLiberado && empresa.telefone_contato ? (
+              <WhatsAppButton empresaId={empresa.usuario_id} href={buildWhatsAppLink(empresa.telefone_contato)} />
+            ) : (
+              <Link href="/publicar-pedido" className={`${buttonClass("primary", "lg")} w-full`}>
+                Pedir orçamento — é grátis
+              </Link>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }

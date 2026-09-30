@@ -115,7 +115,7 @@ export default async function HomePage() {
               </h1>
             </div>
             <div className="lg:flex-1">
-              <MiniPedidoForm cidades={cidades} />
+              <MiniPedidoForm cidades={cidades} estadoPreferido={regiaoEscolhida} />
             </div>
           </div>
         </div>

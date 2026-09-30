@@ -134,7 +134,10 @@ export type CandidatoVaga = {
  * schema: profissional é visível pra empresa autenticada, nunca pra terceiros. */
 export async function listCandidatosDaVaga(vagaId: string, empresaId: string): Promise<CandidatoVaga[]> {
   return query<CandidatoVaga>(
-    `SELECT p.usuario_id AS profissional_id, p.slug AS profissional_slug, p.nome, p.foto_perfil_url, u.telefone,
+    `SELECT p.usuario_id AS profissional_id, p.slug AS profissional_slug, p.nome,
+            CASE WHEN p.foto_perfil_url LIKE 'data:%' THEN '/api/profissional/' || p.usuario_id || '/foto?v=' || length(p.foto_perfil_url)
+                 ELSE p.foto_perfil_url END AS foto_perfil_url,
+            u.telefone,
             vc.criado_em AS candidatado_em, vc.status
      FROM vaga_candidaturas vc
      JOIN vagas_profissionais v ON v.id = vc.vaga_id AND v.empresa_id = $2
