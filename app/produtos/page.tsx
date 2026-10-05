@@ -48,7 +48,7 @@ export default async function ProdutosPage({ searchParams }: { searchParams: Pro
               placeholder="Busque por personagem, tema ou produto..."
               className="w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-sm"
             />
-            <button className="shrink-0 rounded-lg bg-accent px-4 py-2.5 text-sm font-bold text-white hover:bg-accent-dark">
+            <button className="shrink-0 rounded-lg bg-accent-strong px-4 py-2.5 text-sm font-bold text-white hover:bg-accent-dark">
               Buscar
             </button>
           </form>

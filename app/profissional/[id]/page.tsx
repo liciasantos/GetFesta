@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Icon } from "@/components/Icon";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
@@ -126,9 +127,9 @@ export default async function PerfilProfissionalParaEmpresaPage({ params }: { pa
               href={buildWhatsAppLink(telefone, `Olá ${perfil.nome}! Vi seu perfil na GetFesta.`)}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-5 inline-flex items-center justify-center rounded-lg bg-accent px-5 py-2.5 text-[13px] font-bold text-white hover:bg-accent-dark"
+              className="mt-5 inline-flex items-center justify-center rounded-lg bg-accent-strong px-5 py-2.5 text-[13px] font-bold text-white hover:bg-accent-dark"
             >
-              💬 WhatsApp
+              <Icon name="chat" className="h-4 w-4" /> WhatsApp
             </a>
           )}
         </div>
@@ -161,9 +162,9 @@ export default async function PerfilProfissionalParaEmpresaPage({ params }: { pa
             href={buildWhatsAppLink(telefone, `Olá ${perfil.nome}! Vi seu perfil na GetFesta.`)}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-lg bg-accent px-4 py-2 text-[13px] font-bold text-white hover:bg-accent-dark"
+            className="rounded-lg bg-accent-strong px-4 py-2 text-[13px] font-bold text-white hover:bg-accent-dark"
           >
-            💬 WhatsApp
+            <Icon name="chat" className="h-4 w-4" /> WhatsApp
           </a>
         )}
       </div>
@@ -174,11 +175,11 @@ export default async function PerfilProfissionalParaEmpresaPage({ params }: { pa
         </Badge>
         {perfil.sexo && <Badge tone="muted">{SEXO_LABEL[perfil.sexo] ?? perfil.sexo}</Badge>}
         {perfil.tempo_experiencia_meses !== null && (
-          <Badge tone="muted">🕓 {formatTempoExperiencia(perfil.tempo_experiencia_meses)} de experiência</Badge>
+          <Badge tone="muted"><Icon name="clock" className="h-3 w-3" /> {formatTempoExperiencia(perfil.tempo_experiencia_meses)} de experiência</Badge>
         )}
         {perfil.nota_media !== null && (
           <Badge tone="ad">
-            ⭐ {Number(perfil.nota_media).toFixed(1)} ({perfil.total_avaliacoes})
+            <Icon name="star" filled className="h-3.5 w-3.5 text-gold" /> {Number(perfil.nota_media).toFixed(1)} ({perfil.total_avaliacoes})
           </Badge>
         )}
         {perfil.instagram && (
@@ -188,7 +189,7 @@ export default async function PerfilProfissionalParaEmpresaPage({ params }: { pa
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1 rounded-full bg-surface-alt px-2.5 py-0.5 text-[11px] font-bold text-text hover:bg-border"
           >
-            📷 {perfil.instagram.startsWith("@") ? perfil.instagram : `@${perfil.instagram}`}
+            <Icon name="instagram" className="h-3.5 w-3.5" /> {perfil.instagram.startsWith("@") ? perfil.instagram : `@${perfil.instagram}`}
           </a>
         )}
       </div>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Icon } from "@/components/Icon";
 import { getSession } from "@/lib/auth";
 import { listPlanosEmpresa } from "@/lib/data/painel";
 import {
@@ -53,7 +54,7 @@ export default async function EmpresasPage() {
       {/* OFERTA DE LANCAMENTO */}
       <section className="border-b border-border bg-[#fff3d6] px-6 py-8">
         <div className="mx-auto flex max-w-4xl flex-col items-center gap-2 text-center">
-          <Badge tone="ad">🏷️ Oferta de lançamento</Badge>
+          <Badge tone="ad"><Icon name="tag" className="h-3 w-3" /> Oferta de lançamento</Badge>
           <p className="max-w-2xl text-[14.5px] font-semibold leading-relaxed text-[#5c4a10]">
             As 20 primeiras empresas que se cadastrarem ganham 2 meses grátis no plano Light (até 30 orçamentos/mês).
             Em troca, você só precisa topar oferecer um desconto exclusivo pros clientes GetFesta. Vagas limitadas!
@@ -210,7 +211,7 @@ export default async function EmpresasPage() {
                     href={href}
                     className={`mt-6 block w-full rounded-lg py-2.5 text-center text-[13px] font-bold ${
                       p.destaque
-                        ? "bg-accent text-white hover:bg-accent-dark"
+                        ? "bg-accent-strong text-white hover:bg-accent-dark"
                         : "border border-border-strong text-text hover:bg-surface-alt"
                     }`}
                   >

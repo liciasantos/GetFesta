@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import { Icon } from "@/components/Icon";
 import { useRouter } from "next/navigation";
 import type { UploadResult } from "@/lib/actions/perfil";
 import { buttonClass } from "@/components/ui";
@@ -47,7 +48,7 @@ export default function VideoLinkManager({
   if (limite === 0) {
     return (
       <p className="text-[11.5px] font-semibold text-accent-dark">
-        🔒 Links de vídeo são exclusivos do plano Premium. Fale com a gente pra contratar.
+        <Icon name="lock" className="mr-1 h-3.5 w-3.5" />Links de vídeo são exclusivos do plano Premium. Fale com a gente pra contratar.
       </p>
     );
   }

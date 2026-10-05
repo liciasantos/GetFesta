@@ -1,6 +1,7 @@
 "use client";
 
 import { registrarCliqueWhatsapp } from "@/lib/actions/pedidos";
+import { Icon } from "@/components/Icon";
 import { buttonClass } from "@/components/ui";
 
 export default function WhatsAppButton({
@@ -23,7 +24,7 @@ export default function WhatsAppButton({
       }}
       className={buttonClass("whatsapp")}
     >
-      💬 {label}
+      <Icon name="chat" className="h-4 w-4" /> {label}
     </a>
   );
 }

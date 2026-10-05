@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Icon } from "@/components/Icon";
 import Link from "next/link";
 import { listCategorias, listCidades } from "@/lib/data/geo";
 import { paginaMetadata } from "@/lib/seo";
@@ -87,7 +88,7 @@ export default async function BuscaPage({
                 </option>
               ))}
             </select>
-            <button className="rounded-lg bg-accent px-4 py-2 text-sm font-bold text-white hover:bg-accent-dark">Filtrar</button>
+            <button className="rounded-lg bg-accent-strong px-4 py-2 text-sm font-bold text-white hover:bg-accent-dark">Filtrar</button>
           </form>
         </div>
       </div>
@@ -114,7 +115,7 @@ export default async function BuscaPage({
                     {e.categorias.join(", ") || "Fornecedor"} · {e.cidades.join(", ")}
                   </div>
                   <div className="mt-1 text-[11px] text-muted">
-                    {e.nota_exibida ? `⭐ ${Number(e.nota_exibida).toFixed(1)} (${e.total_avaliacoes_exibido})` : "Empresa nova na GetFesta"}
+                    {e.nota_exibida ? <span className="inline-flex items-center gap-1"><Icon name="star" filled className="h-3.5 w-3.5 text-gold" /> {Number(e.nota_exibida).toFixed(1)} ({e.total_avaliacoes_exibido})</span> : "Empresa nova na GetFesta"}
                     {e.preco_a_partir_de ? ` · a partir de R$ ${Number(e.preco_a_partir_de).toLocaleString("pt-BR")}` : ""}
                   </div>
                   <div className="mt-1.5 flex flex-wrap gap-1">

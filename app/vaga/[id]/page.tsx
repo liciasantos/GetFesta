@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { nomeDaVaga } from "@/lib/vaga";
+import { Icon } from "@/components/Icon";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getSession } from "@/lib/auth";
@@ -29,7 +31,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const vaga = await getVagaPublica(id);
   if (!vaga) return {};
 
-  const titulo = `Vaga de ${vaga.categoria_nome} em ${vaga.cidade_nome} — ${vaga.empresa_nome_fantasia} | GetFesta`;
+  const titulo = `Vaga de ${nomeDaVaga(vaga)} em ${vaga.cidade_nome} — ${vaga.empresa_nome_fantasia} | GetFesta`;
   const descricao = `${vaga.empresa_nome_fantasia} procura ${vaga.categoria_nome} pra ${formatDateBR(vaga.data_evento)}, em ${vaga.cidade_nome}. Candidate-se pela GetFesta.`;
   return paginaMetadata({ title: titulo, description: descricao });
 }
@@ -53,7 +55,8 @@ export default async function VagaPublicaPage({ params }: { params: Promise<{ id
     <div className="mx-auto max-w-xl px-6 py-10">
       <div className="rounded-xl border border-border bg-surface p-5">
         <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-lg font-extrabold">{vaga.categoria_nome}</h1>
+          <h1 className="text-lg font-extrabold">{nomeDaVaga(vaga)}</h1>
+          {vaga.titulo && <span className="rounded-full bg-surface-alt px-2 py-0.5 text-[11px] font-semibold text-muted">{vaga.categoria_nome}</span>}
           <Badge tone={vaga.status === "aberta" ? "ok" : vaga.status === "preenchida" ? "ok" : "muted"}>
             {STATUS_LABEL[vaga.status] ?? vaga.status}
           </Badge>
@@ -83,7 +86,7 @@ export default async function VagaPublicaPage({ params }: { params: Promise<{ id
           <CompartilharVagaButton
             vagaId={vaga.id}
             variant="secondary"
-            mensagem={`Vaga de ${vaga.categoria_nome} em ${vaga.cidade_nome} pra ${formatDateBR(vaga.data_evento)} - confira na GetFesta:`}
+            mensagem={`Vaga de ${nomeDaVaga(vaga)} em ${vaga.cidade_nome} pra ${formatDateBR(vaga.data_evento)} - confira na GetFesta:`}
           />
 
           {souDono && (
@@ -94,7 +97,7 @@ export default async function VagaPublicaPage({ params }: { params: Promise<{ id
 
           {session?.tipo === "profissional" && vaga.status === "aberta" && (
             <>
-              {candidaturaStatus === "selecionado" && <Badge tone="ok">🎉 Você foi selecionado!</Badge>}
+              {candidaturaStatus === "selecionado" && <Badge tone="ok"><Icon name="party" className="h-3 w-3" /> Você foi selecionado!</Badge>}
               {candidaturaStatus === "recusado" && <Badge tone="muted">Não foi dessa vez</Badge>}
               {candidaturaStatus === "candidatado" && <Badge tone="ok">Candidatura enviada</Badge>}
               {!candidaturaStatus && <CandidatarVagaButton vagaId={vaga.id} />}

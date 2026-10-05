@@ -5,7 +5,8 @@ import { listMinhasVagas, type MinhaVaga } from "@/lib/data/vagas";
 import { listProfissionaisCompativeis, listCategoriasProfissionais } from "@/lib/data/profissionais";
 import { listCidades } from "@/lib/data/geo";
 import { Badge, buttonClass } from "@/components/ui";
-import { formatCurrencyBRL, formatDateBR } from "@/lib/format";
+import { formatCurrencyBRL } from "@/lib/format";
+import { nomeDaVaga } from "@/lib/vaga";
 import ProfissionaisPainel from "@/components/ProfissionaisPainel";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +16,8 @@ const STATUS_LABEL: Record<string, string> = {
   preenchida: "Preenchida",
   cancelada: "Não preenchida",
 };
+
+const ENCERRADAS_VISIVEIS = 6;
 
 export default async function MinhasVagasPage() {
   const session = await getSession();
@@ -27,8 +30,21 @@ export default async function MinhasVagasPage() {
     listCidades(),
     listCategoriasProfissionais(),
   ]);
-  const emAberto = vagas.filter((v) => !v.realizada && v.status === "aberta");
-  const realizadas = vagas.filter((v) => v.realizada || v.status !== "aberta");
+
+  // Grupos pensados em "o que eu preciso fazer?":
+  //  1. evento já passou e a vaga segue aberta -> a empresa precisa dizer se fechou;
+  //  2. em aberto (recebendo candidatos), do evento mais próximo pro mais distante;
+  //  3. equipe fechada, evento ainda vai acontecer;
+  //  4. encerradas (histórico), da mais recente pra mais antiga.
+  // Antes eram só "Em aberto" e "Encerradas", e vagas com o selo "Aberta"
+  // apareciam dentro de "Encerradas".
+  const porData = (a: MinhaVaga, b: MinhaVaga) => new Date(a.data_evento).getTime() - new Date(b.data_evento).getTime();
+  const precisamDeVoce = vagas.filter((v) => v.realizada && v.status === "aberta").sort(porData);
+  const emAberto = vagas.filter((v) => !v.realizada && v.status === "aberta").sort(porData);
+  const equipeFechada = vagas.filter((v) => !v.realizada && v.status === "preenchida").sort(porData);
+  const encerradas = vagas
+    .filter((v) => (v.realizada && v.status !== "aberta") || (!v.realizada && v.status === "cancelada"))
+    .sort((a, b) => porData(b, a));
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-8">
@@ -59,13 +75,46 @@ export default async function MinhasVagasPage() {
         <p className="text-sm text-muted">Freelas pontuais (ator, animador, garçom...) para um evento específico.</p>
       </div>
 
-      <h2 className="mb-2 mt-6 text-xs font-bold uppercase tracking-wide text-muted-2">Em aberto</h2>
-      <div className="flex flex-col gap-3">
+      <nav aria-label="Resumo das vagas" className="mt-6 flex flex-wrap gap-2 text-[12.5px] font-bold">
+        {precisamDeVoce.length > 0 && (
+          <a href="#precisam" className="rounded-full border border-note-border bg-note-bg px-3 py-1.5 text-note-text">
+            {precisamDeVoce.length} {precisamDeVoce.length === 1 ? "precisa" : "precisam"} de você
+          </a>
+        )}
+        <a href="#abertas" className="rounded-full border border-border bg-surface px-3 py-1.5">
+          {emAberto.length} em aberto
+        </a>
+        {equipeFechada.length > 0 && (
+          <a href="#fechadas" className="rounded-full border border-border bg-surface px-3 py-1.5">
+            {equipeFechada.length} com equipe fechada
+          </a>
+        )}
+        {encerradas.length > 0 && (
+          <a href="#encerradas" className="rounded-full border border-border bg-surface px-3 py-1.5 text-muted">
+            {encerradas.length} {encerradas.length === 1 ? "encerrada" : "encerradas"}
+          </a>
+        )}
+      </nav>
+
+      {precisamDeVoce.length > 0 && (
+        <Grupo
+          id="precisam"
+          titulo="Precisam de você"
+          descricao="O evento já passou e a vaga continua aberta. Conte se fechou com alguém para encerrar e avaliar o profissional."
+          destaque
+        >
+          {precisamDeVoce.map((v) => (
+            <VagaRow key={v.id} vaga={v} />
+          ))}
+        </Grupo>
+      )}
+
+      <Grupo id="abertas" titulo="Em aberto" descricao="Recebendo candidatos — do evento mais próximo para o mais distante.">
         {emAberto.map((v) => (
           <VagaRow key={v.id} vaga={v} />
         ))}
         {emAberto.length === 0 && (
-          <p className="text-sm text-muted">
+          <p className="rounded-xl border border-dashed border-border-strong p-4 text-sm text-muted">
             Nenhuma vaga em aberto.{" "}
             <Link href="/painel/vagas/nova" className="font-bold text-accent-dark underline">
               Publicar uma
@@ -73,17 +122,27 @@ export default async function MinhasVagasPage() {
             .
           </p>
         )}
-      </div>
+      </Grupo>
 
-      {realizadas.length > 0 && (
-        <>
-          <h2 className="mb-2 mt-8 text-xs font-bold uppercase tracking-wide text-muted-2">Encerradas</h2>
-          <div className="flex flex-col gap-3">
-            {realizadas.map((v) => (
-              <VagaRow key={v.id} vaga={v} />
-            ))}
-          </div>
-        </>
+      {equipeFechada.length > 0 && (
+        <Grupo id="fechadas" titulo="Equipe fechada" descricao="Todos os profissionais escolhidos — o evento ainda vai acontecer.">
+          {equipeFechada.map((v) => (
+            <VagaRow key={v.id} vaga={v} />
+          ))}
+        </Grupo>
+      )}
+
+      {encerradas.length > 0 && (
+        <Grupo id="encerradas" titulo="Encerradas" descricao="Histórico, da mais recente para a mais antiga.">
+          {encerradas.slice(0, ENCERRADAS_VISIVEIS).map((v) => (
+            <VagaRow key={v.id} vaga={v} apagada />
+          ))}
+          {encerradas.length > ENCERRADAS_VISIVEIS && (
+            <Link href="/painel/vagas/concluidas" className="self-start text-[12.5px] font-bold text-accent-dark underline">
+              Ver histórico completo →
+            </Link>
+          )}
+        </Grupo>
       )}
 
       <h2 className="mb-1 mt-10 text-lg font-extrabold">Profissionais em destaque</h2>
@@ -112,29 +171,87 @@ export default async function MinhasVagasPage() {
   );
 }
 
-function VagaRow({ vaga: v }: { vaga: MinhaVaga }) {
+function Grupo({
+  id,
+  titulo,
+  descricao,
+  destaque = false,
+  children,
+}: {
+  id: string;
+  titulo: string;
+  descricao: string;
+  destaque?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <section id={id} className="mt-8 scroll-mt-24">
+      <h2 className={`text-[15px] font-extrabold ${destaque ? "text-note-text" : ""}`}>{titulo}</h2>
+      <p className="mb-3 mt-0.5 text-[12.5px] text-muted">{descricao}</p>
+      <div className="flex flex-col gap-3">{children}</div>
+    </section>
+  );
+}
+
+const MESES = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
+
+/** "hoje", "amanhã", "em 5 dias" (fuso de Brasília); null se já passou. */
+function quandoFalta(dataEvento: string | Date) {
+  const d = new Date(dataEvento);
+  const evento = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  const [y, m, dia] = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" })
+    .format(new Date())
+    .split("-")
+    .map(Number);
+  const dias = Math.round((evento - Date.UTC(y, m - 1, dia)) / 86400000);
+  if (dias === 0) return "hoje";
+  if (dias === 1) return "amanhã";
+  if (dias > 1) return `em ${dias} dias`;
+  return null;
+}
+
+function VagaRow({ vaga: v, apagada = false }: { vaga: MinhaVaga; apagada?: boolean }) {
   const precisaFechamento = v.realizada && v.status === "aberta";
+  const d = new Date(v.data_evento);
+  const falta = !v.realizada ? quandoFalta(v.data_evento) : null;
+  const status = precisaFechamento
+    ? { tone: "warn" as const, texto: "Fechou com alguém?" }
+    : v.status === "aberta"
+      ? { tone: "ok" as const, texto: "Aberta" }
+      : v.status === "preenchida"
+        ? { tone: "ok" as const, texto: v.realizada ? "Realizada" : "Equipe fechada" }
+        : { tone: "muted" as const, texto: STATUS_LABEL[v.status] ?? v.status };
   return (
     <Link
       href={`/painel/vagas/${v.id}`}
-      className="card-hover flex flex-col gap-2 rounded-xl border border-border bg-surface p-4 sm:flex-row sm:items-center sm:justify-between"
+      className={`card-hover flex items-center gap-4 rounded-xl border border-border bg-surface p-4 ${apagada ? "opacity-80" : ""}`}
     >
-      <div>
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="font-bold">{v.categoria_nome}</span>
-          <Badge tone={v.status === "aberta" ? "ok" : v.status === "preenchida" ? "ok" : "muted"}>
-            {STATUS_LABEL[v.status] ?? v.status}
-          </Badge>
+      {/* bloco de data: dá pra achar a vaga do dia certo só batendo o olho */}
+      <div
+        className={`flex w-14 shrink-0 flex-col items-center rounded-lg py-2 ${
+          precisaFechamento ? "bg-note-bg text-note-text" : "bg-surface-alt"
+        }`}
+      >
+        <span className="font-display text-xl font-extrabold leading-none">{String(d.getUTCDate()).padStart(2, "0")}</span>
+        <span className="mt-0.5 text-[10.5px] font-bold tracking-wide text-muted">{MESES[d.getUTCMonth()]}</span>
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span className="font-bold">{nomeDaVaga(v)}</span>
+          {v.titulo && (
+            <span className="rounded-full bg-surface-alt px-2 py-0.5 text-[11px] font-semibold text-muted">{v.categoria_nome}</span>
+          )}
+          <Badge tone={status.tone}>{status.texto}</Badge>
           {v.vagas_desejadas > 1 && (
             <Badge tone="muted">
               {v.total_selecionados} de {v.vagas_desejadas} preenchidas
             </Badge>
           )}
-          {precisaFechamento && <Badge tone="warn">Fechou com alguém?</Badge>}
         </div>
         <p className="mt-1 text-[12.5px] text-muted">
-          {v.bairro_nome ?? v.cidade_nome} · {formatDateBR(v.data_evento)} · {v.hora_inicio.slice(0, 5)} ·{" "}
-          {Number(v.duracao_horas)}h · {v.valor ? formatCurrencyBRL(v.valor) : "a combinar"}
+          {v.bairro_nome ?? v.cidade_nome} · {v.hora_inicio.slice(0, 5)} · {Number(v.duracao_horas)}h ·{" "}
+          {v.valor ? formatCurrencyBRL(v.valor) : "a combinar"}
+          {falta && <span className="font-semibold text-text"> · {falta}</span>}
         </p>
         {v.total_selecionados > 0 && (
           <p className="mt-1 text-[12px] font-semibold text-ok">
@@ -142,8 +259,9 @@ function VagaRow({ vaga: v }: { vaga: MinhaVaga }) {
           </p>
         )}
       </div>
-      <div className="text-[12.5px] font-bold text-accent-dark">
-        {v.total_candidatos} {v.total_candidatos === 1 ? "candidato" : "candidatos"} →
+      <div className="shrink-0 text-right text-[12.5px] font-bold text-accent-dark">
+        {v.total_candidatos}
+        <span className="hidden sm:inline"> {v.total_candidatos === 1 ? "candidato" : "candidatos"}</span> →
       </div>
     </Link>
   );

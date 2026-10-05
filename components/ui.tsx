@@ -39,7 +39,7 @@ export function buttonClass(
   size: "md" | "sm" | "lg" = "md"
 ) {
   const variants: Record<string, string> = {
-    primary: "bg-accent text-white shadow-sm hover:bg-accent-dark hover:shadow-md",
+    primary: "bg-accent-strong text-white shadow-sm hover:bg-accent-dark hover:shadow-md",
     secondary: "bg-surface text-text border border-border-strong hover:bg-surface-alt",
     ghost: "bg-transparent text-accent-dark border border-accent-soft-2 hover:bg-accent-soft",
     // verde do WhatsApp - usado só no WhatsAppButton, pra diferenciar

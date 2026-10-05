@@ -39,7 +39,7 @@ export default function ProdutoCard({ produto }: { produto: ProdutoAfiliado }) {
         <LinkMercadoLivre
           produtoId={produto.id}
           href={produto.url_afiliado || produto.url_produto}
-          className="mt-auto inline-flex items-center justify-center gap-1 rounded-lg bg-accent px-3 py-2 text-[12.5px] font-bold text-white hover:bg-accent-dark"
+          className="mt-auto inline-flex items-center justify-center gap-1 rounded-lg bg-accent-strong px-3 py-2 text-[12.5px] font-bold text-white hover:bg-accent-dark"
         >
           Ver no Mercado Livre ↗
         </LinkMercadoLivre>

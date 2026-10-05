@@ -64,6 +64,19 @@ export default function NovaVagaForm({
     <form action={handleSubmit} className="flex flex-col gap-3">
       {mode === "editar" && vaga && <input type="hidden" name="id" value={vaga.id} />}
 
+      <Field label="Título da vaga (opcional)">
+        <input
+          name="titulo"
+          maxLength={80}
+          defaultValue={vaga?.titulo ?? ""}
+          placeholder="Ex: Mascote Bluey — aniversário da Maria"
+          className="rounded-md border border-border px-3 py-2.5 text-sm"
+        />
+        <span className="mt-1 block text-[11.5px] font-normal normal-case text-muted">
+          Ajuda você e o profissional a identificar o evento ou o personagem. Sem título, a vaga aparece pelo nome da função.
+        </span>
+      </Field>
+
       <Field label="Função que você precisa">
         <select
           name="categoriaProfissionalId"

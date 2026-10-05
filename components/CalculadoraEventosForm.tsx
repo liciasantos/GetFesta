@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Icon } from "@/components/Icon";
 import {
   calcularEvento,
   TIPOS_CARDAPIO,
@@ -185,7 +186,7 @@ export default function CalculadoraEventosForm() {
                     </span>
                   </div>
                   {item.detalhe && <p className="mt-1 text-[11px] text-muted">{item.detalhe}</p>}
-                  {item.nota && <p className="mt-1 text-[11px] italic text-muted-2">💡 {item.nota}</p>}
+                  {item.nota && <p className="mt-1 text-[11px] italic text-muted-2"><Icon name="lightbulb" className="mr-1 h-3 w-3" />{item.nota}</p>}
                 </div>
               ))}
             </div>
@@ -193,7 +194,7 @@ export default function CalculadoraEventosForm() {
             {resultado.avisos.length > 0 && (
               <div className="mt-4 flex flex-col gap-2 rounded-lg border border-note-border bg-note-bg p-3 text-[11.5px] leading-relaxed text-note-text">
                 {resultado.avisos.map((a) => (
-                  <p key={a}>⚠️ {a}</p>
+                  <p key={a}><Icon name="alert" className="mr-1 h-3.5 w-3.5" />{a}</p>
                 ))}
               </div>
             )}

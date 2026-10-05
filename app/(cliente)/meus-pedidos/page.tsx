@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Icon } from "@/components/Icon";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { listMeusPedidos } from "@/lib/data/pedidos";
@@ -54,7 +55,7 @@ export default async function MeusPedidosPage() {
             </div>
           )}
           <div>
-            <div className="text-[14.5px] font-bold">Olá, {perfil?.nome ?? "cliente"} 👋</div>
+            <div className="text-[14.5px] font-bold">Olá, {perfil?.nome ?? "cliente"}</div>
             <div className="text-[12px] text-muted">{perfil?.cidade_nome ?? "Cidade não informada"}</div>
           </div>
         </div>
@@ -74,7 +75,7 @@ export default async function MeusPedidosPage() {
       {/* Cadastro via Google não pede cidade - avisa que falta completar */}
       {perfil && !perfil.cidade_id && (
         <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed border-border-strong bg-[#efece5] p-3 text-[12.5px] text-muted">
-          <span>⚠️ Falta informar sua cidade pra gente mostrar pedidos e fornecedores certos pra você.</span>
+          <span><Icon name="alert" className="mr-1 h-4 w-4" />Falta informar sua cidade pra gente mostrar pedidos e fornecedores certos pra você.</span>
           <Link href="/meu-perfil" className="font-bold text-accent-dark underline">
             Completar perfil
           </Link>

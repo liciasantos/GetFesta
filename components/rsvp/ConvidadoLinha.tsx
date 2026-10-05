@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { Icon } from "@/components/Icon";
 import { useState, useTransition } from "react";
 import { atualizarConfirmacaoConvidado, removerConvidado } from "@/lib/actions/rsvp";
 import { Badge } from "@/components/ui";
@@ -67,7 +68,7 @@ export default function ConvidadoLinha({ convidado, eventoSlug }: { convidado: C
             rel="noopener noreferrer"
             className="rounded-md border border-border-strong px-2.5 py-1 text-[11.5px] font-bold hover:bg-surface-alt"
           >
-            💬 Convite
+            <Icon name="chat" className="h-3.5 w-3.5" /> Convite
           </a>
         )}
 

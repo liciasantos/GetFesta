@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { Icon, Estrelas } from "@/components/Icon";
 import { avaliarProfissional, type AvaliarProfissionalState } from "@/lib/actions/vagas";
 import { buttonClass } from "@/components/ui";
 
@@ -23,7 +24,7 @@ export default function AvaliarProfissionalForm({
     return (
       <div className="mt-3 rounded-lg bg-accent-soft p-3">
         <p className="text-[12.5px] font-bold text-accent-dark">
-          Você avaliou {profissionalNome}: {"⭐".repeat(notaExibida)}
+          Você avaliou {profissionalNome}: <Estrelas nota={notaExibida} />
         </p>
       </div>
     );
@@ -41,10 +42,11 @@ export default function AvaliarProfissionalForm({
             key={n}
             type="button"
             onClick={() => setNota(n)}
-            className={`text-2xl leading-none ${n <= nota ? "opacity-100" : "opacity-30"}`}
+            className={`flex h-10 w-10 items-center justify-center ${n <= nota ? "text-gold" : "text-border-strong"}`}
             aria-label={`${n} estrelas`}
+            aria-pressed={n <= nota}
           >
-            ⭐
+            <Icon name="star" filled={n <= nota} className="h-7 w-7" />
           </button>
         ))}
       </div>

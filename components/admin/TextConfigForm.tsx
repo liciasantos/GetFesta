@@ -52,7 +52,7 @@ export default function TextConfigForm({ titulo, descricao, campos }: { titulo: 
         type="button"
         onClick={salvar}
         disabled={isPending}
-        className="mt-3 rounded-lg bg-accent px-4 py-2 text-[12.5px] font-bold text-white hover:bg-accent-dark disabled:opacity-50"
+        className="mt-3 rounded-lg bg-accent-strong px-4 py-2 text-[12.5px] font-bold text-white hover:bg-accent-dark disabled:opacity-50"
       >
         {isPending ? "Salvando..." : "Salvar"}
       </button>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Icon } from "@/components/Icon";
 import { headers } from "next/headers";
 import { listCategorias, listCidades } from "@/lib/data/geo";
 import { getEmpresasDestaque } from "@/lib/data/empresas";
@@ -27,7 +28,7 @@ import Hero from "@/components/HeroBannerCarousel";
 import BgImage from "@/components/BgImage";
 import MiniPedidoForm from "@/components/MiniPedidoForm";
 import PedidosCarousel from "@/components/PedidosCarousel";
-import DestaquesGrid, { DestaquesKicker } from "@/components/DestaquesGrid";
+import DestaquesGrid from "@/components/DestaquesGrid";
 import HelpIcon from "@/components/HelpIcon";
 import ComoFuncionaClienteReels from "@/components/ComoFuncionaClienteReels";
 import { getPermutaConfig } from "@/lib/data/permuta";
@@ -222,11 +223,13 @@ export default async function HomePage() {
         <section className="border-b border-border bg-surface-alt/60 px-6 py-16 sm:py-20">
           <div className="mx-auto max-w-6xl">
             <span className="section-kicker">03 — Destaques da semana</span>
-            <div className="mt-3">
-              <DestaquesKicker />
+            {/* antes o kicker e um segundo título repetiam "Destaques da semana" */}
+            <div className="mt-3 flex flex-wrap items-center gap-2.5">
+              <h2 className="text-2xl font-extrabold sm:text-[26px]">Fornecedores em destaque</h2>
+              <Badge tone="ad">Anúncio</Badge>
             </div>
             <p className="mt-1.5 max-w-lg text-[13.5px] text-muted">
-              Posição fixa por categoria — clique abre o WhatsApp direto, sem passar pelo funil de interesse.
+              Selecionados por categoria — toque e fale direto pelo WhatsApp.
             </p>
             <div className="mt-9">
               <DestaquesGrid banners={banners} />
@@ -291,7 +294,7 @@ export default async function HomePage() {
                     {e.categorias[0] ?? "Fornecedor"} · {e.cidades[0] ?? ""}
                   </div>
                   <div className="mt-1 text-[11.5px] font-semibold text-accent-dark">
-                    {e.nota_exibida ? `⭐ ${Number(e.nota_exibida).toFixed(1)} (${e.total_avaliacoes_exibido})` : "Empresa nova"}
+                    {e.nota_exibida ? <span className="inline-flex items-center gap-1"><Icon name="star" filled className="h-3.5 w-3.5 text-gold" /> {Number(e.nota_exibida).toFixed(1)} ({e.total_avaliacoes_exibido})</span> : "Empresa nova"}
                   </div>
                   <div className="mt-2 flex flex-wrap gap-1">
                     {e.aprovada_para_destaque && <Badge tone="ad">Destaque</Badge>}
@@ -365,7 +368,7 @@ export default async function HomePage() {
                   href={href}
                   className={`mt-6 block w-full rounded-lg py-2.5 text-center text-[13px] font-bold ${
                     p.destaque
-                      ? "bg-accent text-white hover:bg-accent-dark"
+                      ? "bg-accent-strong text-white hover:bg-accent-dark"
                       : "border border-border-strong text-text hover:bg-surface-alt"
                   }`}
                 >

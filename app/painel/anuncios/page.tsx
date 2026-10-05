@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Icon } from "@/components/Icon";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { listMeusBannersCategoria, listMeusBannersHero } from "@/lib/data/banners";
@@ -90,9 +91,9 @@ export default async function MeusAnunciosPage() {
         {header && (
           <a
             href={buildAnunciarBannerMailto(header.nomeFantasia, session.usuarioId)}
-            className="mt-3 inline-flex rounded-lg bg-accent px-4 py-2 text-[12.5px] font-bold text-white hover:bg-accent-dark"
+            className="mt-3 inline-flex rounded-lg bg-accent-strong px-4 py-2 text-[12.5px] font-bold text-white hover:bg-accent-dark"
           >
-            📣 Anunciar no banner principal
+            <Icon name="megaphone" className="h-4 w-4" /> Anunciar no banner principal
           </a>
         )}
       </div>

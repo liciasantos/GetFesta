@@ -59,7 +59,7 @@ export default function NotFound() {
         </text>
       </svg>
 
-      <h1 className="mt-4 text-xl font-extrabold">Essa página não recebeu o convite 🎈</h1>
+      <h1 className="mt-4 text-xl font-extrabold">Essa página não recebeu o convite</h1>
       <p className="mt-2 text-sm text-muted">
         A página que você procura não existe ou mudou de endereço. Mas a festa continua — bora voltar pro início?
       </p>

@@ -1,4 +1,6 @@
 import { redirect } from "next/navigation";
+import { nomeDaVaga } from "@/lib/vaga";
+import { Icon } from "@/components/Icon";
 import { getSession } from "@/lib/auth";
 import { getMeuPerfilProfissional, listCategoriasProfissionais } from "@/lib/data/profissionais";
 import { listCidades } from "@/lib/data/geo";
@@ -77,7 +79,7 @@ export default async function PerfilProfissionalPage({
   const avisoCatalogoIncompleto =
     !perfil.bairro_id || perfil.categorias.length === 0 ? (
       <div className="rounded-lg border border-dashed border-border-strong bg-[#efece5] p-3 text-[12.5px] text-muted">
-        ⚠️ Falta completar seu catálogo pra empresas te encontrarem:{" "}
+        <Icon name="alert" className="mr-1 h-4 w-4" />Falta completar seu catálogo pra empresas te encontrarem:{" "}
         {!perfil.bairro_id && <b className="text-text">bairro</b>}
         {!perfil.bairro_id && perfil.categorias.length === 0 && " e "}
         {perfil.categorias.length === 0 && <b className="text-text">funções que você exerce</b>} — preencha no
@@ -90,7 +92,7 @@ export default async function PerfilProfissionalPage({
   // sem CPF continuam funcionando normalmente, só com esse lembrete.
   const avisoCpfFaltando = !perfil.cpf ? (
     <div className="rounded-lg border border-dashed border-border-strong bg-[#efece5] p-3 text-[12.5px] text-muted">
-      ⚠️ Falta completar seu <b className="text-text">CPF</b> pra manter sua conta segura contra perfis falsos —
+      <Icon name="alert" className="mr-1 h-4 w-4" />Falta completar seu <b className="text-text">CPF</b> pra manter sua conta segura contra perfis falsos —
       preencha no formulário abaixo.
     </div>
   ) : null;
@@ -159,10 +161,10 @@ export default async function PerfilProfissionalPage({
         <div>
           <h2 className="text-[14px] font-bold text-accent-dark">
             {limites.planoTipo === "premium"
-              ? "✨ Você está no plano Premium"
+              ? "Você está no plano Premium"
               : limites.planoTipo === "light"
-                ? "✨ Você está no plano Light — quer mais?"
-                : "✨ Torne-se Light ou Premium e se destaque"}
+                ? "Você está no plano Light — quer mais?"
+                : "Torne-se Light ou Premium e se destaque"}
           </h2>
           <p className="mt-1 text-[12.5px] text-accent-dark">
             {limites.planoTipo === "premium"
@@ -196,7 +198,8 @@ export default async function PerfilProfissionalPage({
         {vagas.map((vaga) => (
           <div key={vaga.id} className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-3.5 last:border-b-0">
             <div className="text-[12.5px]">
-              <span className="font-bold">{vaga.categoria_nome}</span> · {vaga.bairro_nome ?? vaga.cidade_nome} ·{" "}
+              <span className="font-bold">{nomeDaVaga(vaga)}</span>
+              {vaga.titulo && <> · {vaga.categoria_nome}</>} · {vaga.bairro_nome ?? vaga.cidade_nome} ·{" "}
               {formatDateBR(vaga.data_evento)} · {vaga.hora_inicio.slice(0, 5)} · {Number(vaga.duracao_horas)}h
               <div className="mt-1 flex flex-wrap gap-1">
                 <span className="rounded-full bg-surface-alt px-2 py-0.5 text-[11px] font-semibold">
@@ -213,7 +216,7 @@ export default async function PerfilProfissionalPage({
             </div>
             <div className="flex flex-col items-end gap-1.5">
               {vaga.candidatura_status === "selecionado" ? (
-                <Badge tone="ok">🎉 Selecionado!</Badge>
+                <Badge tone="ok"><Icon name="party" className="h-3 w-3" /> Selecionado!</Badge>
               ) : vaga.status === "cancelada" ? (
                 <Badge tone="muted">Vaga encerrada</Badge>
               ) : vaga.candidatura_status === "recusado" ? (
@@ -230,7 +233,7 @@ export default async function PerfilProfissionalPage({
                 )}
               <CompartilharVagaButton
                 vagaId={vaga.id}
-                mensagem={`Vaga de ${vaga.categoria_nome} em ${vaga.cidade_nome} pra ${formatDateBR(vaga.data_evento)} - confira na GetFesta:`}
+                mensagem={`Vaga de ${nomeDaVaga(vaga)} em ${vaga.cidade_nome} pra ${formatDateBR(vaga.data_evento)} - confira na GetFesta:`}
               />
             </div>
           </div>

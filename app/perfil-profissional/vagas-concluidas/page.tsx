@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { nomeDaVaga } from "@/lib/vaga";
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { listVagasConcluidasProfissional, countVagasConcluidasProfissional } from "@/lib/data/vagas";
@@ -44,7 +45,7 @@ export default async function VagasConcluidasProfissionalPage({
               className="flex items-center justify-between gap-3 border-b border-border p-3.5 text-[12.5px] last:border-b-0"
             >
               <div>
-                <span className="font-bold">{v.categoria_nome}</span> · {v.empresa_nome_fantasia}
+                <span className="font-bold">{nomeDaVaga(v)}</span> · {v.empresa_nome_fantasia}
                 <div className="text-[11px] text-muted-2">{formatDateBR(v.data_evento)}</div>
               </div>
               <span className="whitespace-nowrap text-[11px] font-semibold text-muted-2">

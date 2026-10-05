@@ -10,6 +10,7 @@ import { TABS } from "@/lib/profissional-tabs";
 export default function ProfissionalGlobalTabBar() {
   return (
     <nav
+      data-barra-inferior
       className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_rgba(31,41,51,0.08)] sm:hidden"
       aria-label="Navegação do catálogo profissional"
     >

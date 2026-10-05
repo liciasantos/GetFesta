@@ -73,7 +73,7 @@ export default async function PedidosPage({
         <button
           type="submit"
           aria-label="Buscar"
-          className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-md bg-accent text-white hover:bg-accent-dark"
+          className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-md bg-accent-strong text-white hover:bg-accent-dark"
         >
           <SearchIcon />
         </button>

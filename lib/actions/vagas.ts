@@ -22,6 +22,7 @@ export async function criarVaga(_prevState: VagaActionState, formData: FormData)
     duracaoHoras: formData.get("duracaoHoras"),
     valor: formData.get("valor") || undefined,
     descricao: formData.get("descricao"),
+    titulo: formData.get("titulo") || undefined,
     sexoDesejado: formData.get("sexoDesejado") || undefined,
     vagasDesejadas: formData.get("vagasDesejadas") || undefined,
   });
@@ -29,8 +30,8 @@ export async function criarVaga(_prevState: VagaActionState, formData: FormData)
 
   await query(
     `INSERT INTO vagas_profissionais (
-       empresa_id, categoria_profissional_id, cidade_id, bairro_id, data_evento, hora_inicio, duracao_horas, valor, descricao, sexo_desejado, vagas_desejadas
-     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+       empresa_id, categoria_profissional_id, cidade_id, bairro_id, data_evento, hora_inicio, duracao_horas, valor, descricao, sexo_desejado, vagas_desejadas, titulo
+     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
     [
       session.usuarioId,
       parsed.data.categoriaProfissionalId,
@@ -43,6 +44,7 @@ export async function criarVaga(_prevState: VagaActionState, formData: FormData)
       parsed.data.descricao,
       parsed.data.sexoDesejado ?? "indiferente",
       parsed.data.vagasDesejadas ?? 1,
+      parsed.data.titulo || null,
     ]
   );
 
@@ -72,6 +74,7 @@ export async function editarVaga(_prevState: VagaActionState, formData: FormData
     duracaoHoras: formData.get("duracaoHoras"),
     valor: formData.get("valor") || undefined,
     descricao: formData.get("descricao"),
+    titulo: formData.get("titulo") || undefined,
     sexoDesejado: formData.get("sexoDesejado") || undefined,
     vagasDesejadas: formData.get("vagasDesejadas") || undefined,
   });
@@ -97,7 +100,7 @@ export async function editarVaga(_prevState: VagaActionState, formData: FormData
   await query(
     `UPDATE vagas_profissionais
      SET categoria_profissional_id = $1, cidade_id = $2, bairro_id = $3, data_evento = $4, hora_inicio = $5,
-         duracao_horas = $6, valor = $7, descricao = $8, sexo_desejado = $9, vagas_desejadas = $10
+         duracao_horas = $6, valor = $7, descricao = $8, sexo_desejado = $9, vagas_desejadas = $10, titulo = $13
      WHERE id = $11 AND empresa_id = $12`,
     [
       parsed.data.categoriaProfissionalId,
@@ -112,6 +115,7 @@ export async function editarVaga(_prevState: VagaActionState, formData: FormData
       vagasDesejadas,
       vagaId,
       session.usuarioId,
+      parsed.data.titulo || null,
     ]
   );
 
@@ -176,7 +180,7 @@ export async function retirarCandidatura(vagaId: string): Promise<CandidatarVaga
     data_evento: string;
     categoria_nome: string;
   }>(
-    `SELECT vc.status, v.status AS vaga_status, v.empresa_id, v.data_evento, cp.nome AS categoria_nome,
+    `SELECT vc.status, v.status AS vaga_status, v.empresa_id, v.data_evento, COALESCE(v.titulo, cp.nome) AS categoria_nome,
             (v.data_evento < (now() AT TIME ZONE 'America/Sao_Paulo')::date) AS evento_passou
        FROM vaga_candidaturas vc
        JOIN vagas_profissionais v ON v.id = vc.vaga_id
@@ -267,7 +271,7 @@ export async function selecionarCandidatoVaga(vagaId: string, profissionalId: st
     status: string;
     vagas_desejadas: number;
   }>(
-    `SELECT cp.nome AS categoria_nome, v.data_evento, v.hora_inicio, v.duracao_horas, e.nome_fantasia,
+    `SELECT COALESCE(v.titulo, cp.nome) AS categoria_nome, v.data_evento, v.hora_inicio, v.duracao_horas, e.nome_fantasia,
             v.status, v.vagas_desejadas
      FROM vagas_profissionais v
      JOIN categorias_profissionais cp ON cp.id = v.categoria_profissional_id

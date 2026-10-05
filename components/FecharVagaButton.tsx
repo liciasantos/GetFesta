@@ -73,7 +73,7 @@ export function DesfazerSelecaoButton({ vagaId, profissionalId }: { vagaId: stri
               else router.refresh();
             })
           }
-          className="rounded-md bg-accent px-2.5 py-1 text-[11.5px] font-bold text-white hover:bg-accent-dark disabled:opacity-50"
+          className="rounded-md bg-accent-strong px-2.5 py-1 text-[11.5px] font-bold text-white hover:bg-accent-dark disabled:opacity-50"
         >
           {isPending ? "Removendo..." : "Sim, desfazer"}
         </button>

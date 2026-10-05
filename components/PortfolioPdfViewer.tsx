@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Icon } from "@/components/Icon";
 import { buttonClass } from "@/components/ui";
 
 export default function PortfolioPdfViewer({ url, nome }: { url: string; nome: string }) {
@@ -36,7 +37,7 @@ export default function PortfolioPdfViewer({ url, nome }: { url: string; nome: s
   return (
     <div>
       <button type="button" onClick={() => setAberto((v) => !v)} className={buttonClass("secondary", "sm")}>
-        {aberto ? "Fechar portfólio/currículo" : `📄 Ver portfólio/currículo (${nome})`}
+        {aberto ? "Fechar portfólio/currículo" : `Ver portfólio/currículo (${nome})`}
       </button>
 
       {aberto && (
@@ -48,7 +49,7 @@ export default function PortfolioPdfViewer({ url, nome }: { url: string; nome: s
               disabled={!blobUrl}
               className="rounded-md border border-border-strong bg-surface px-2.5 py-1 text-[11.5px] font-bold hover:bg-surface-alt disabled:opacity-50"
             >
-              🖨️ Imprimir
+              <Icon name="printer" className="h-4 w-4" /> Imprimir
             </button>
             <button
               type="button"

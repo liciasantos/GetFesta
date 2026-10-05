@@ -11,7 +11,11 @@
   --color-muted: #6b7684;
   --color-muted-2: #98a0ac;
   --color-accent: #ff6b4a;
-  --color-accent-dark: #e14f30;
+  /* preenchimento de botão com texto branco: #ff6b4a dava só 2,9:1 de contraste;
+     #d24420 dá 4,6:1 (WCAG AA). O coral vivo continua em --color-accent pros destaques. */
+  --color-accent-strong: #d24420;
+  /* hover e texto de link sobre fundo claro (5:1) */
+  --color-accent-dark: #c8401f;
   --color-accent-soft: #ffe9e1;
   --color-accent-soft-2: #ffd3c2;
   --color-gold: #ffb800;
@@ -44,6 +48,7 @@
   --color-muted: var(--color-muted);
   --color-muted-2: var(--color-muted-2);
   --color-accent: var(--color-accent);
+  --color-accent-strong: var(--color-accent-strong);
   --color-accent-dark: var(--color-accent-dark);
   --color-accent-soft: var(--color-accent-soft);
   --color-accent-soft-2: var(--color-accent-soft-2);
@@ -116,4 +121,17 @@ h1, h2, h3, h4 {
 
 .no-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+/* entrada do cartão de cookies (components/CookieConsent.tsx) - só com
+   motion-safe, quem pediu movimento reduzido vê o cartão direto */
+@keyframes subir {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

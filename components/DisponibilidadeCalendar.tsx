@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState, useTransition } from "react";
+import { Icon } from "@/components/Icon";
 import {
   alternarDiaIndisponivel,
   adicionarBloqueioHorario,
@@ -335,7 +336,7 @@ export default function DisponibilidadeCalendar({
                 c.passado
                   ? "text-muted-2 opacity-40"
                   : diaInteiro
-                    ? "bg-accent text-white hover:bg-accent-dark"
+                    ? "bg-accent-strong text-white hover:bg-accent-dark"
                     : "border border-border text-text hover:border-accent-soft-2 hover:bg-accent-soft"
               } ${isHoje && !diaInteiro ? "ring-1 ring-inset ring-accent-dark" : ""} ${
                 selecionado ? "outline outline-2 outline-offset-1 outline-accent-dark" : ""
@@ -626,7 +627,7 @@ function AgendaRow({
         </div>
         <div className="flex shrink-0 items-center gap-2.5">
           <button type="button" aria-label="Editar bloqueio" onClick={abrirEdicao} className="text-muted-2 hover:text-accent-dark">
-            ✏️
+            <Icon name="pencil" />
           </button>
           <button type="button" aria-label="Remover bloqueio" onClick={onRemover} className="text-muted-2 hover:text-accent-dark">
             ✕

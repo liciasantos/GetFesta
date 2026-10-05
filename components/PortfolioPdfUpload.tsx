@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import { Icon } from "@/components/Icon";
 import { useRouter } from "next/navigation";
 import { atualizarPortfolioPdfProfissional, removerPortfolioPdfProfissional } from "@/lib/actions/perfil";
 import { fileToDataUrl } from "@/lib/pdf-client";
@@ -50,10 +51,10 @@ export default function PortfolioPdfUpload({ nomeAtual, elegivel }: { nomeAtual:
 
   return (
     <div>
-      <p className="text-[12.5px]">{nome ? `📄 ${nome}` : "Nenhum arquivo enviado ainda."}</p>
+      <p className="text-[12.5px]">{nome ? <><Icon name="file" className="mr-1 h-3.5 w-3.5" />{nome}</> : "Nenhum arquivo enviado ainda."}</p>
       {!elegivel && (
         <p className="mt-1 text-[11.5px] font-semibold text-accent-dark">
-          🔒 O portfólio em PDF exige o plano Light ou Premium (grátis por 1 ano pros 20 primeiros profissionais
+          <Icon name="lock" className="mr-1 h-3.5 w-3.5" />O portfólio em PDF exige o plano Light ou Premium (grátis por 1 ano pros 20 primeiros profissionais
           cadastrados). Fale com a gente pra contratar.
         </p>
       )}

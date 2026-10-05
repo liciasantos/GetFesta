@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { Icon, type IconName } from "@/components/Icon";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
@@ -25,13 +26,13 @@ import PermutaResumoCard, { getResumoPermutaPainel } from "@/components/permuta/
 export const dynamic = "force-dynamic";
 const PEDIDOS_RECENTES_LIMITE = 10;
 
-const ATIVIDADE_INFO: Record<AtividadeRecente["tipo"], { icone: string; texto: string }> = {
-  visualizacao_perfil: { icone: "👁️", texto: "Seu perfil foi visualizado" },
-  clique_whatsapp: { icone: "💬", texto: "Alguém clicou no seu WhatsApp" },
-  visualizacao_banner: { icone: "📣", texto: "Seu anúncio foi visualizado" },
-  clique_banner: { icone: "📣", texto: "Alguém clicou no seu anúncio" },
-  pedido_compativel: { icone: "📋", texto: "Novo pedido compatível encontrado" },
-  candidatura_vaga: { icone: "🙋", texto: "Novo candidato numa vaga" },
+const ATIVIDADE_INFO: Record<AtividadeRecente["tipo"], { icone: IconName; texto: string }> = {
+  visualizacao_perfil: { icone: "eye", texto: "Seu perfil foi visualizado" },
+  clique_whatsapp: { icone: "chat", texto: "Alguém clicou no seu WhatsApp" },
+  visualizacao_banner: { icone: "megaphone", texto: "Seu anúncio foi visualizado" },
+  clique_banner: { icone: "megaphone", texto: "Alguém clicou no seu anúncio" },
+  pedido_compativel: { icone: "clipboard", texto: "Novo pedido compatível encontrado" },
+  candidatura_vaga: { icone: "userPlus", texto: "Novo candidato numa vaga" },
 };
 
 export default async function PainelPage() {
@@ -88,7 +89,7 @@ export default async function PainelPage() {
         </div>
 
         <div className="mb-4 hidden flex-wrap items-center justify-between gap-2 sm:flex lg:hidden">
-          <h1 className="text-xl font-extrabold">{nomeFantasia ?? "Seu painel"} 👋</h1>
+          <h1 className="text-xl font-extrabold">{nomeFantasia ?? "Seu painel"}</h1>
           <div className="flex items-center gap-4">
             <Link href="/painel/perfil" className="text-[12.5px] font-bold text-accent-dark underline">
               Editar perfil e fotos
@@ -107,7 +108,7 @@ export default async function PainelPage() {
 
         {/* a partir do lg: o cabeçalho vira só o saudação (nav e ver-perfil já
             estão na sidebar/coluna direita) */}
-        <h1 className="mb-4 hidden text-xl font-extrabold lg:block">{nomeFantasia ?? "Seu painel"} 👋</h1>
+        <h1 className="mb-4 hidden text-xl font-extrabold lg:block">{nomeFantasia ?? "Seu painel"}</h1>
 
         {assinatura && (
           <>
@@ -122,7 +123,7 @@ export default async function PainelPage() {
                   href={buildAnunciarBannerMailto(nomeFantasia ?? "minha empresa", session.usuarioId)}
                   className={`${buttonClass("primary")} w-full text-center`}
                 >
-                  📣 Anunciar no banner principal
+                  <Icon name="megaphone" className="h-4 w-4" /> Anunciar no banner principal
                 </a>
                 <Suspense fallback={<button className={`${buttonClass("primary")} w-full`}>Alterar Plano</button>}>
                   <PlanoSelector
@@ -149,7 +150,7 @@ export default async function PainelPage() {
                   href={buildAnunciarBannerMailto(nomeFantasia ?? "minha empresa", session.usuarioId)}
                   className="rounded-lg border border-border-strong bg-surface px-3 py-1.5 text-[12.5px] font-bold hover:bg-surface-alt"
                 >
-                  📣 Anunciar no banner principal
+                  <Icon name="megaphone" className="h-4 w-4" /> Anunciar no banner principal
                 </a>
                 <Suspense fallback={<button className={buttonClass("secondary", "sm")}>Alterar plano</button>}>
                   <PlanoSelector
@@ -200,7 +201,7 @@ export default async function PainelPage() {
           {atividades.length === 0 && <p className="p-4 text-[12.5px] text-muted">Ainda sem atividade por aqui.</p>}
           {atividades.map((a, i) => (
             <div key={i} className="flex items-center gap-3 border-b border-border p-3 text-[12.5px] last:border-b-0">
-              <span className="text-[15px]">{ATIVIDADE_INFO[a.tipo].icone}</span>
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-surface-alt text-muted"><Icon name={ATIVIDADE_INFO[a.tipo].icone} /></span>
               <span className="flex-1">{ATIVIDADE_INFO[a.tipo].texto}</span>
               <span className="text-[11px] text-muted-2">{timeAgo(a.criado_em)}</span>
             </div>
@@ -247,7 +248,7 @@ export default async function PainelPage() {
         <PermutaResumoCard resumo={resumoPermuta} />
 
         <div className="rounded-xl border border-accent bg-accent-soft p-4">
-          <p className="text-[13px] font-bold text-accent-dark">📣 Destaque seu perfil</p>
+          <p className="text-[13px] font-bold text-accent-dark"><Icon name="megaphone" className="mr-1 h-4 w-4" />Destaque seu perfil</p>
           <p className="mt-1 text-[12px] text-accent-dark">
             Apareça no banner principal da home e conquiste mais clientes.
           </p>
@@ -263,10 +264,10 @@ export default async function PainelPage() {
           <p className="mb-2.5 text-[11px] font-bold uppercase tracking-wide text-muted-2">Acesso rápido</p>
           <div className="flex flex-col gap-1.5">
             <Link href="/painel/perfil" className="text-[12.5px] font-bold text-accent-dark hover:underline">
-              ✏️ Editar perfil e fotos
+              <Icon name="pencil" className="mr-1 h-3.5 w-3.5" />Editar perfil e fotos
             </Link>
             <Link href={`/empresa/${slug ?? session.usuarioId}`} className="text-[12.5px] font-bold text-accent-dark hover:underline">
-              🔗 Ver meu perfil público
+              <Icon name="link" className="mr-1 h-3.5 w-3.5" />Ver meu perfil público
             </Link>
             {slug && (
               <div className="mt-1">

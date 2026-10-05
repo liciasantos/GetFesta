@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Icon } from "@/components/Icon";
 import { Badge, PlaceholderImg } from "@/components/ui";
 import type { ProfissionalBusca } from "@/lib/data/profissionais";
 
@@ -20,7 +21,7 @@ export default function ProfissionalCard({ p }: { p: ProfissionalBusca }) {
           {p.categoria_principal ?? "Profissional"} · {p.bairro_nome ?? p.cidade_nome ?? ""}
         </div>
         <div className="mt-1 text-[11.5px] font-semibold text-accent-dark">
-          {p.nota_media ? `⭐ ${Number(p.nota_media).toFixed(1)} (${p.total_avaliacoes})` : "Ainda sem avaliação"}
+          {p.nota_media ? <span className="inline-flex items-center gap-1"><Icon name="star" filled className="h-3.5 w-3.5 text-gold" /> {Number(p.nota_media).toFixed(1)} ({p.total_avaliacoes})</span> : "Ainda sem avaliação"}
         </div>
         {p.aprovada_para_destaque && (
           <div className="mt-2">

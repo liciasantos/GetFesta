@@ -1007,3 +1007,11 @@ CREATE TABLE IF NOT EXISTS permuta_entrega_fotos (
 CREATE INDEX IF NOT EXISTS idx_permuta_entrega_fotos_entrega ON permuta_entrega_fotos(entrega_id);
 
 ALTER TABLE empresa_galeria ADD COLUMN IF NOT EXISTS origem_entrega_id UUID REFERENCES permuta_entregas(id) ON DELETE SET NULL;
+
+-- =====================================================================
+-- VAGAS — título opcional (idempotente)
+-- =====================================================================
+-- Nome livre que a empresa dá à vaga ("Mascote Bluey — aniversário da Maria")
+-- pra ela e o profissional identificarem o evento sem abrir os detalhes.
+-- Sem título, a interface continua mostrando a função (categoria).
+ALTER TABLE vagas_profissionais ADD COLUMN IF NOT EXISTS titulo VARCHAR(80);

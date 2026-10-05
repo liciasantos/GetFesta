@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "seed": "tsx db/seed.ts",
-    "permuta:setup": "tsx db/permuta-setup.ts"
+    "permuta:setup": "tsx db/permuta-setup.ts",
+    "db:migrate": "tsx db/migrate.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

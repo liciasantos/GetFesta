@@ -3,6 +3,8 @@ import { query, queryOne } from "@/lib/db";
 export type VagaFeedItem = {
   id: string;
   categoria_nome: string;
+  /** nome livre dado pela empresa (opcional) - ver lib/vaga.ts:nomeDaVaga */
+  titulo: string | null;
   cidade_nome: string;
   bairro_nome: string | null;
   data_evento: string;
@@ -43,7 +45,7 @@ export type VagaFeedItem = {
 export async function listVagasCompativeis(profissionalId: string): Promise<(VagaFeedItem & { ja_candidatado: boolean })[]> {
   return query<VagaFeedItem & { ja_candidatado: boolean }>(
     `SELECT
-       v.id, cp.nome AS categoria_nome, ci.nome AS cidade_nome, b.nome AS bairro_nome,
+       v.id, v.titulo, cp.nome AS categoria_nome, ci.nome AS cidade_nome, b.nome AS bairro_nome,
        v.data_evento, v.hora_inicio, v.duracao_horas, v.valor, v.descricao, v.criado_em, v.sexo_desejado,
        v.status, v.vagas_desejadas,
        (SELECT count(*)::int FROM vaga_candidaturas vc2 WHERE vc2.vaga_id = v.id AND vc2.status = 'selecionado') AS vagas_selecionadas,
@@ -77,6 +79,8 @@ export type MinhaVaga = {
   id: string;
   categoria_profissional_id: number;
   categoria_nome: string;
+  /** nome livre dado pela empresa (opcional) - ver lib/vaga.ts:nomeDaVaga */
+  titulo: string | null;
   cidade_id: number;
   cidade_nome: string;
   bairro_id: number | null;
@@ -97,7 +101,7 @@ export type MinhaVaga = {
 
 const MINHA_VAGA_SELECT = `
   SELECT
-    v.id, v.categoria_profissional_id, cp.nome AS categoria_nome, v.cidade_id, ci.nome AS cidade_nome,
+    v.id, v.titulo, v.categoria_profissional_id, cp.nome AS categoria_nome, v.cidade_id, ci.nome AS cidade_nome,
     v.bairro_id, b.nome AS bairro_nome,
     v.data_evento, v.hora_inicio, v.duracao_horas, v.valor, v.descricao, v.criado_em, v.status, v.sexo_desejado,
     v.vagas_desejadas,
@@ -161,6 +165,8 @@ export async function getAvaliacaoDaVaga(vagaId: string, empresaId: string, prof
 export type VagaConcluidaEmpresa = {
   id: string;
   categoria_nome: string;
+  /** nome livre dado pela empresa (opcional) - ver lib/vaga.ts:nomeDaVaga */
+  titulo: string | null;
   data_evento: string;
   valor: string | null;
   profissional_selecionado_nome: string | null;
@@ -170,7 +176,7 @@ export type VagaConcluidaEmpresa = {
 // uma linha por contratação (não por vaga) - uma vaga com vagas_desejadas=3
 // aparece 3 vezes aqui, uma pra cada profissional selecionado.
 const VAGA_CONCLUIDA_EMPRESA_SELECT = `
-  SELECT v.id, cp.nome AS categoria_nome, v.data_evento, v.valor,
+  SELECT v.id, v.titulo, cp.nome AS categoria_nome, v.data_evento, v.valor,
          sel.nome AS profissional_selecionado_nome, sel.slug AS profissional_selecionado_slug
   FROM vaga_candidaturas vc
   JOIN vagas_profissionais v ON v.id = vc.vaga_id
@@ -205,6 +211,8 @@ export async function countVagasConcluidasEmpresa(empresaId: string): Promise<nu
 export type VagaConcluidaProfissional = {
   id: string;
   categoria_nome: string;
+  /** nome livre dado pela empresa (opcional) - ver lib/vaga.ts:nomeDaVaga */
+  titulo: string | null;
   data_evento: string;
   valor: string | null;
   empresa_nome_fantasia: string;
@@ -212,7 +220,7 @@ export type VagaConcluidaProfissional = {
 };
 
 const VAGA_CONCLUIDA_PROFISSIONAL_SELECT = `
-  SELECT v.id, cp.nome AS categoria_nome, v.data_evento, v.valor,
+  SELECT v.id, v.titulo, cp.nome AS categoria_nome, v.data_evento, v.valor,
          e.nome_fantasia AS empresa_nome_fantasia, e.slug AS empresa_slug
   FROM vaga_candidaturas vc
   JOIN vagas_profissionais v ON v.id = vc.vaga_id
@@ -248,6 +256,8 @@ export type VagaPublica = {
   id: string;
   empresa_id: string;
   categoria_nome: string;
+  /** nome livre dado pela empresa (opcional) - ver lib/vaga.ts:nomeDaVaga */
+  titulo: string | null;
   cidade_nome: string;
   bairro_nome: string | null;
   data_evento: string;
@@ -268,7 +278,7 @@ export type VagaPublica = {
  * justamente alcançar gente fora do feed normal de compatibilidade. */
 export async function getVagaPublica(vagaId: string): Promise<VagaPublica | null> {
   return queryOne<VagaPublica>(
-    `SELECT v.id, v.empresa_id, cp.nome AS categoria_nome, ci.nome AS cidade_nome, b.nome AS bairro_nome,
+    `SELECT v.id, v.empresa_id, v.titulo, cp.nome AS categoria_nome, ci.nome AS cidade_nome, b.nome AS bairro_nome,
             v.data_evento, v.hora_inicio, v.duracao_horas, v.valor, v.descricao, v.sexo_desejado, v.status,
             v.vagas_desejadas,
             (SELECT count(*)::int FROM vaga_candidaturas vc WHERE vc.vaga_id = v.id AND vc.status = 'selecionado') AS vagas_selecionadas,

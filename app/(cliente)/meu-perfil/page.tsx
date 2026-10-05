@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { Icon } from "@/components/Icon";
 import { getSession } from "@/lib/auth";
 import { getMeuPerfilCliente } from "@/lib/data/clientes";
 import { listCidades } from "@/lib/data/geo";
@@ -25,7 +26,7 @@ export default async function MeuPerfilPage() {
 
       {!perfil.cpf && (
         <div className="mt-4 rounded-lg border border-dashed border-border-strong bg-[#efece5] p-3 text-[12.5px] text-muted">
-          ⚠️ Falta completar seu CPF pra manter sua conta segura contra perfis falsos — preencha no formulário abaixo.
+          <Icon name="alert" className="mr-1 h-4 w-4" />Falta completar seu CPF pra manter sua conta segura contra perfis falsos — preencha no formulário abaixo.
         </div>
       )}
 

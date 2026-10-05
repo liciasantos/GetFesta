@@ -49,7 +49,7 @@ export default function FavoritarProdutoButton({ slug }: { slug: string }) {
       aria-label={favoritado ? "Remover dos favoritos" : "Favoritar"}
       aria-pressed={favoritado}
       className={`flex h-8 w-8 items-center justify-center rounded-full shadow-sm transition-colors ${
-        favoritado ? "bg-accent text-white" : "bg-white/90 text-muted hover:text-accent-dark"
+        favoritado ? "bg-accent-strong text-white" : "bg-white/90 text-muted hover:text-accent-dark"
       }`}
     >
       <svg viewBox="0 0 24 24" fill={favoritado ? "currentColor" : "none"} stroke="currentColor" strokeWidth={1.8} className="h-4 w-4">

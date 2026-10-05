@@ -278,6 +278,7 @@ export const avaliarProfissionalSchema = z.object({
 });
 
 export const criarVagaSchema = z.object({
+  titulo: z.string().trim().max(80, "Use até 80 caracteres no título").optional(),
   categoriaProfissionalId: z.coerce.number({ message: "Selecione a função" }),
   cidadeId: z.coerce.number({ message: "Selecione a cidade" }),
   bairroId: z.coerce.number().optional().nullable(),

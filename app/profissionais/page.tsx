@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Icon } from "@/components/Icon";
 import { getSession } from "@/lib/auth";
 import { buttonClass, Badge } from "@/components/ui";
 import {
@@ -46,7 +47,7 @@ export default async function ProfissionaisPage() {
       {/* VANTAGEM PIONEIROS */}
       <section className="border-b border-border bg-[#fff3d6] px-6 py-8">
         <div className="mx-auto flex max-w-4xl flex-col items-center gap-2 text-center">
-          <Badge tone="ad">✨ Vantagem para os pioneiros</Badge>
+          <Badge tone="ad"><Icon name="sparkles" className="h-3 w-3" /> Vantagem para os pioneiros</Badge>
           <p className="max-w-2xl text-[14.5px] font-semibold leading-relaxed text-[#5c4a10]">
             Garanta 1 ano de plano Light grátis! Os 20 primeiros profissionais a criarem um perfil liberam recursos
             premium sem custo, incluindo 6 fotos no catálogo e envio de portfólio em PDF.
@@ -103,7 +104,7 @@ export default async function ProfissionaisPage() {
                     key={i}
                     className={`flex aspect-square items-center justify-center rounded-md text-[10.5px] font-bold ${
                       bloqueadoTotal
-                        ? "bg-accent text-white"
+                        ? "bg-accent-strong text-white"
                         : bloqueadoParcial
                           ? "border border-accent-soft-2 bg-accent-soft text-accent-dark"
                           : "border border-border text-muted-2"

@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useState, useTransition } from "react";
+import { Icon } from "@/components/Icon";
 import Link from "next/link";
 import { buttonClass } from "@/components/ui";
 import type { Cidade, Bairro, Categoria } from "@/lib/data/geo";
@@ -183,7 +184,7 @@ export default function PublicarPedidoWizard({
                 i < step
                   ? "border-ok bg-ok text-white"
                   : i === step
-                  ? "border-accent bg-accent text-white"
+                  ? "border-accent bg-accent-strong text-white"
                   : "border-border-strong bg-surface text-muted-2"
               }`}
             >
@@ -333,7 +334,7 @@ export default function PublicarPedidoWizard({
             />
             {leak.blocked && (
               <div className="mt-2.5 flex items-start gap-2 rounded-lg border border-note-border bg-note-bg p-3 text-[12px] text-note-text">
-                ⚠️ Detectamos uma possível informação de contato (telefone ou e-mail) no texto. Remova esse trecho — o
+                <Icon name="alert" className="mr-1 h-4 w-4" />Detectamos uma possível informação de contato (telefone ou e-mail) no texto. Remova esse trecho — o
                 contato é liberado automaticamente quando uma empresa demonstra interesse no seu pedido.
               </div>
             )}
@@ -419,7 +420,7 @@ function Confirmacao({ pedidoId, nomeTemp, telefoneTemp }: { pedidoId: string; n
 
   return (
     <div className="rounded-xl border border-border bg-surface p-6 text-center">
-      <div className="mb-2 text-3xl">🎉</div>
+      <div className="mb-3 flex justify-center text-accent-dark"><Icon name="party" className="h-10 w-10" /></div>
       <h2 className="text-lg font-extrabold">Pedido publicado!</h2>
       <p className="mt-1 text-sm text-muted">
         As empresas da sua região já podem ver seu pedido. Crie uma conta grátis pra acompanhar quem demonstrou interesse.

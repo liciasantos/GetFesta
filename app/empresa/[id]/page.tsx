@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Icon, Estrelas } from "@/components/Icon";
 import { notFound } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { contatoLiberadoParaCliente, getEmpresaById, registrarVisualizacaoPerfil } from "@/lib/data/empresas";
@@ -145,7 +146,7 @@ export default async function EmpresaPerfilPage({ params }: { params: Promise<{ 
             {seloPermutaBadge}
           </div>
           <p className="mt-1.5 text-[12.5px] text-muted">
-            {[empresa.categorias[0], empresa.cidades.length > 0 ? `📍 ${empresa.cidades.join(", ")}` : null]
+            {[empresa.categorias[0], empresa.cidades.length > 0 ? empresa.cidades.join(", ") : null]
               .filter(Boolean)
               .join(" · ") || "Fornecedor de festas"}
           </p>
@@ -213,7 +214,7 @@ export default async function EmpresaPerfilPage({ params }: { params: Promise<{ 
                 <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-[12.5px] text-muted">
                   {empresa.nota_exibida ? (
                     <span>
-                      ⭐ <b className="text-text">{Number(empresa.nota_exibida).toFixed(1)}</b> (
+                      <Icon name="star" filled className="h-3.5 w-3.5 text-gold" /> <b className="text-text">{Number(empresa.nota_exibida).toFixed(1)}</b> (
                       {empresa.total_avaliacoes_exibido} avaliações)
                       {empresa.nota_fonte === "google" && empresa.url_perfil_google && (
                         <>
@@ -234,7 +235,7 @@ export default async function EmpresaPerfilPage({ params }: { params: Promise<{ 
                   )}
                   {empresa.cidades.length > 0 && (
                     <span>
-                      📍 <b className="text-text">{empresa.cidades.join(", ")}</b>
+                      <Icon name="pin" className="h-3.5 w-3.5" /> <b className="text-text">{empresa.cidades.join(", ")}</b>
                     </span>
                   )}
                 </div>
@@ -331,7 +332,7 @@ export default async function EmpresaPerfilPage({ params }: { params: Promise<{ 
                 {empresa.nota_fonte === "google" && (
                   <>
                     {" "}
-                    A nota mostrada no topo do perfil (⭐ {Number(empresa.nota_exibida).toFixed(1)}) vem do{" "}
+                    A nota mostrada no topo do perfil (nota {Number(empresa.nota_exibida).toFixed(1)}) vem do{" "}
                     <b>Google Meu Negócio</b> — assim que a empresa acumular avaliações aqui na plataforma, essa lista
                     passa a mostrá-las.
                   </>
@@ -341,7 +342,7 @@ export default async function EmpresaPerfilPage({ params }: { params: Promise<{ 
               <div className="flex flex-col gap-2">
                 {empresa.avaliacoes.map((a, i) => (
                   <div key={i} className="rounded-lg border border-border p-3">
-                    <div className="mb-1 text-[12px] font-bold">{"⭐".repeat(a.nota)}</div>
+                    <div className="mb-1"><Estrelas nota={a.nota} /></div>
                     {a.comentario && <div className="text-[12px] text-muted">{a.comentario}</div>}
                   </div>
                 ))}
@@ -376,14 +377,14 @@ export default async function EmpresaPerfilPage({ params }: { params: Promise<{ 
               </div>
             ) : session?.tipo === "profissional" ? (
               <div className="rounded-lg border border-dashed border-border-strong bg-[#efece5] p-3.5 text-center text-[12px] text-muted">
-                🔒 Entrar em contato direto com empresas é exclusivo do plano Premium (R$18/mês).{" "}
+                <Icon name="lock" className="mr-1 h-3.5 w-3.5" />Entrar em contato direto com empresas é exclusivo do plano Premium (R$18/mês).{" "}
                 <Link href="/perfil-profissional" className="font-bold text-accent-dark underline">
                   Ver meu plano
                 </Link>
               </div>
             ) : (
               <div className="rounded-lg border border-dashed border-border-strong bg-[#efece5] p-3.5 text-center text-[12px] text-muted">
-                🔒 Para ver o Instagram e o telefone, publique seu pedido — é grátis. Quando {empresa.nome_fantasia} tiver
+                <Icon name="lock" className="mr-1 h-3.5 w-3.5" />Para ver o Instagram e o telefone, publique seu pedido — é grátis. Quando {empresa.nome_fantasia} tiver
                 interesse, o contato é liberado para você.
                 <div className="mt-3 sm:mt-2">
                   <Link href="/publicar-pedido" className={`${buttonClass("primary")} w-full sm:hidden`}>

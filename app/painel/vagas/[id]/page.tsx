@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { nomeDaVaga } from "@/lib/vaga";
+import { Icon } from "@/components/Icon";
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { getAvaliacaoDaVaga, getVagaDaEmpresa, listCandidatosDaVaga } from "@/lib/data/vagas";
@@ -51,7 +53,8 @@ export default async function VagaCandidatosPage({ params }: { params: Promise<{
 
       <div className="mt-3 rounded-xl border border-border bg-surface p-4">
         <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-lg font-extrabold">{vaga.categoria_nome}</h1>
+          <h1 className="text-lg font-extrabold">{nomeDaVaga(vaga)}</h1>
+          {vaga.titulo && <span className="rounded-full bg-surface-alt px-2 py-0.5 text-[11px] font-semibold text-muted">{vaga.categoria_nome}</span>}
           <Badge tone={vaga.status === "aberta" ? "ok" : vaga.status === "preenchida" ? "ok" : "muted"}>
             {STATUS_LABEL[vaga.status] ?? vaga.status}
           </Badge>
@@ -71,7 +74,7 @@ export default async function VagaCandidatosPage({ params }: { params: Promise<{
         <div className="mt-3">
           <CompartilharVagaButton
             vagaId={vaga.id}
-            mensagem={`Vaga de ${vaga.categoria_nome} em ${vaga.cidade_nome} pra ${formatDateBR(vaga.data_evento)} - confira na GetFesta:`}
+            mensagem={`Vaga de ${nomeDaVaga(vaga)} em ${vaga.cidade_nome} pra ${formatDateBR(vaga.data_evento)} - confira na GetFesta:`}
           />
         </div>
 
@@ -134,9 +137,9 @@ export default async function VagaCandidatosPage({ params }: { params: Promise<{
                   href={buildWhatsAppLink(c.telefone, `Olá ${c.nome}! Vi seu interesse na vaga que publiquei na GetFesta.`)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rounded-lg bg-accent px-3 py-1.5 text-[12px] font-bold text-white hover:bg-accent-dark"
+                  className="rounded-lg bg-accent-strong px-3 py-1.5 text-[12px] font-bold text-white hover:bg-accent-dark"
                 >
-                  💬 WhatsApp
+                  <Icon name="chat" className="h-4 w-4" /> WhatsApp
                 </a>
               )}
               {c.status === "selecionado" && <DesfazerSelecaoButton vagaId={vaga.id} profissionalId={c.profissional_id} />}

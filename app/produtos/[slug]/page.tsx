@@ -72,7 +72,7 @@ export default async function ProdutoAfiliadoPage({ params }: { params: Promise<
           <LinkMercadoLivre
             produtoId={produto.id}
             href={produto.url_afiliado || produto.url_produto}
-            className="mt-5 inline-flex w-fit items-center gap-1.5 rounded-lg bg-accent px-5 py-3 text-[14px] font-bold text-white hover:bg-accent-dark"
+            className="mt-5 inline-flex w-fit items-center gap-1.5 rounded-lg bg-accent-strong px-5 py-3 text-[14px] font-bold text-white hover:bg-accent-dark"
           >
             Ver no Mercado Livre ↗
           </LinkMercadoLivre>
