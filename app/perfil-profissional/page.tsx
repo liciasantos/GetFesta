@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import { nomeDaVaga } from "@/lib/vaga";
 import { Icon } from "@/components/Icon";
 import { getSession } from "@/lib/auth";
 import { getMeuPerfilProfissional, listCategoriasProfissionais } from "@/lib/data/profissionais";
@@ -10,9 +9,6 @@ import { getConfiguracoesSite, CONFIG_CONTATO_EMAIL } from "@/lib/data/config";
 import AvatarUpload from "@/components/AvatarUpload";
 import GaleriaManager from "@/components/GaleriaManager";
 import DisponibilidadeCalendar from "@/components/DisponibilidadeCalendar";
-import CandidatarVagaButton from "@/components/CandidatarVagaButton";
-import RetirarCandidaturaButton from "@/components/RetirarCandidaturaButton";
-import CompartilharVagaButton from "@/components/CompartilharVagaButton";
 import AlterarSenhaForm from "@/components/AlterarSenhaForm";
 import ExcluirContaForm from "@/components/ExcluirContaForm";
 import PortfolioPdfUpload from "@/components/PortfolioPdfUpload";
@@ -28,7 +24,9 @@ import { excluirContaProfissional } from "@/lib/actions/conta";
 import { getLimitesProfissional } from "@/lib/data/limites-profissional";
 import { Badge, buttonClass } from "@/components/ui";
 import { formatCurrencyBRL, formatDateBR } from "@/lib/format";
+import { buildWhatsAppLink } from "@/lib/whatsapp";
 import PerfilProfissionalForm from "./PerfilProfissionalForm";
+import VagasProfissionalLista, { type VagaProfissional } from "@/components/VagasProfissionalLista";
 import { ProfissionalTabsProvider, TabSection, TabShortcutButton } from "@/components/ProfissionalTabs";
 import { TAB_IDS, type Tab } from "@/lib/profissional-tabs";
 import PerfilProfissionalMobileHeader from "@/components/PerfilProfissionalMobileHeader";
@@ -66,6 +64,31 @@ export default async function PerfilProfissionalPage({
     getLimitesProfissional(session.usuarioId),
   ]);
   if (!perfil) redirect("/entrar");
+
+  // Datas como YYYY-MM-DD e "hoje" no fuso de Brasília calculado aqui, no servidor
+  // (o componente de lista é client e não deve chamar new Date() no render).
+  const hoje = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
+  const diaIso = (d: string | Date) => (typeof d === "string" ? d : d.toISOString()).slice(0, 10);
+  const vagasLista: VagaProfissional[] = vagas.map((v) => ({
+    id: v.id,
+    titulo: v.titulo,
+    categoria_nome: v.categoria_nome,
+    cidade_nome: v.cidade_nome,
+    bairro_nome: v.bairro_nome,
+    empresa_nome_fantasia: v.empresa_nome_fantasia,
+    empresa_telefone: v.empresa_telefone,
+    data_evento: diaIso(v.data_evento),
+    hora_inicio: v.hora_inicio,
+    duracao_horas: Number(v.duracao_horas),
+    valor: v.valor,
+    descricao: v.descricao,
+    criado_em: diaIso(v.criado_em),
+    status: v.status,
+    candidatura_status: v.candidatura_status,
+    ja_candidatado: v.ja_candidatado,
+    vagas_desejadas: v.vagas_desejadas,
+    vagas_selecionadas: v.vagas_selecionadas,
+  }));
 
   const emailContato = config[CONFIG_CONTATO_EMAIL];
   const assuntoDestaque = encodeURIComponent("Quero destacar meu perfil na GetFesta");
@@ -105,12 +128,16 @@ export default async function PerfilProfissionalPage({
       </>
     ) : null;
 
+  // Selecionado e o evento ainda vai acontecer: banner no topo, em todas as abas,
+  // pra ele ver assim que entrar (a lista completa fica na aba Vagas).
+  const selecionadasProximas = vagasLista.filter((v) => v.candidatura_status === "selecionado" && v.data_evento >= hoje);
+
   const candidaturasEmAnalise = vagas.filter(
     (v) => v.ja_candidatado && v.candidatura_status !== "selecionado" && v.candidatura_status !== "recusado"
   ).length;
 
   return (
-    <ProfissionalTabsProvider initialTab={initialTab}>
+    <ProfissionalTabsProvider initialTab={initialTab} vagasBadge={selecionadasProximas.length}>
     <div className="lg:flex lg:items-start lg:gap-6 lg:pl-6 lg:pt-8">
       <ProfissionalPainelSidebar />
       <div className="min-w-0 flex-1">
@@ -130,6 +157,45 @@ export default async function PerfilProfissionalPage({
         aviso={avisoCompletarCatalogo}
         atualizarFoto={atualizarFotoProfissional}
       />
+
+      {selecionadasProximas.length > 0 && (
+        <div className="mt-6 rounded-2xl border-2 border-ok bg-ok-soft p-4">
+          <p className="flex items-center gap-1.5 text-[14px] font-extrabold text-ok">
+            <Icon name="party" className="h-4 w-4" />
+            {selecionadasProximas.length === 1
+              ? "Você foi selecionado(a) para uma vaga!"
+              : `Você foi selecionado(a) para ${selecionadasProximas.length} vagas!`}
+          </p>
+          <ul className="mt-2 flex flex-col gap-1 text-[13px] text-text">
+            {selecionadasProximas.map((v) => (
+              <li key={v.id} className="flex items-center justify-between gap-3">
+                <span>
+                  <b>{v.titulo?.trim() || v.categoria_nome}</b> · {v.empresa_nome_fantasia} ·{" "}
+                  {v.data_evento.split("-").reverse().join("/")} às {v.hora_inicio.slice(0, 5)}
+                </span>
+                {v.empresa_telefone && (
+                  <a
+                    href={buildWhatsAppLink(
+                      v.empresa_telefone,
+                      `Olá! Fui selecionado(a) para a vaga de ${v.titulo?.trim() || v.categoria_nome} do dia ${v.data_evento.split("-").reverse().join("/")} pela GetFesta. Podemos combinar os detalhes?`
+                    )}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`Falar com ${v.empresa_nome_fantasia} no WhatsApp`}
+                    title={`Falar com ${v.empresa_nome_fantasia} no WhatsApp`}
+                    className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ok text-white shadow-sm hover:bg-ok/90"
+                  >
+                    <Icon name="chat" className="h-[18px] w-[18px]" />
+                  </a>
+                )}
+              </li>
+            ))}
+          </ul>
+          <div className="mt-3">
+            <TabShortcutButton tabId="vagas" label="Ver detalhes na aba Vagas" />
+          </div>
+        </div>
+      )}
 
       <TabSection tab="painel">
       <div className="mt-6 grid grid-cols-2 gap-2.5 lg:grid-cols-4">
@@ -190,55 +256,10 @@ export default async function PerfilProfissionalPage({
       </TabSection>
 
       <TabSection tab="vagas">
-      <h2 className="mb-2 mt-8 text-xs font-bold uppercase tracking-wide text-muted-2">
+      <h2 className="mb-1 mt-8 text-xs font-bold uppercase tracking-wide text-muted">
         Vagas compatíveis e minhas candidaturas
       </h2>
-      <div className="overflow-hidden rounded-xl border border-border">
-        {vagas.length === 0 && <p className="p-4 text-[12.5px] text-muted">Nenhuma vaga compatível por enquanto.</p>}
-        {vagas.map((vaga) => (
-          <div key={vaga.id} className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-3.5 last:border-b-0">
-            <div className="text-[12.5px]">
-              <span className="font-bold">{nomeDaVaga(vaga)}</span>
-              {vaga.titulo && <> · {vaga.categoria_nome}</>} · {vaga.bairro_nome ?? vaga.cidade_nome} ·{" "}
-              {formatDateBR(vaga.data_evento)} · {vaga.hora_inicio.slice(0, 5)} · {Number(vaga.duracao_horas)}h
-              <div className="mt-1 flex flex-wrap gap-1">
-                <span className="rounded-full bg-surface-alt px-2 py-0.5 text-[11px] font-semibold">
-                  {vaga.valor ? formatCurrencyBRL(vaga.valor) : "Valor a combinar"}
-                </span>
-                {vaga.vagas_desejadas > 1 && (
-                  <span className="rounded-full bg-surface-alt px-2 py-0.5 text-[11px] font-semibold">
-                    Vaga pra {vaga.vagas_desejadas} pessoas · {vaga.vagas_selecionadas} selecionada
-                    {vaga.vagas_selecionadas === 1 ? "" : "s"}
-                  </span>
-                )}
-              </div>
-              <p className="mt-1.5 max-w-md text-[12px] leading-relaxed text-muted">{vaga.descricao}</p>
-            </div>
-            <div className="flex flex-col items-end gap-1.5">
-              {vaga.candidatura_status === "selecionado" ? (
-                <Badge tone="ok"><Icon name="party" className="h-3 w-3" /> Selecionado!</Badge>
-              ) : vaga.status === "cancelada" ? (
-                <Badge tone="muted">Vaga encerrada</Badge>
-              ) : vaga.candidatura_status === "recusado" ? (
-                <Badge tone="muted">Não foi dessa vez</Badge>
-              ) : vaga.ja_candidatado ? (
-                <Badge tone="ok">Candidatura enviada</Badge>
-              ) : (
-                <CandidatarVagaButton vagaId={vaga.id} />
-              )}
-              {(vaga.candidatura_status === "candidatado" || vaga.candidatura_status === "selecionado") &&
-                vaga.status !== "cancelada" &&
-                !eventoJaPassou(vaga.data_evento) && (
-                  <RetirarCandidaturaButton vagaId={vaga.id} selecionado={vaga.candidatura_status === "selecionado"} />
-                )}
-              <CompartilharVagaButton
-                vagaId={vaga.id}
-                mensagem={`Vaga de ${nomeDaVaga(vaga)} em ${vaga.cidade_nome} pra ${formatDateBR(vaga.data_evento)} - confira na GetFesta:`}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
+      <VagasProfissionalLista vagas={vagasLista} hoje={hoje} />
 
       <div className="mt-5 rounded-xl border border-border bg-surface p-5">
         <div className="mb-3 flex items-center justify-between gap-2">
@@ -335,12 +356,4 @@ function PainelKpi({ value, label }: { value: string | number; label: string }) 
       <div className="mt-0.5 text-[10.5px] font-semibold text-muted">{label}</div>
     </div>
   );
-}
-
-/** data_evento vem do banco como Date (meia-noite UTC) ou string YYYY-MM-DD -
- * compara só o dia, no fuso de Brasília. */
-function eventoJaPassou(dataEvento: string | Date): boolean {
-  const dia = (typeof dataEvento === "string" ? dataEvento : dataEvento.toISOString()).slice(0, 10);
-  const hoje = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
-  return dia < hoje;
 }

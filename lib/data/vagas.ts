@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { query, queryOne } from "@/lib/db";
 
 export type VagaFeedItem = {
@@ -14,6 +15,12 @@ export type VagaFeedItem = {
   descricao: string;
   criado_em: string;
   empresa_nome_fantasia: string;
+  /** telefone de contato da empresa - só vem preenchido quando ESTE
+   * profissional foi selecionado pra vaga (a empresa aceitou, então o contato
+   * é liberado) E o evento ainda não aconteceu; em qualquer outro caso é null
+   * e nunca sai do servidor. Se ele desistir, a candidatura é apagada e o
+   * telefone some junto. */
+  empresa_telefone: string | null;
   sexo_desejado: string;
   /** status da vaga em si (aberta/preenchida/cancelada) - junto com
    * candidatura_status, decide o que mostrar pro profissional (ver
@@ -36,7 +43,10 @@ export type VagaFeedItem = {
  * na direção inversa) MAIS qualquer vaga que ele já se candidatou antes,
  * mesmo que ela tenha sido preenchida/cancelada depois - assim ele continua
  * vendo o resultado da candidatura (selecionado ou nao) em vez da vaga
- * simplesmente sumir da lista. Compara por estado (nao cidade) pra nao
+ * simplesmente sumir da lista. Vagas abertas de evento que ja passou nao
+ * aparecem (ficam "abertas" ate a empresa encerrar, mas ninguem mais pode se
+ * candidatar a elas); ordem: eventos mais proximos primeiro, passados (so as
+ * que ele se candidatou) no fim. Compara por estado (nao cidade) pra nao
  * esconder vagas de cidades vizinhas na mesma regiao metropolitana (ex.:
  * profissional de Nilopolis ve vaga na capital do RJ). sexo_desejado=
  * 'indiferente' aparece pra todo mundo; senão, só combina se bater com o
@@ -50,6 +60,8 @@ export async function listVagasCompativeis(profissionalId: string): Promise<(Vag
        v.status, v.vagas_desejadas,
        (SELECT count(*)::int FROM vaga_candidaturas vc2 WHERE vc2.vaga_id = v.id AND vc2.status = 'selecionado') AS vagas_selecionadas,
        e.nome_fantasia AS empresa_nome_fantasia,
+       CASE WHEN vc.status = 'selecionado' AND v.data_evento >= (now() AT TIME ZONE 'America/Sao_Paulo')::date
+            THEN e.telefone_contato END AS empresa_telefone,
        vc.status AS candidatura_status,
        (vc.id IS NOT NULL) AS ja_candidatado
      FROM vagas_profissionais v
@@ -63,6 +75,7 @@ export async function listVagasCompativeis(profissionalId: string): Promise<(Vag
      LEFT JOIN vaga_candidaturas vc ON vc.vaga_id = v.id AND vc.profissional_id = $1
      WHERE (
        (v.status = 'aberta'
+        AND v.data_evento >= (now() AT TIME ZONE 'America/Sao_Paulo')::date
         AND pci.estado = ci.estado
         AND (v.sexo_desejado = 'indiferente' OR v.sexo_desejado = p.sexo)
         AND EXISTS (
@@ -70,7 +83,10 @@ export async function listVagasCompativeis(profissionalId: string): Promise<(Vag
         ))
        OR vc.id IS NOT NULL
      )
-     ORDER BY v.criado_em DESC`,
+     ORDER BY
+       (v.data_evento < (now() AT TIME ZONE 'America/Sao_Paulo')::date),
+       CASE WHEN v.data_evento >= (now() AT TIME ZONE 'America/Sao_Paulo')::date THEN v.data_evento END ASC,
+       v.data_evento DESC`,
     [profissionalId]
   );
 }
@@ -227,9 +243,12 @@ const VAGA_CONCLUIDA_PROFISSIONAL_SELECT = `
   JOIN categorias_profissionais cp ON cp.id = v.categoria_profissional_id
   JOIN empresas e ON e.usuario_id = v.empresa_id
   WHERE vc.profissional_id = $1 AND v.status = 'preenchida' AND vc.status = 'selecionado'
+    AND v.data_evento < (now() AT TIME ZONE 'America/Sao_Paulo')::date
 `;
 
-/** Histórico de vagas concluídas do profissional - mesmo padrão do lado da
+/** Histórico de vagas concluídas do profissional (selecionado E evento já
+ * aconteceu - antes de acontecer a vaga aparece como "selecionado" em
+ * destaque na lista de vagas, não aqui) - mesmo padrão do lado da
  * empresa (card resumido + página de histórico paginada). */
 export async function listVagasConcluidasProfissional(
   profissionalId: string,
@@ -246,7 +265,8 @@ export async function countVagasConcluidasProfissional(profissionalId: string): 
     `SELECT COUNT(*) AS total
      FROM vaga_candidaturas vc
      JOIN vagas_profissionais v ON v.id = vc.vaga_id
-     WHERE vc.profissional_id = $1 AND v.status = 'preenchida' AND vc.status = 'selecionado'`,
+     WHERE vc.profissional_id = $1 AND v.status = 'preenchida' AND vc.status = 'selecionado'
+       AND v.data_evento < (now() AT TIME ZONE 'America/Sao_Paulo')::date`,
     [profissionalId]
   );
   return Number(row?.total ?? 0);
@@ -307,3 +327,26 @@ export async function listVagaIdsParaSitemap(): Promise<string[]> {
   const rows = await query<{ id: string }>(`SELECT id FROM vagas_profissionais WHERE status <> 'cancelada' ORDER BY id`);
   return rows.map((r) => r.id);
 }
+
+/** Número do selo ao lado de "Vagas" no menu: pro profissional, em quantas
+ * vagas de evento futuro ele foi selecionado; pra empresa, quantas vagas ainda
+ * abertas já passaram da data do evento (precisam do "fechou com alguém?").
+ * cache() do React = no máximo uma consulta por requisição, mesmo com o layout
+ * raiz e o layout do painel pedindo o mesmo número. */
+export const getVagasBadgeCount = cache(async (tipo: "profissional" | "empresa", usuarioId: string): Promise<number> => {
+  const hoje = "(now() AT TIME ZONE 'America/Sao_Paulo')::date";
+  const row =
+    tipo === "profissional"
+      ? await queryOne<{ n: number }>(
+          `SELECT count(*)::int AS n
+           FROM vaga_candidaturas vc JOIN vagas_profissionais v ON v.id = vc.vaga_id
+           WHERE vc.profissional_id = $1 AND vc.status = 'selecionado' AND v.data_evento >= ${hoje}`,
+          [usuarioId]
+        )
+      : await queryOne<{ n: number }>(
+          `SELECT count(*)::int AS n FROM vagas_profissionais
+           WHERE empresa_id = $1 AND status = 'aberta' AND data_evento < ${hoje}`,
+          [usuarioId]
+        );
+  return row?.n ?? 0;
+});

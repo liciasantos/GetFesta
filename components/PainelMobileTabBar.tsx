@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import NavBadge from "@/components/NavBadge";
 
 const TABS: Array<{ href: string; label: string; icon: string; match: (p: string) => boolean }> = [
   {
@@ -41,7 +42,7 @@ const TABS: Array<{ href: string; label: string; icon: string; match: (p: string
  * cada item é uma rota de verdade (Home/Perfil/Pedidos/Vagas já são páginas
  * separadas), então a navegação é feita com <Link> normal + usePathname pra
  * destacar a aba ativa, sem precisar de nenhum estado client extra. */
-export default function PainelMobileTabBar() {
+export default function PainelMobileTabBar({ vagasBadge = 0 }: { vagasBadge?: number }) {
   const pathname = usePathname();
   return (
     <nav
@@ -61,7 +62,7 @@ export default function PainelMobileTabBar() {
               }`}
               aria-current={active ? "page" : undefined}
             >
-              <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${active ? "bg-accent-soft" : ""}`}>
+              <span className={`relative flex h-10 w-10 items-center justify-center rounded-xl ${active ? "bg-accent-soft" : ""}`}>
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
@@ -72,6 +73,7 @@ export default function PainelMobileTabBar() {
                   className="h-[27px] w-[27px]"
                   dangerouslySetInnerHTML={{ __html: t.icon }}
                 />
+                {t.label === "Vagas" && <NavBadge count={vagasBadge} rotulo={["vaga aguardando seu fechamento", "vagas aguardando seu fechamento"]} variant="corner" />}
               </span>
               {t.label}
             </Link>

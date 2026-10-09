@@ -11,6 +11,7 @@ import ClarityScript from "@/components/ClarityScript";
 import GoogleTagManagerScript, { GoogleTagManagerNoScript } from "@/components/GoogleTagManager";
 import MobileAccountNav from "@/components/MobileAccountNav";
 import { getSession } from "@/lib/auth";
+import { getVagasBadgeCount } from "@/lib/data/vagas";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -54,6 +55,11 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
+  // selo numérico ao lado de "Vagas" nas barras de navegação (ver components/NavBadge.tsx)
+  const vagasBadge =
+    session && (session.tipo === "profissional" || session.tipo === "empresa")
+      ? await getVagasBadgeCount(session.tipo, session.usuarioId)
+      : 0;
 
   return (
     <html lang="pt-BR" className={`h-full ${inter.variable} ${manrope.variable}`}>
@@ -67,7 +73,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <ClarityScript />
         <SiteHeader />
         <main className="flex-1">
-          <MobileAccountNav tipo={session?.tipo ?? null}>{children}</MobileAccountNav>
+          <MobileAccountNav tipo={session?.tipo ?? null} vagasBadge={vagasBadge}>{children}</MobileAccountNav>
         </main>
         <GoogleAdBanner />
         <SiteFooter />

@@ -178,6 +178,9 @@ export default function NovaVagaForm({
             <option value="feminino">Feminino</option>
             <option value="masculino">Masculino</option>
           </select>
+          <p className="text-[11px] leading-snug text-muted">
+            Feminino ou Masculino: só profissionais desse gênero veem a vaga. Use Indiferente pra todos.
+          </p>
         </Field>
       </div>
 

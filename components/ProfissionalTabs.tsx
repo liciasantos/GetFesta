@@ -2,10 +2,12 @@
 
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { TABS, type Tab } from "@/lib/profissional-tabs";
+import NavBadge from "@/components/NavBadge";
 
-const TabContext = createContext<{ tab: Tab; setTab: (t: Tab) => void }>({
+const TabContext = createContext<{ tab: Tab; setTab: (t: Tab) => void; vagasBadge: number }>({
   tab: "perfil",
   setTab: () => {},
+  vagasBadge: 0,
 });
 
 /** Shell de navegação por abas (Perfil/Galeria/Calendário/Vagas + Painel
@@ -15,10 +17,19 @@ const TabContext = createContext<{ tab: Tab; setTab: (t: Tab) => void }>({
  * mesma árvore de componentes, sem duplicar nenhum client component nem
  * refazer fetch, então não tem custo extra de performance nem de estado
  * dessincronizado entre abas. */
-export function ProfissionalTabsProvider({ children, initialTab = "perfil" }: { children: ReactNode; initialTab?: Tab }) {
+export function ProfissionalTabsProvider({
+  children,
+  initialTab = "perfil",
+  vagasBadge = 0,
+}: {
+  children: ReactNode;
+  initialTab?: Tab;
+  /** selo numérico ao lado de "Vagas" (vagas em que foi selecionado) */
+  vagasBadge?: number;
+}) {
   const [tab, setTab] = useState<Tab>(initialTab);
   return (
-    <TabContext.Provider value={{ tab, setTab }}>
+    <TabContext.Provider value={{ tab, setTab, vagasBadge }}>
       <div className="pb-20 sm:pb-0">{children}</div>
       <MobileTabBar />
     </TabContext.Provider>
@@ -55,7 +66,7 @@ export function TabShortcutButton({ tabId, label }: { tabId: Tab; label: string 
 }
 
 function MobileTabBar() {
-  const { tab, setTab } = useContext(TabContext);
+  const { tab, setTab, vagasBadge } = useContext(TabContext);
   return (
     <nav
       data-barra-inferior
@@ -75,7 +86,7 @@ function MobileTabBar() {
               }`}
               aria-current={isActive ? "page" : undefined}
             >
-              <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${isActive ? "bg-accent-soft" : ""}`}>
+              <span className={`relative flex h-10 w-10 items-center justify-center rounded-xl ${isActive ? "bg-accent-soft" : ""}`}>
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
@@ -86,6 +97,7 @@ function MobileTabBar() {
                   className="h-[27px] w-[27px]"
                   dangerouslySetInnerHTML={{ __html: t.icon }}
                 />
+                {t.id === "vagas" && <NavBadge count={vagasBadge} rotulo={["vaga em que você foi selecionado(a)", "vagas em que você foi selecionado(a)"]} variant="corner" />}
               </span>
               {t.label}
             </button>

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import NavBadge from "@/components/NavBadge";
 
 const ITENS: Array<{ href: string; label: string; icon: string; match: (p: string) => boolean }> = [
   {
@@ -53,7 +54,7 @@ const ITENS: Array<{ href: string; label: string; icon: string; match: (p: strin
  * components/PainelMobileTabBar.tsx e components/MobileAccountNav.tsx),
  * então essa sidebar não duplica nada, só cobre o desktop, onde antes não
  * existia navegação nenhuma além dos links soltos dentro de cada página. */
-export default function PainelSidebar() {
+export default function PainelSidebar({ vagasBadge = 0 }: { vagasBadge?: number }) {
   const pathname = usePathname();
 
   return (
@@ -83,6 +84,7 @@ export default function PainelSidebar() {
               dangerouslySetInnerHTML={{ __html: item.icon }}
             />
             {item.label}
+            {item.href === "/painel/vagas" && <NavBadge count={vagasBadge} rotulo={["vaga aguardando seu fechamento", "vagas aguardando seu fechamento"]} />}
           </Link>
         );
       })}

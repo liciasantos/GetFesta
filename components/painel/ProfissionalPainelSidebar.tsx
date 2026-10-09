@@ -2,6 +2,7 @@
 
 import { useProfissionalTab } from "@/components/ProfissionalTabs";
 import { TABS, type Tab } from "@/lib/profissional-tabs";
+import NavBadge from "@/components/NavBadge";
 
 const ITENS: Array<{ id: Tab; label: string; icon: string }> = [
   {
@@ -20,7 +21,7 @@ const ITENS: Array<{ id: Tab; label: string; icon: string }> = [
  * ProfissionalTabs.tsx), que não ganha o item "Painel inicial" de propósito -
  * ele só existe no desktop. */
 export default function ProfissionalPainelSidebar() {
-  const { tab, setTab } = useProfissionalTab();
+  const { tab, setTab, vagasBadge } = useProfissionalTab();
 
   return (
     <nav className="sticky top-6 hidden w-[230px] shrink-0 flex-col gap-1 lg:flex" aria-label="Navegação do catálogo profissional">
@@ -47,6 +48,7 @@ export default function ProfissionalPainelSidebar() {
               dangerouslySetInnerHTML={{ __html: item.icon }}
             />
             {item.label}
+            {item.id === "vagas" && <NavBadge count={vagasBadge} rotulo={["vaga em que você foi selecionado(a)", "vagas em que você foi selecionado(a)"]} />}
           </button>
         );
       })}

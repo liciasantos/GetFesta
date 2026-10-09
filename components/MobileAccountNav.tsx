@@ -12,9 +12,11 @@ import ProfissionalGlobalTabBar from "@/components/ProfissionalGlobalTabBar";
  * admin ou visitante. */
 export default function MobileAccountNav({
   tipo,
+  vagasBadge = 0,
   children,
 }: {
   tipo: "cliente" | "empresa" | "profissional" | "admin" | null;
+  vagasBadge?: number;
   children: ReactNode;
 }) {
   const pathname = usePathname();
@@ -23,7 +25,7 @@ export default function MobileAccountNav({
     return (
       <div className="pb-20 sm:pb-0">
         {children}
-        <PainelMobileTabBar />
+        <PainelMobileTabBar vagasBadge={vagasBadge} />
       </div>
     );
   }
@@ -34,7 +36,7 @@ export default function MobileAccountNav({
     return (
       <div className="pb-20 sm:pb-0">
         {children}
-        <ProfissionalGlobalTabBar />
+        <ProfissionalGlobalTabBar vagasBadge={vagasBadge} />
       </div>
     );
   }
