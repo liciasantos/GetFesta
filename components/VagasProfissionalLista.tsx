@@ -81,7 +81,7 @@ function Chip({ ativo, onClick, children }: { ativo: boolean; onClick: () => voi
       type="button"
       aria-pressed={ativo}
       onClick={onClick}
-      className={`min-h-9 rounded-full border px-3.5 py-1.5 text-[12.5px] font-bold transition-colors ${
+      className={`min-h-9 rounded-full border px-3.5 py-1.5 text-[12.5px] font-bold transition-colors sm:min-h-8 sm:px-3 sm:py-1 sm:text-[12px] ${
         ativo
           ? "border-accent bg-accent-soft text-accent-dark"
           : "border-border bg-surface text-muted hover:border-border-strong hover:text-text"
@@ -94,9 +94,9 @@ function Chip({ ativo, onClick, children }: { ativo: boolean; onClick: () => voi
 
 function GrupoFiltro({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div>
+    <div className="sm:flex sm:items-center sm:gap-2.5">
       <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted">{label}</p>
-      <div className="mt-2 flex flex-wrap gap-2">{children}</div>
+      <div className="mt-2 flex flex-wrap gap-2 sm:mt-0 sm:gap-1.5">{children}</div>
     </div>
   );
 }
@@ -183,9 +183,11 @@ export default function VagasProfissionalLista({ vagas, hoje }: { vagas: VagaPro
           <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-ok">
             <Icon name="party" className="h-4 w-4" /> Você foi selecionado(a) · {selecionadasProximas.length}
           </p>
-          {selecionadasProximas.map((v) => (
-            <CartaoSelecionada key={v.id} v={v} hoje={hoje} />
-          ))}
+          <div className={`grid grid-cols-1 gap-4 ${selecionadasProximas.length > 1 ? "xl:grid-cols-2" : ""}`}>
+            {selecionadasProximas.map((v) => (
+              <CartaoSelecionada key={v.id} v={v} hoje={hoje} />
+            ))}
+          </div>
         </section>
       )}
 
@@ -197,11 +199,11 @@ export default function VagasProfissionalLista({ vagas, hoje }: { vagas: VagaPro
 
       {/* FILTROS */}
       {ativas.length > 0 && (
-      <section className="rounded-2xl border border-border bg-surface p-5 shadow-card" aria-label="Filtrar vagas">
-        <div className="flex items-start justify-between gap-3">
-          <div>
+      <section className="rounded-2xl border border-border bg-surface p-5 shadow-card sm:p-4" aria-label="Filtrar vagas">
+        <div className="flex items-start justify-between gap-3 sm:items-center">
+          <div className="sm:flex sm:items-baseline sm:gap-3">
             <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-accent-dark">Filtrar vagas</p>
-            <p className="mt-0.5 text-[14px] text-muted" aria-live="polite">
+            <p className="mt-0.5 text-[14px] text-muted sm:mt-0" aria-live="polite">
               <b className="text-text">{filtradas.length}</b> {filtradas.length === 1 ? "vaga" : "vagas"}
               {filtradas.length !== ativas.length && <> de {ativas.length}</>}
             </p>
@@ -223,7 +225,7 @@ export default function VagasProfissionalLista({ vagas, hoje }: { vagas: VagaPro
           </div>
         </div>
 
-        <div className="relative mt-3">
+        <div className="relative mt-3 sm:mt-2.5">
           <svg
             viewBox="0 0 24 24"
             fill="none"
@@ -243,11 +245,11 @@ export default function VagasProfissionalLista({ vagas, hoje }: { vagas: VagaPro
             onChange={(e) => setBusca(e.target.value)}
             placeholder="Título, empresa, cidade, função…"
             aria-label="Buscar vagas"
-            className="w-full rounded-full border border-border bg-surface-alt/50 py-3 pl-11 pr-4 text-[14px]"
+            className="w-full rounded-full border border-border bg-surface-alt/50 py-3 pl-11 pr-4 text-[14px] sm:py-2 sm:text-[13.5px]"
           />
         </div>
 
-        <div className={`${mostrarGrupos} mt-4 flex-col gap-x-10 gap-y-4 sm:flex sm:flex-row sm:flex-wrap`}>
+        <div className={`${mostrarGrupos} mt-4 flex-col gap-x-6 gap-y-4 sm:mt-3 sm:flex sm:flex-row sm:flex-wrap sm:items-center sm:gap-y-2`}>
           <GrupoFiltro label="Quando">
             <Chip ativo={quando === "semana"} onClick={() => setQuando(quando === "semana" ? "" : "semana")}>
               Próximos 7 dias
@@ -277,7 +279,7 @@ export default function VagasProfissionalLista({ vagas, hoje }: { vagas: VagaPro
           )}
 
           {cidades.length > 1 && (
-            <div>
+            <div className="sm:flex sm:items-center sm:gap-2.5">
               <label htmlFor="filtro-cidade" className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted">
                 Cidade
               </label>
@@ -285,7 +287,7 @@ export default function VagasProfissionalLista({ vagas, hoje }: { vagas: VagaPro
                 id="filtro-cidade"
                 value={cidade}
                 onChange={(e) => setCidade(e.target.value)}
-                className="mt-2 block min-h-9 rounded-full border border-border bg-surface-alt/50 px-3.5 py-1.5 text-[12.5px] font-bold"
+                className="mt-2 block min-h-9 rounded-full border border-border bg-surface-alt/50 px-3.5 py-1.5 text-[12.5px] font-bold sm:mt-0 sm:min-h-8 sm:py-1 sm:text-[12px]"
               >
                 <option value="">Todas as cidades</option>
                 {cidades.map((c) => (
@@ -310,6 +312,7 @@ export default function VagasProfissionalLista({ vagas, hoje }: { vagas: VagaPro
         </div>
       )}
 
+      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
       {filtradas.map((v) => {
         const dias = diasEntre(hoje, v.data_evento);
         const passou = dias < 0;
@@ -373,7 +376,7 @@ export default function VagasProfissionalLista({ vagas, hoje }: { vagas: VagaPro
 
             <p className="mt-3 max-w-2xl text-[13.5px] leading-relaxed text-muted">{v.descricao}</p>
 
-            <div className="mt-4 flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mt-4 flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
               <span className="text-[12px] text-muted">Publicada em {dataCurta(v.criado_em)}</span>
               <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center [&_button]:w-full sm:[&_button]:w-auto [&>div]:w-full sm:[&>div]:w-auto">
                 <CompartilharVagaButton
@@ -389,6 +392,7 @@ export default function VagasProfissionalLista({ vagas, hoje }: { vagas: VagaPro
           </article>
         );
       })}
+      </div>
 
       {historico.length > 0 && (
         <Sanfona

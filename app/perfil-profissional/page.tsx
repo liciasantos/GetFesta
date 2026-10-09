@@ -27,7 +27,7 @@ import { formatCurrencyBRL, formatDateBR } from "@/lib/format";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 import PerfilProfissionalForm from "./PerfilProfissionalForm";
 import VagasProfissionalLista, { type VagaProfissional } from "@/components/VagasProfissionalLista";
-import { ProfissionalTabsProvider, TabSection, TabShortcutButton } from "@/components/ProfissionalTabs";
+import { LarguraPorAba, ProfissionalTabsProvider, TabSection, TabShortcutButton } from "@/components/ProfissionalTabs";
 import { TAB_IDS, type Tab } from "@/lib/profissional-tabs";
 import PerfilProfissionalMobileHeader from "@/components/PerfilProfissionalMobileHeader";
 import ProfissionalPainelSidebar from "@/components/painel/ProfissionalPainelSidebar";
@@ -141,7 +141,7 @@ export default async function PerfilProfissionalPage({
     <div className="lg:flex lg:items-start lg:gap-6 lg:pl-6 lg:pt-8">
       <ProfissionalPainelSidebar />
       <div className="min-w-0 flex-1">
-      <div className="mx-auto max-w-2xl px-6 py-10">
+      <LarguraPorAba>
       <div className="hidden sm:block">
         <h1 className="text-xl font-extrabold">Meu catálogo profissional</h1>
         <p className="mt-1 text-sm text-muted">
@@ -342,7 +342,7 @@ export default async function PerfilProfissionalPage({
         />
       </div>
       </TabSection>
-      </div>
+      </LarguraPorAba>
       </div>
     </div>
     </ProfissionalTabsProvider>

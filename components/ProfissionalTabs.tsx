@@ -45,6 +45,16 @@ export function useProfissionalTab() {
   return useContext(TabContext);
 }
 
+/** Largura do conteúdo: estreita (max-w-2xl) nas abas de formulário, mas na aba
+ * Vagas, em tela grande, usa o espaço todo ao lado do menu pra caber as vagas em
+ * duas colunas (ver components/VagasProfissionalLista.tsx). */
+export function LarguraPorAba({ children }: { children: ReactNode }) {
+  const { tab } = useContext(TabContext);
+  return (
+    <div className={`mx-auto px-6 py-10 ${tab === "vagas" ? "max-w-2xl lg:max-w-6xl" : "max-w-2xl"}`}>{children}</div>
+  );
+}
+
 export function TabSection({ tab, children }: { tab: Tab; children: ReactNode }) {
   const { tab: active } = useContext(TabContext);
   return <div className={active === tab ? "block" : "hidden"}>{children}</div>;
