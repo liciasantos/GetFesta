@@ -91,7 +91,7 @@ export default async function VagaCandidatosPage({ params }: { params: Promise<{
         {vaga.status === "aberta" && (
           <div className="mt-3 flex flex-wrap gap-3">
             {selecionados.length > 0 && <FinalizarVagaButton vagaId={vaga.id} />}
-            {candidatos.length > 0 && selecionados.length === 0 && <NaoFechouButton vagaId={vaga.id} />}
+            {selecionados.length === 0 && <NaoFechouButton vagaId={vaga.id} />}
           </div>
         )}
 

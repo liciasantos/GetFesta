@@ -119,23 +119,57 @@ export function FinalizarVagaButton({ vagaId }: { vagaId: string }) {
   );
 }
 
+/** Encerra a vaga sem ninguém selecionado (com ou sem candidatos) - tira ela
+ * do alerta "Fechou com alguém?" e manda pra "Encerradas". Pede confirmação
+ * porque a vaga deixa de receber candidaturas e não dá pra reabrir. */
 export function NaoFechouButton({ vagaId }: { vagaId: string }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [confirmando, setConfirmando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  if (!confirmando) {
+    return (
+      <button
+        type="button"
+        onClick={() => setConfirmando(true)}
+        className="text-[12px] font-bold text-muted underline"
+      >
+        Encerrar vaga sem selecionar ninguém
+      </button>
+    );
+  }
 
   return (
-    <button
-      type="button"
-      disabled={isPending}
-      className="text-[12px] font-bold text-muted underline disabled:opacity-50"
-      onClick={() =>
-        startTransition(async () => {
-          await marcarVagaNaoPreenchida(vagaId);
-          router.refresh();
-        })
-      }
-    >
-      {isPending ? "Salvando..." : "Não fechei com ninguém"}
-    </button>
+    <div className="rounded-lg border border-border-strong bg-surface-alt p-2.5">
+      <p className="text-[11.5px] text-muted">
+        A vaga deixa de receber candidaturas e vai para &ldquo;Encerradas&rdquo; como não preenchida. Tem certeza?
+      </p>
+      <div className="mt-2 flex gap-2">
+        <button
+          type="button"
+          disabled={isPending}
+          onClick={() =>
+            startTransition(async () => {
+              const res = await marcarVagaNaoPreenchida(vagaId);
+              if (res.error) setError(res.error);
+              else router.refresh();
+            })
+          }
+          className="rounded-md bg-accent px-2.5 py-1 text-[11.5px] font-bold text-white hover:bg-accent-dark disabled:opacity-50"
+        >
+          {isPending ? "Encerrando..." : "Sim, encerrar vaga"}
+        </button>
+        <button
+          type="button"
+          disabled={isPending}
+          onClick={() => setConfirmando(false)}
+          className="rounded-md border border-border-strong px-2.5 py-1 text-[11.5px] font-bold disabled:opacity-50"
+        >
+          Cancelar
+        </button>
+      </div>
+      {error && <p className="mt-1 text-[11px] font-semibold text-accent-dark">{error}</p>}
+    </div>
   );
 }

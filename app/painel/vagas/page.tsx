@@ -8,6 +8,7 @@ import { Badge, buttonClass } from "@/components/ui";
 import { formatCurrencyBRL } from "@/lib/format";
 import { nomeDaVaga } from "@/lib/vaga";
 import ProfissionaisPainel from "@/components/ProfissionaisPainel";
+import Sanfona from "@/components/Sanfona";
 
 export const dynamic = "force-dynamic";
 
@@ -133,7 +134,12 @@ export default async function MinhasVagasPage() {
       )}
 
       {encerradas.length > 0 && (
-        <Grupo id="encerradas" titulo="Encerradas" descricao="Histórico, da mais recente para a mais antiga.">
+        <Sanfona
+          id="encerradas"
+          titulo="Encerradas"
+          descricao="Histórico, da mais recente para a mais antiga. Toque para abrir."
+          total={encerradas.length}
+        >
           {encerradas.slice(0, ENCERRADAS_VISIVEIS).map((v) => (
             <VagaRow key={v.id} vaga={v} apagada />
           ))}
@@ -142,7 +148,7 @@ export default async function MinhasVagasPage() {
               Ver histórico completo →
             </Link>
           )}
-        </Grupo>
+        </Sanfona>
       )}
 
       <h2 className="mb-1 mt-10 text-lg font-extrabold">Profissionais em destaque</h2>
