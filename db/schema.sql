@@ -1039,3 +1039,6 @@ CREATE TABLE IF NOT EXISTS whatsapp_fila (
 );
 CREATE INDEX IF NOT EXISTS idx_whatsapp_fila_aberta ON whatsapp_fila(id) WHERE status IN ('pendente', 'enviando');
 CREATE INDEX IF NOT EXISTS idx_whatsapp_fila_enviado_em ON whatsapp_fila(enviado_em) WHERE status = 'enviado';
+
+-- vagas_vistas_em (migration 2026-10-11_vagas_vistas.sql)
+ALTER TABLE profissionais ADD COLUMN IF NOT EXISTS vagas_vistas_em TIMESTAMPTZ NOT NULL DEFAULT now();

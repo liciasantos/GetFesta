@@ -48,7 +48,7 @@ export default function ProfissionalPainelSidebar() {
               dangerouslySetInnerHTML={{ __html: item.icon }}
             />
             {item.label}
-            {item.id === "vagas" && <NavBadge count={vagasBadge} rotulo={["vaga em que você foi selecionado(a)", "vagas em que você foi selecionado(a)"]} />}
+            {item.id === "vagas" && <NavBadge count={vagasBadge} rotulo={["novidade em vagas", "novidades em vagas"]} />}
           </button>
         );
       })}

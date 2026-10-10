@@ -33,7 +33,7 @@ export default function ProfissionalGlobalTabBar({ vagasBadge = 0 }: { vagasBadg
                 className="h-[27px] w-[27px]"
                 dangerouslySetInnerHTML={{ __html: t.icon }}
               />
-              {t.id === "vagas" && <NavBadge count={vagasBadge} rotulo={["vaga em que você foi selecionado(a)", "vagas em que você foi selecionado(a)"]} variant="corner" />}
+              {t.id === "vagas" && <NavBadge count={vagasBadge} rotulo={["novidade em vagas", "novidades em vagas"]} variant="corner" />}
             </span>
             {t.label}
           </Link>

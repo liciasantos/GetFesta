@@ -11,6 +11,15 @@ import { avisarCandidatura, avisarDesistencia, avisarSelecionado, avisarVagaNova
 
 export type VagaActionState = { error?: string; success?: boolean } | undefined;
 
+/** Profissional abriu a aba Vagas: as vagas publicadas até agora deixam de
+ * contar como novas (selo do menu e etiqueta "Nova"). Sem revalidatePath de
+ * propósito - as etiquetas da visita atual continuam até a próxima. */
+export async function marcarVagasVistas(): Promise<void> {
+  const session = await getSession();
+  if (!session || session.tipo !== "profissional") return;
+  await query(`UPDATE profissionais SET vagas_vistas_em = now() WHERE usuario_id = $1`, [session.usuarioId]);
+}
+
 export async function criarVaga(_prevState: VagaActionState, formData: FormData): Promise<VagaActionState> {
   const session = await getSession();
   if (!session || session.tipo !== "empresa") return { error: "Sessão inválida." };

@@ -90,6 +90,7 @@ export default async function PerfilProfissionalPage({
     ja_candidatado: v.ja_candidatado,
     vagas_desejadas: v.vagas_desejadas,
     vagas_selecionadas: v.vagas_selecionadas,
+    nao_vista: v.nao_vista,
   }));
 
   const emailContato = config[CONFIG_CONTATO_EMAIL];
@@ -133,13 +134,19 @@ export default async function PerfilProfissionalPage({
   // Selecionado e o evento ainda vai acontecer: banner no topo, em todas as abas,
   // pra ele ver assim que entrar (a lista completa fica na aba Vagas).
   const selecionadasProximas = vagasLista.filter((v) => v.candidatura_status === "selecionado" && v.data_evento >= hoje);
+  // vagas publicadas depois da última visita à aba Vagas - somam no selo até ele abrir a aba
+  const vagasNaoVistas = vagasLista.filter((v) => v.nao_vista).length;
 
   const candidaturasEmAnalise = vagas.filter(
     (v) => v.ja_candidatado && v.candidatura_status !== "selecionado" && v.candidatura_status !== "recusado"
   ).length;
 
   return (
-    <ProfissionalTabsProvider initialTab={initialTab} vagasBadge={selecionadasProximas.length}>
+    <ProfissionalTabsProvider
+      initialTab={initialTab}
+      vagasBadge={selecionadasProximas.length + vagasNaoVistas}
+      vagasNaoVistas={vagasNaoVistas}
+    >
     <div className="lg:flex lg:items-start lg:gap-6 lg:pl-6 lg:pt-8">
       <ProfissionalPainelSidebar />
       <div className="min-w-0 flex-1">

@@ -32,6 +32,8 @@ export type VagaProfissional = {
   ja_candidatado: boolean;
   vagas_desejadas: number;
   vagas_selecionadas: number;
+  /** publicada depois da última vez que ele abriu a aba Vagas */
+  nao_vista: boolean;
 };
 
 const MESES = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
@@ -316,7 +318,7 @@ export default function VagasProfissionalLista({ vagas, hoje }: { vagas: VagaPro
       {filtradas.map((v) => {
         const dias = diasEntre(hoje, v.data_evento);
         const passou = dias < 0;
-        const nova = !v.ja_candidatado && !passou && diasEntre(v.criado_em, hoje) <= 2;
+        const nova = v.nao_vista && !passou;
         const [, mes, dia] = v.data_evento.split("-");
         const local = v.bairro_nome ?? v.cidade_nome;
         const urgencia = dias === 0 ? "Hoje" : dias === 1 ? "Amanhã" : dias >= 2 && dias <= 7 ? `Em ${dias} dias` : null;

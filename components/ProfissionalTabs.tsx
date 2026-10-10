@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { marcarVagasVistas } from "@/lib/actions/vagas";
 import { TABS, type Tab } from "@/lib/profissional-tabs";
 import NavBadge from "@/components/NavBadge";
 
@@ -21,15 +22,30 @@ export function ProfissionalTabsProvider({
   children,
   initialTab = "perfil",
   vagasBadge = 0,
+  vagasNaoVistas = 0,
 }: {
   children: ReactNode;
   initialTab?: Tab;
-  /** selo numérico ao lado de "Vagas" (vagas em que foi selecionado) */
+  /** selo numérico ao lado de "Vagas" (selecionado em evento futuro + vagas novas não vistas) */
   vagasBadge?: number;
+  /** quantas das vagas do selo são novas ainda não vistas - saem do selo ao abrir a aba Vagas */
+  vagasNaoVistas?: number;
 }) {
   const [tab, setTab] = useState<Tab>(initialTab);
+  const [vistas, setVistas] = useState(false);
+  const marcou = useRef(false);
+
+  // Abriu a aba Vagas: registra a visita (as etiquetas "Nova" continuam nesta
+  // visita - só somem na próxima) e tira as novas do selo na hora.
+  useEffect(() => {
+    if (tab !== "vagas" || vagasNaoVistas === 0 || marcou.current) return;
+    marcou.current = true;
+    marcarVagasVistas().then(() => setVistas(true));
+  }, [tab, vagasNaoVistas]);
+
+  const badge = vistas ? Math.max(0, vagasBadge - vagasNaoVistas) : vagasBadge;
   return (
-    <TabContext.Provider value={{ tab, setTab, vagasBadge }}>
+    <TabContext.Provider value={{ tab, setTab, vagasBadge: badge }}>
       <div className="pb-20 sm:pb-0">{children}</div>
       <MobileTabBar />
     </TabContext.Provider>
@@ -107,7 +123,7 @@ function MobileTabBar() {
                   className="h-[27px] w-[27px]"
                   dangerouslySetInnerHTML={{ __html: t.icon }}
                 />
-                {t.id === "vagas" && <NavBadge count={vagasBadge} rotulo={["vaga em que você foi selecionado(a)", "vagas em que você foi selecionado(a)"]} variant="corner" />}
+                {t.id === "vagas" && <NavBadge count={vagasBadge} rotulo={["novidade em vagas", "novidades em vagas"]} variant="corner" />}
               </span>
               {t.label}
             </button>

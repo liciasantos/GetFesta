@@ -52,8 +52,10 @@ export type VagaFeedItem = {
  * 'indiferente' aparece pra todo mundo; senão, só combina se bater com o
  * sexo do profissional (quem é nao_binario/prefiro_nao_informar ou nao
  * informou so ve vagas indiferentes). */
-export async function listVagasCompativeis(profissionalId: string): Promise<(VagaFeedItem & { ja_candidatado: boolean })[]> {
-  return query<VagaFeedItem & { ja_candidatado: boolean }>(
+export async function listVagasCompativeis(
+  profissionalId: string
+): Promise<(VagaFeedItem & { ja_candidatado: boolean; nao_vista: boolean })[]> {
+  return query<VagaFeedItem & { ja_candidatado: boolean; nao_vista: boolean }>(
     `SELECT
        v.id, v.titulo, cp.nome AS categoria_nome, ci.nome AS cidade_nome, b.nome AS bairro_nome,
        v.data_evento, v.hora_inicio, v.duracao_horas, v.valor, v.descricao, v.criado_em, v.sexo_desejado,
@@ -63,7 +65,9 @@ export async function listVagasCompativeis(profissionalId: string): Promise<(Vag
        CASE WHEN vc.status = 'selecionado' AND v.data_evento >= (now() AT TIME ZONE 'America/Sao_Paulo')::date
             THEN e.telefone_contato END AS empresa_telefone,
        vc.status AS candidatura_status,
-       (vc.id IS NOT NULL) AS ja_candidatado
+       (vc.id IS NOT NULL) AS ja_candidatado,
+       -- publicada depois da última vez que ele abriu a aba Vagas (etiqueta "Nova" + selo do menu)
+       (vc.id IS NULL AND v.status = 'aberta' AND v.criado_em > p.vagas_vistas_em) AS nao_vista
      FROM vagas_profissionais v
      JOIN categorias_profissionais cp ON cp.id = v.categoria_profissional_id
      JOIN cidades ci ON ci.id = v.cidade_id
@@ -329,7 +333,9 @@ export async function listVagaIdsParaSitemap(): Promise<string[]> {
 }
 
 /** Número do selo ao lado de "Vagas" no menu: pro profissional, em quantas
- * vagas de evento futuro ele foi selecionado; pra empresa, quantas vagas ainda
+ * vagas de evento futuro ele foi selecionado MAIS as vagas compatíveis
+ * publicadas depois da última vez que ele abriu a aba Vagas (mesmo critério de
+ * listVagasCompativeis); pra empresa, quantas vagas ainda
  * abertas já passaram da data do evento (precisam do "fechou com alguém?").
  * cache() do React = no máximo uma consulta por requisição, mesmo com o layout
  * raiz e o layout do painel pedindo o mesmo número. */
@@ -338,9 +344,26 @@ export const getVagasBadgeCount = cache(async (tipo: "profissional" | "empresa",
   const row =
     tipo === "profissional"
       ? await queryOne<{ n: number }>(
-          `SELECT count(*)::int AS n
-           FROM vaga_candidaturas vc JOIN vagas_profissionais v ON v.id = vc.vaga_id
-           WHERE vc.profissional_id = $1 AND vc.status = 'selecionado' AND v.data_evento >= ${hoje}`,
+          `SELECT
+             (SELECT count(*)::int
+                FROM vaga_candidaturas vc JOIN vagas_profissionais v ON v.id = vc.vaga_id
+               WHERE vc.profissional_id = $1 AND vc.status = 'selecionado' AND v.data_evento >= ${hoje})
+             +
+             (SELECT count(*)::int
+                FROM vagas_profissionais v
+                JOIN cidades ci ON ci.id = v.cidade_id
+                JOIN profissionais p ON p.usuario_id = $1
+                LEFT JOIN bairros pb ON pb.id = p.bairro_id
+                LEFT JOIN cidades pci ON pci.id = pb.cidade_id
+               WHERE v.criado_em > p.vagas_vistas_em
+                 AND NOT EXISTS (SELECT 1 FROM vaga_candidaturas vc WHERE vc.vaga_id = v.id AND vc.profissional_id = $1)
+                 AND (v.status = 'aberta'
+                 AND v.data_evento >= (now() AT TIME ZONE 'America/Sao_Paulo')::date
+                 AND pci.estado = ci.estado
+                 AND (v.sexo_desejado = 'indiferente' OR v.sexo_desejado = p.sexo)
+                 AND EXISTS (
+                   SELECT 1 FROM profissional_categorias pc WHERE pc.profissional_id = $1 AND pc.categoria_id = v.categoria_profissional_id
+                 ))) AS n`,
           [usuarioId]
         )
       : await queryOne<{ n: number }>(
