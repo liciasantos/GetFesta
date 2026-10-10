@@ -1,11 +1,19 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { salvarAvisosWhatsApp, type WhatsAppActionState } from "@/lib/actions/whatsapp";
 import { buttonClass } from "@/components/ui";
 
 export default function WhatsAppAvisosForm({ ativo, numero, eventos }: { ativo: boolean; numero: string; eventos: string[] }) {
   const [state, action, pending] = useActionState<WhatsAppActionState, FormData>(salvarAvisosWhatsApp, undefined);
+
+  // vindo do atalho do painel (#whatsapp): a página chega em streaming e o
+  // navegador já tentou rolar antes do card existir - rola de novo aqui
+  useEffect(() => {
+    if (window.location.hash === "#whatsapp") {
+      document.getElementById("whatsapp")?.scrollIntoView({ block: "center" });
+    }
+  }, []);
 
   return (
     <form action={action} className="flex flex-col gap-3">

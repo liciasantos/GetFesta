@@ -12,6 +12,7 @@ import DisponibilidadeCalendar from "@/components/DisponibilidadeCalendar";
 import AlterarSenhaForm from "@/components/AlterarSenhaForm";
 import ExcluirContaForm from "@/components/ExcluirContaForm";
 import WhatsAppAvisos from "@/components/WhatsAppAvisos";
+import WhatsAppAtalho from "@/components/WhatsAppAtalho";
 import PortfolioPdfUpload from "@/components/PortfolioPdfUpload";
 import VideoLinkManager from "@/components/VideoLinkManager";
 import {
@@ -213,6 +214,13 @@ export default async function PerfilProfissionalPage({
         <TabShortcutButton tabId="galeria" label="Galeria e portfólio" />
         <TabShortcutButton tabId="calendario" label="Calendário" />
         <TabShortcutButton tabId="vagas" label="Vagas compatíveis" />
+      </div>
+      <div className="mt-5 max-w-sm">
+        <WhatsAppAtalho
+          usuarioId={session.usuarioId}
+          href="/perfil-profissional?tab=perfil#whatsapp"
+          convite="Saiba na hora quando surgir uma vaga para você ou quando uma empresa te escolher."
+        />
       </div>
       </TabSection>
 

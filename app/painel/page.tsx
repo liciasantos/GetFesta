@@ -21,6 +21,7 @@ import { timeAgo } from "@/lib/format";
 import PlanoSelector from "@/components/PlanoSelector";
 import PedidoLeadRow from "@/components/PedidoLeadRow";
 import CompartilharPerfilButton from "@/components/CompartilharPerfilButton";
+import WhatsAppAtalho from "@/components/WhatsAppAtalho";
 import PermutaResumoCard, { getResumoPermutaPainel } from "@/components/permuta/PermutaResumoCard";
 
 export const dynamic = "force-dynamic";
@@ -259,6 +260,12 @@ export default async function PainelPage() {
             Quero anunciar
           </a>
         </div>
+
+        <WhatsAppAtalho
+          usuarioId={session.usuarioId}
+          href="/painel/perfil#whatsapp"
+          convite="Saiba na hora quando chegar um pedido de orçamento da sua região ou um candidato nas suas vagas."
+        />
 
         <div className="rounded-xl border border-border bg-surface p-4">
           <p className="mb-2.5 text-[11px] font-bold uppercase tracking-wide text-muted-2">Acesso rápido</p>
