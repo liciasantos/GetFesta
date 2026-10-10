@@ -11,6 +11,7 @@ import GaleriaManager from "@/components/GaleriaManager";
 import DisponibilidadeCalendar from "@/components/DisponibilidadeCalendar";
 import AlterarSenhaForm from "@/components/AlterarSenhaForm";
 import ExcluirContaForm from "@/components/ExcluirContaForm";
+import WhatsAppAvisos from "@/components/WhatsAppAvisos";
 import PortfolioPdfUpload from "@/components/PortfolioPdfUpload";
 import VideoLinkManager from "@/components/VideoLinkManager";
 import {
@@ -328,6 +329,8 @@ export default async function PerfilProfissionalPage({
       <div className="mt-5 rounded-xl border border-border bg-surface p-5">
         <PerfilProfissionalForm perfil={perfil} categorias={categorias} cidades={cidades} />
       </div>
+
+      <WhatsAppAvisos usuarioId={session.usuarioId} tipo="profissional" />
 
       <div className="mt-5 rounded-xl border border-border bg-surface p-5">
         <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Alterar senha</h2>

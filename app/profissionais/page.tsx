@@ -1,4 +1,5 @@
 import Link from "next/link";
+import RevealObserver from "@/components/RevealObserver";
 import { Icon } from "@/components/Icon";
 import { getSession } from "@/lib/auth";
 import { buttonClass, Badge } from "@/components/ui";
@@ -58,7 +59,7 @@ export default async function ProfissionaisPage() {
       {/* COMO FUNCIONA — versão animada estilo Reels/Stories, mesmo padrão
           da home (ver components/ComoFuncionaReels.tsx), com conteúdo
           específico pro profissional em vez do fluxo do cliente. */}
-      <section className="border-b border-border bg-surface-alt/60 px-6 py-16 sm:py-20">
+      <section className="reveal border-b border-border bg-surface-alt/60 px-6 py-16 sm:py-20">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-8 lg:flex-row lg:items-center lg:justify-between lg:gap-16">
           <div className="max-w-md text-center lg:text-left">
             <span className="section-kicker justify-center lg:justify-start">Como funciona, em 1 minuto</span>
@@ -72,7 +73,7 @@ export default async function ProfissionaisPage() {
       </section>
 
       {/* COMO FUNCIONA — detalhamento em passos */}
-      <section className="mx-auto max-w-5xl px-6 py-16 sm:py-20">
+      <section className="reveal mx-auto max-w-5xl px-6 py-16 sm:py-20">
         <span className="section-kicker">Passo a passo</span>
         <h2 className="mt-3 text-2xl font-extrabold sm:text-[26px]">Do catálogo ao primeiro job</h2>
         <div className="mt-9 grid grid-cols-1 gap-6 sm:grid-cols-4">
@@ -84,7 +85,7 @@ export default async function ProfissionaisPage() {
       </section>
 
       {/* AGENDA — mockup visual simples */}
-      <section className="border-t border-border bg-surface-alt px-6 py-16 sm:py-20">
+      <section className="reveal border-t border-border bg-surface-alt px-6 py-16 sm:py-20">
         <div className="mx-auto grid max-w-5xl grid-cols-1 items-center gap-10 sm:grid-cols-2">
           <div>
             <span className="section-kicker">Sua agenda, do seu jeito</span>
@@ -128,7 +129,7 @@ export default async function ProfissionaisPage() {
       </section>
 
       {/* POR QUE VALE A PENA */}
-      <section className="border-t border-border bg-text">
+      <section className="reveal border-t border-border bg-text">
         <div className="mx-auto max-w-4xl px-6 py-16 text-center sm:py-20">
           <h2 className="section-kicker justify-center">Por que vale a pena</h2>
           <p className="mt-4 font-display text-[22px] font-bold leading-snug text-white sm:text-[28px]">
@@ -142,7 +143,7 @@ export default async function ProfissionaisPage() {
       </section>
 
       {/* CTA FINAL */}
-      <section className="mx-auto max-w-5xl px-6 py-16 text-center sm:py-20">
+      <section className="reveal mx-auto max-w-5xl px-6 py-16 text-center sm:py-20">
         <h2 className="font-display text-2xl font-extrabold sm:text-3xl">Bora colocar seu talento em destaque?</h2>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Link href={profissionalLogado ? "/perfil-profissional" : "/cadastro/profissional"} className={buttonClass("primary", "lg")}>
@@ -160,6 +161,7 @@ function PassoCard({ n, titulo, texto }: { n: string; titulo: string; texto: str
       <div className="font-display text-3xl font-extrabold text-accent-dark">{n}</div>
       <h3 className="mt-2 text-[14px] font-bold">{titulo}</h3>
       <p className="mt-1.5 text-[12.5px] leading-relaxed text-muted">{texto}</p>
+      <RevealObserver />
     </div>
   );
 }

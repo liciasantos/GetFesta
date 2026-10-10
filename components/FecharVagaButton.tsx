@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { toast } from "@/lib/toast";
 import { useState, useTransition } from "react";
 import {
   desfazerSelecaoCandidato,
@@ -25,7 +26,10 @@ export function SelecionarCandidatoButton({ vagaId, profissionalId }: { vagaId: 
           startTransition(async () => {
             const res = await selecionarCandidatoVaga(vagaId, profissionalId);
             if (res.error) setError(res.error);
-            else router.refresh();
+            else {
+              toast("Profissional selecionado — avisamos por e-mail.");
+              router.refresh();
+            }
           })
         }
       >

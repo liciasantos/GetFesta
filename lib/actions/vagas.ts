@@ -2,10 +2,12 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { query, queryOne } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { avaliarProfissionalSchema, criarVagaSchema } from "@/lib/validators";
 import { sendEmail, buildVagaSelecionadaEmail, buildCandidatoDesistiuEmail } from "@/lib/email";
+import { avisarCandidatura, avisarDesistencia, avisarSelecionado, avisarVagaNova } from "@/lib/whatsapp/avisos";
 
 export type VagaActionState = { error?: string; success?: boolean } | undefined;
 
@@ -28,10 +30,10 @@ export async function criarVaga(_prevState: VagaActionState, formData: FormData)
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
 
-  await query(
+  const nova = await queryOne<{ id: string }>(
     `INSERT INTO vagas_profissionais (
        empresa_id, categoria_profissional_id, cidade_id, bairro_id, data_evento, hora_inicio, duracao_horas, valor, descricao, sexo_desejado, vagas_desejadas, titulo
-     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id`,
     [
       session.usuarioId,
       parsed.data.categoriaProfissionalId,
@@ -48,6 +50,7 @@ export async function criarVaga(_prevState: VagaActionState, formData: FormData)
     ]
   );
 
+  if (nova) after(() => avisarVagaNova(nova.id));
   revalidatePath("/painel/vagas");
   redirect("/painel/vagas");
 }
@@ -151,10 +154,14 @@ export async function candidatarVaga(vagaId: string): Promise<CandidatarVagaResu
     return { error: "Essa vaga não está mais disponível." };
   }
 
-  await query(
-    `INSERT INTO vaga_candidaturas (vaga_id, profissional_id) VALUES ($1, $2) ON CONFLICT (vaga_id, profissional_id) DO NOTHING`,
+  const inserida = await query(
+    `INSERT INTO vaga_candidaturas (vaga_id, profissional_id) VALUES ($1, $2) ON CONFLICT (vaga_id, profissional_id) DO NOTHING RETURNING id`,
     [vagaId, session.usuarioId]
   );
+  if (inserida.length > 0) {
+    const profissionalId = session.usuarioId;
+    after(() => avisarCandidatura(vagaId, profissionalId));
+  }
 
   revalidatePath("/perfil-profissional");
   return { ok: true };
@@ -221,6 +228,10 @@ export async function retirarCandidatura(vagaId: string): Promise<CandidatarVaga
         vagaId
       );
       await sendEmail({ to: dados.email, subject, html });
+    }
+    if (dados) {
+      const nome = dados.profissional_nome;
+      after(() => avisarDesistencia(vagaId, nome));
     }
   }
 
@@ -338,6 +349,7 @@ export async function selecionarCandidatoVaga(vagaId: string, profissionalId: st
     );
     await sendEmail({ to: profissional.email, subject, html });
   }
+  after(() => avisarSelecionado(vagaId, profissionalId));
 
   revalidatePath("/painel/vagas");
   revalidatePath(`/painel/vagas/${vagaId}`);

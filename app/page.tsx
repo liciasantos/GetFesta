@@ -1,4 +1,5 @@
 import Link from "next/link";
+import RevealObserver from "@/components/RevealObserver";
 import { Icon } from "@/components/Icon";
 import { headers } from "next/headers";
 import { listCategorias, listCidades } from "@/lib/data/geo";
@@ -126,7 +127,7 @@ export default async function HomePage() {
           pra passar o "como funciona" de um jeito rápido e visual antes do
           feed de pedidos. Autoplay com barra de progresso tipo Stories;
           pausa no hover e aceita navegação manual (toque nas laterais). */}
-      <section className="border-b border-border bg-surface-alt/60 px-6 py-16 sm:py-20">
+      <section className="reveal border-b border-border bg-surface-alt/60 px-6 py-16 sm:py-20">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-8 lg:flex-row lg:items-center lg:justify-between lg:gap-16">
           <div className="max-w-md text-center lg:text-left">
             <span className="section-kicker justify-center lg:justify-start">Como funciona, em 1 minuto</span>
@@ -140,7 +141,7 @@ export default async function HomePage() {
       </section>
 
       {/* PEDIDOS FEED — carrossel */}
-      <section className="border-b border-border px-6 pb-16 pt-[58px] sm:pb-20 sm:pt-[72px]">
+      <section className="reveal border-b border-border px-6 pb-16 pt-[58px] sm:pb-20 sm:pt-[72px]">
         <div className="mx-auto max-w-6xl">
           <span className="section-kicker">01 — Pedidos</span>
           <h2 className="mt-3 text-2xl font-extrabold sm:text-[26px]">Pedidos publicados agora</h2>
@@ -159,7 +160,7 @@ export default async function HomePage() {
       {/* COMO FUNCIONA — imagem full-bleed com faixa de passos numerados por
           cima, inspirado numa referencia de site de turismo que o usuario
           trouxe (fundo atmosferico + coluna de intro + steps com divisorias) */}
-      <section id="como-funciona" className="relative min-h-[420px] w-full overflow-hidden bg-text sm:min-h-[465px]">
+      <section id="como-funciona" className="reveal relative min-h-[420px] w-full overflow-hidden bg-text sm:min-h-[465px]">
         <BgImage src={config[CONFIG_COMO_FUNCIONA_BG]} className="object-cover" sizes="100vw" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/5 to-black/15" />
 
@@ -220,7 +221,7 @@ export default async function HomePage() {
 
       {/* DESTAQUES DA SEMANA */}
       {banners.length > 0 && (
-        <section className="border-b border-border bg-surface-alt/60 px-6 py-16 sm:py-20">
+        <section className="reveal border-b border-border bg-surface-alt/60 px-6 py-16 sm:py-20">
           <div className="mx-auto max-w-6xl">
             <span className="section-kicker">03 — Destaques da semana</span>
             {/* antes o kicker e um segundo título repetiam "Destaques da semana" */}
@@ -239,7 +240,7 @@ export default async function HomePage() {
       )}
 
       {/* CATEGORIAS — fundo escuro (#1f2933), texto claro automaticamente */}
-      <section className="border-b border-border bg-[#1f2933] px-6 py-16 sm:py-20">
+      <section className="reveal border-b border-border bg-[#1f2933] px-6 py-16 sm:py-20">
         <div className="mx-auto max-w-6xl">
           <span className="section-kicker">{banners.length > 0 ? "04" : "03"} — Categorias</span>
           <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
@@ -263,7 +264,7 @@ export default async function HomePage() {
       </section>
 
       {/* EMPRESAS EM DESTAQUE */}
-      <section className="border-b border-border px-6 py-16 sm:py-20">
+      <section className="reveal border-b border-border px-6 py-16 sm:py-20">
         <div className="mx-auto max-w-6xl">
           <span className="section-kicker">{banners.length > 0 ? "05" : "04"} — Fornecedores</span>
           <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
@@ -313,7 +314,7 @@ export default async function HomePage() {
       </section>
 
       {/* PLANOS PARA FORNECEDORES */}
-      <section className="border-b border-border bg-surface-alt/60 px-6 py-16 sm:py-20">
+      <section className="reveal border-b border-border bg-surface-alt/60 px-6 py-16 sm:py-20">
         <div className="mx-auto max-w-6xl">
           <span className="section-kicker">{banners.length > 0 ? "06" : "05"} — Planos para fornecedores</span>
           <h2 className="mt-3 text-2xl font-extrabold sm:text-[26px]">Comece grátis, cresça no seu ritmo</h2>
@@ -384,7 +385,7 @@ export default async function HomePage() {
       {/* PRECISA DE AJUDA — atalhos rapidos pros 3 perfis, cada um com uma
           descricao curta e os links mais uteis (mesmos links do rodape,
           organizados aqui de um jeito mais visual/facil de escanear). */}
-      <section className="border-b border-border px-6 py-16 sm:py-20">
+      <section className="reveal border-b border-border px-6 py-16 sm:py-20">
         <div className="mx-auto max-w-6xl text-center">
           <span className="section-kicker justify-center">{banners.length > 0 ? "07" : "06"} — Precisa de ajuda?</span>
           <h2 className="mt-3 text-2xl font-extrabold sm:text-[26px]">Encontre o caminho certo pra você</h2>
@@ -430,7 +431,7 @@ export default async function HomePage() {
           seção "Mais procurados" de /produtos, só que recortada aqui na home
           pra puxar tráfego pra vitrine de afiliado. */}
       {produtosDestaque.length > 0 && (
-        <section className="border-b border-border bg-surface-alt/60 px-6 py-16 sm:py-20">
+        <section className="reveal border-b border-border bg-surface-alt/60 px-6 py-16 sm:py-20">
           <div className="mx-auto max-w-6xl">
             <span className="section-kicker">{banners.length > 0 ? "08" : "07"} — Produtos para sua festa</span>
             <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
@@ -453,7 +454,7 @@ export default async function HomePage() {
 
       {/* CTA FORNECEDOR — full banner de fundo por trás do box (nao mais dentro
           dele), afastado da seção de planos com uma margem extra pra respirar. */}
-      <section className="relative mt-11 overflow-hidden border-b border-border px-6 py-16 sm:py-20">
+      <section className="reveal relative mt-11 overflow-hidden border-b border-border px-6 py-16 sm:py-20">
         <BgImage src={config[CONFIG_CTA_FORNECEDOR_BG]} className="object-cover" sizes="100vw" />
         <div className="absolute inset-0" style={{ backgroundColor: hexToRgba(config[CONFIG_CTA_FORNECEDOR_COR], 0.8) }} />
 
@@ -500,6 +501,7 @@ function HelpColumn({
           </li>
         ))}
       </ul>
+      <RevealObserver />
     </div>
   );
 }

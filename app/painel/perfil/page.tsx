@@ -15,6 +15,7 @@ import { formatCurrencyBRL, formatDateBR } from "@/lib/format";
 import PerfilEmpresaForm from "./PerfilEmpresaForm";
 import AvaliacaoGoogleForm from "./AvaliacaoGoogleForm";
 import ValidarCnpjCard from "@/components/ValidarCnpjCard";
+import WhatsAppAvisos from "@/components/WhatsAppAvisos";
 import { queryOne } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -108,6 +109,8 @@ export default async function PainelPerfilPage() {
           </div>
         )}
       </div>
+
+      <WhatsAppAvisos usuarioId={session.usuarioId} tipo="empresa" />
 
       <div className="mt-5 rounded-xl border border-border bg-surface p-5">
         <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-2">Alterar senha</h2>

@@ -32,7 +32,9 @@ export function Card({ children, className = "" }: { children: ReactNode; classN
 }
 
 const buttonBase =
-  "inline-flex items-center justify-center gap-1.5 rounded-lg font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed";
+  // resposta ao toque: encolhe 3% ao pressionar (150ms, curva --ease-out);
+  // propriedades nomeadas em vez de transition-all
+  "inline-flex items-center justify-center gap-1.5 rounded-lg font-bold text-sm transition-[background-color,border-color,box-shadow,transform] duration-150 ease-[var(--ease-out)] active:scale-[0.97] motion-reduce:active:scale-100 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100";
 
 export function buttonClass(
   variant: "primary" | "secondary" | "ghost" | "whatsapp" | "danger" = "primary",

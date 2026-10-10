@@ -92,7 +92,7 @@ export default function AccessMenu({ inline = false }: { inline?: boolean }) {
         Entrar / Cadastrar
       </button>
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-[320px] rounded-xl border border-border bg-surface p-2 shadow-card-hover">
+        <div className="menu-pop menu-pop-direita absolute right-0 top-full z-50 mt-2 w-[320px] rounded-xl border border-border bg-surface p-2 shadow-card-hover">
           <p className="px-2 pb-1.5 pt-1 text-[10.5px] font-bold uppercase tracking-wide text-muted-2">
             Área de acesso — quem é você?
           </p>

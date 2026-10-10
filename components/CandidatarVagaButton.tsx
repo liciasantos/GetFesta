@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { toast } from "@/lib/toast";
 import { useState, useTransition } from "react";
 import { candidatarVaga } from "@/lib/actions/vagas";
 import { buttonClass } from "@/components/ui";
@@ -20,7 +21,10 @@ export default function CandidatarVagaButton({ vagaId }: { vagaId: string }) {
           startTransition(async () => {
             const res = await candidatarVaga(vagaId);
             if (res.error) setError(res.error);
-            else router.refresh();
+            else {
+              toast("Candidatura enviada! A empresa vai ver seu perfil.");
+              router.refresh();
+            }
           })
         }
       >

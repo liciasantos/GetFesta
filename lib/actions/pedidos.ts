@@ -1,9 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { query, queryOne } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { detectContactLeak } from "@/lib/contact-filter";
+import { avisarPedidoNovo } from "@/lib/whatsapp/avisos";
 import { orcamentoFaixaParaMinMax, publicarPedidoSchema, type PublicarPedidoInput } from "@/lib/validators";
 
 export type CriarPedidoResult = { error?: string; pedidoId?: string };
@@ -55,6 +57,7 @@ export async function criarPedido(input: PublicarPedidoInput): Promise<CriarPedi
     await query(`INSERT INTO pedido_categorias (pedido_id, categoria_id) VALUES ($1,$2)`, [pedido.id, categoriaId]);
   }
 
+  after(() => avisarPedidoNovo(pedido.id));
   revalidatePath("/");
   return { pedidoId: pedido.id };
 }

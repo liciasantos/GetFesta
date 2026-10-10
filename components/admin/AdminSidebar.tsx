@@ -127,6 +127,12 @@ const GRUPOS: Grupo[] = [
         icon: `<path d="M4 8h13l-3-3"/><path d="M20 16H7l3 3"/>`,
       },
       {
+        href: "/admin/whatsapp",
+        label: "Avisos por WhatsApp",
+        match: (p) => p.startsWith("/admin/whatsapp"),
+        icon: `<path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z"/><path d="M9 10c0 3 2 5 5 5"/>`,
+      },
+      {
         href: "/admin/pedidos",
         label: "Pedidos",
         match: (p) => p.startsWith("/admin/pedidos"),

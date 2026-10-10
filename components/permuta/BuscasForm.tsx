@@ -1,12 +1,17 @@
 "use client";
 
 import { useActionState } from "react";
+import { toast } from "@/lib/toast";
 import { salvarBuscas, type PermutaActionState } from "@/lib/actions/permuta";
 import { buttonClass } from "@/components/ui";
 import type { Categoria } from "@/lib/data/geo";
 
 export default function BuscasForm({ categorias, selecionadas }: { categorias: Categoria[]; selecionadas: number[] }) {
-  const [state, formAction, pending] = useActionState<PermutaActionState, FormData>(salvarBuscas, undefined);
+  const [state, formAction, pending] = useActionState<PermutaActionState, FormData>(async (prev, fd) => {
+    const r = await salvarBuscas(prev, fd);
+    if (r?.ok) toast("O que você busca foi salvo.");
+    return r;
+  }, undefined);
   return (
     <form action={formAction} className="flex flex-col gap-3">
       <div className="flex flex-wrap gap-2">
@@ -24,7 +29,6 @@ export default function BuscasForm({ categorias, selecionadas }: { categorias: C
         <button disabled={pending} className={buttonClass("primary", "sm")}>
           {pending ? "Salvando..." : "Salvar o que busco"}
         </button>
-        {state?.ok && <span className="text-[12px] font-semibold text-ok">Salvo!</span>}
         {state?.error && <span className="text-[12px] font-semibold text-danger-dark">{state.error}</span>}
       </div>
     </form>

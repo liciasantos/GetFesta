@@ -37,7 +37,7 @@ export default function AtendeMenu() {
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full z-50 mt-2 w-[230px] rounded-xl border border-border bg-surface p-1.5 shadow-card-hover">
+        <div className="menu-pop absolute left-0 top-full z-50 mt-2 w-[230px] rounded-xl border border-border bg-surface p-1.5 shadow-card-hover">
           <Link
             href="/empresas"
             onClick={() => setOpen(false)}

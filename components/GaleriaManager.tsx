@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import { toast } from "@/lib/toast";
 import { useRouter } from "next/navigation";
 import { resizeImageToDataUrl } from "@/lib/image-client";
 import type { UploadResult } from "@/lib/actions/perfil";
@@ -38,6 +39,7 @@ export default function GaleriaManager({
     }
 
     startTransition(async () => {
+      let enviadas = 0;
       for (const file of aceitas) {
         try {
           const resized = await resizeImageToDataUrl(file, 640, 0.82);
@@ -46,11 +48,13 @@ export default function GaleriaManager({
             setError(res.error);
             break;
           }
+          enviadas++;
         } catch {
           setError("Não foi possível processar uma das imagens.");
           break;
         }
       }
+      if (enviadas > 0) toast(enviadas === 1 ? "Foto adicionada à galeria." : `${enviadas} fotos adicionadas à galeria.`);
       router.refresh();
     });
   }

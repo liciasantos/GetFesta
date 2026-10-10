@@ -1,4 +1,5 @@
 import Link from "next/link";
+import RevealObserver from "@/components/RevealObserver";
 import { Icon } from "@/components/Icon";
 import { getSession } from "@/lib/auth";
 import { listPlanosEmpresa } from "@/lib/data/painel";
@@ -65,7 +66,7 @@ export default async function EmpresasPage() {
       {/* COMO FUNCIONA — versão animada estilo Reels/Stories, mesmo padrão
           da home (ver components/ComoFuncionaReels.tsx), com conteúdo
           específico pra empresa em vez do fluxo do cliente. */}
-      <section className="border-b border-border bg-surface-alt/60 px-6 py-16 sm:py-20">
+      <section className="reveal border-b border-border bg-surface-alt/60 px-6 py-16 sm:py-20">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-8 lg:flex-row lg:items-center lg:justify-between lg:gap-16">
           <div className="max-w-md text-center lg:text-left">
             <span className="section-kicker justify-center lg:justify-start">Como funciona, em 1 minuto</span>
@@ -79,7 +80,7 @@ export default async function EmpresasPage() {
       </section>
 
       {/* COMO FUNCIONA — detalhamento em passos */}
-      <section className="mx-auto max-w-5xl px-6 py-16 sm:py-20">
+      <section className="reveal mx-auto max-w-5xl px-6 py-16 sm:py-20">
         <span className="section-kicker">Passo a passo</span>
         <h2 className="mt-3 text-2xl font-extrabold sm:text-[26px]">Do cadastro ao contato liberado</h2>
         <div className="mt-9 grid grid-cols-1 gap-6 sm:grid-cols-4">
@@ -91,7 +92,7 @@ export default async function EmpresasPage() {
       </section>
 
       {/* APAREÇA PRIMEIRO — banner + destaque */}
-      <section className="border-t border-border bg-surface-alt px-6 py-16 sm:py-20">
+      <section className="reveal border-t border-border bg-surface-alt px-6 py-16 sm:py-20">
         <div className="mx-auto max-w-5xl">
           <span className="section-kicker">Apareça primeiro</span>
           <h2 className="mt-3 text-2xl font-extrabold sm:text-[26px]">Dois jeitos de se destacar</h2>
@@ -118,7 +119,7 @@ export default async function EmpresasPage() {
       </section>
 
       {/* CONTRATE PROFISSIONAIS */}
-      <section className="mx-auto max-w-5xl px-6 py-16 sm:py-20">
+      <section className="reveal mx-auto max-w-5xl px-6 py-16 sm:py-20">
         <span className="section-kicker">Reforce sua equipe</span>
         <h2 className="mt-3 text-2xl font-extrabold sm:text-[26px]">Contrate profissionais freelance direto pelo site</h2>
         <p className="mt-2 max-w-2xl text-[13.5px] leading-relaxed text-muted">
@@ -135,7 +136,7 @@ export default async function EmpresasPage() {
       {/* REDE DE PERMUTAS — troca de serviços entre empresas (texto e
           visibilidade editáveis em /admin/permutas › Regras) */}
       {permuta.ativa && permuta.secaoEmpresasVisivel && (
-        <section className="border-t border-border bg-surface-alt px-6 py-16 sm:py-20">
+        <section className="reveal border-t border-border bg-surface-alt px-6 py-16 sm:py-20">
           <div className="mx-auto max-w-5xl">
             <span className="section-kicker">Rede de permutas</span>
             <h2 className="mt-3 text-2xl font-extrabold sm:text-[26px]">{permuta.secaoEmpresasTitulo}</h2>
@@ -161,7 +162,7 @@ export default async function EmpresasPage() {
       )}
 
       {/* PLANOS */}
-      <section className="border-t border-border bg-surface-alt/60 px-6 py-16 sm:py-20">
+      <section className="reveal border-t border-border bg-surface-alt/60 px-6 py-16 sm:py-20">
         <div className="mx-auto max-w-6xl">
           <span className="section-kicker">Planos</span>
           <h2 className="mt-3 text-2xl font-extrabold sm:text-[26px]">Comece grátis, cresça no seu ritmo</h2>
@@ -225,7 +226,7 @@ export default async function EmpresasPage() {
       </section>
 
       {/* POR QUE VALE A PENA */}
-      <section className="border-t border-border bg-text">
+      <section className="reveal border-t border-border bg-text">
         <div className="mx-auto max-w-4xl px-6 py-16 text-center sm:py-20">
           <h2 className="section-kicker justify-center">Por que vale a pena</h2>
           <p className="mt-4 font-display text-[22px] font-bold leading-snug text-white sm:text-[28px]">
@@ -236,7 +237,7 @@ export default async function EmpresasPage() {
       </section>
 
       {/* CTA FINAL */}
-      <section className="mx-auto max-w-5xl px-6 py-16 text-center sm:py-20">
+      <section className="reveal mx-auto max-w-5xl px-6 py-16 text-center sm:py-20">
         <h2 className="font-display text-2xl font-extrabold sm:text-3xl">Pronto pra receber seus primeiros pedidos?</h2>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Link href={empresaLogada ? "/painel" : "/cadastro/empresa"} className={buttonClass("primary", "lg")}>
@@ -254,6 +255,7 @@ function PassoCard({ n, titulo, texto }: { n: string; titulo: string; texto: str
       <div className="font-display text-3xl font-extrabold text-accent-dark">{n}</div>
       <h3 className="mt-2 text-[14px] font-bold">{titulo}</h3>
       <p className="mt-1.5 text-[12.5px] leading-relaxed text-muted">{texto}</p>
+      <RevealObserver />
     </div>
   );
 }

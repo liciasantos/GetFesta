@@ -1,6 +1,7 @@
 "use client";
 
 import { forwardRef, useImperativeHandle, useRef, useState, useTransition } from "react";
+import { toast } from "@/lib/toast";
 import { useRouter } from "next/navigation";
 import type { UploadResult } from "@/lib/actions/perfil";
 import { resizeImageToDataUrl } from "@/lib/image-client";
@@ -56,6 +57,7 @@ const AvatarUpload = forwardRef<
           setError(res.error);
           return;
         }
+        toast("Foto atualizada.");
         router.refresh();
       });
     } catch {

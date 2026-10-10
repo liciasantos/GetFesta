@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { toast } from "@/lib/toast";
 import { useState, useTransition } from "react";
 import { manifestarInteresse } from "@/lib/actions/pedidos";
 import { buttonClass } from "@/components/ui";
@@ -20,7 +21,10 @@ export default function InteresseButton({ pedidoId }: { pedidoId: string }) {
           startTransition(async () => {
             const res = await manifestarInteresse(pedidoId);
             if (res.error) setError(res.error);
-            else router.refresh();
+            else {
+              toast("Interesse enviado ao cliente.");
+              router.refresh();
+            }
           })
         }
       >

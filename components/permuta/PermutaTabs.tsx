@@ -26,7 +26,7 @@ export default function PermutaTabs() {
               key={t.href}
               href={t.href}
               aria-current={active ? "page" : undefined}
-              className={`whitespace-nowrap rounded-lg px-3.5 py-2 text-[13px] font-bold ${
+              className={`whitespace-nowrap rounded-lg px-3.5 py-2 text-[13px] font-bold transition-colors duration-150 ${
                 active ? "bg-surface text-text shadow-sm" : "text-muted hover:text-text"
               }`}
             >

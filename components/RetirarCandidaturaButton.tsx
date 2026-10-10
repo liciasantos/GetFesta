@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { toast } from "@/lib/toast";
 import { useState, useTransition } from "react";
 import { retirarCandidatura } from "@/lib/actions/vagas";
 
@@ -21,7 +22,10 @@ export default function RetirarCandidaturaButton({ vagaId, selecionado }: { vaga
     startTransition(async () => {
       const res = await retirarCandidatura(vagaId);
       if (res.error) setError(res.error);
-      else router.refresh();
+      else {
+        toast(selecionado ? "Você desistiu da vaga. A empresa foi avisada." : "Candidatura retirada.");
+        router.refresh();
+      }
     });
   }
 
