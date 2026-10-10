@@ -171,7 +171,8 @@ export default function DisponibilidadeCalendar({
         return;
       }
       setBloqueios((prev) => {
-        const semEsseDia = prev.filter((b) => b.data !== iso);
+        // horários de vaga continuam (o servidor também não apaga esses)
+        const semEsseDia = prev.filter((b) => b.data !== iso || !!b.vaga);
         return res.indisponivel
           ? [...semEsseDia, { id: res.id!, data: iso, horaInicio: null, horaFim: null, observacao: null }]
           : semEsseDia;
@@ -253,7 +254,7 @@ export default function DisponibilidadeCalendar({
         return;
       }
       setBloqueios((prev) => {
-        const semEssesDias = prev.filter((b) => !alvo.includes(b.data));
+        const semEssesDias = prev.filter((b) => !alvo.includes(b.data) || !!b.vaga);
         return indisponivel
           ? [
               ...semEssesDias,
@@ -386,23 +387,35 @@ export default function DisponibilidadeCalendar({
                 observacao={diaInteiroBloqueado.observacao}
                 vaga={diaInteiroBloqueado.vaga}
                 salvando={isPending}
-                onRemover={toggleDiaInteiro}
+                onRemover={diaInteiroBloqueado.vaga ? undefined : toggleDiaInteiro}
                 onSalvarObservacao={(obs) => salvarObservacao(diaInteiroBloqueado.id, obs)}
               />
             )}
-            {horariosDoDia.map((b) => (
-              <AgendaRow
-                key={b.id}
-                label={`${b.horaInicio}\n${b.horaFim}`}
-                horaInicio={b.horaInicio!}
-                horaFim={b.horaFim!}
-                observacao={b.observacao}
-                vaga={b.vaga}
-                salvando={isPending}
-                onRemover={() => removerHorario(b.id)}
-                onSalvarHorario={(horaInicio, horaFim, obs) => salvarEdicaoHorario(b.id, horaInicio, horaFim, obs)}
-              />
-            ))}
+            {horariosDoDia.map((b) =>
+              b.vaga ? (
+                // horário de vaga em que foi escolhido: só o texto é editável;
+                // horário e remoção dependem da vaga (desistir na aba Vagas)
+                <AgendaRow
+                  key={b.id}
+                  label={`${b.horaInicio}\n${b.horaFim}`}
+                  observacao={b.observacao}
+                  vaga={b.vaga}
+                  salvando={isPending}
+                  onSalvarObservacao={(obs) => salvarObservacao(b.id, obs)}
+                />
+              ) : (
+                <AgendaRow
+                  key={b.id}
+                  label={`${b.horaInicio}\n${b.horaFim}`}
+                  horaInicio={b.horaInicio!}
+                  horaFim={b.horaFim!}
+                  observacao={b.observacao}
+                  salvando={isPending}
+                  onRemover={() => removerHorario(b.id)}
+                  onSalvarHorario={(horaInicio, horaFim, obs) => salvarEdicaoHorario(b.id, horaInicio, horaFim, obs)}
+                />
+              )
+            )}
             {!diaInteiroBloqueado && horariosDoDia.length === 0 && (
               <p className="text-[12.5px] text-muted sm:text-[11.5px]">Nenhum bloqueio nesse dia — você está disponível.</p>
             )}
@@ -410,13 +423,17 @@ export default function DisponibilidadeCalendar({
 
           <button
             type="button"
-            disabled={isPending}
+            disabled={isPending || !!diaInteiroBloqueado?.vaga}
             onClick={toggleDiaInteiro}
             className={`mt-3 w-full rounded-md border px-3 py-2.5 text-[13.5px] font-bold sm:py-1.5 sm:text-[12px] disabled:opacity-50 ${
               diaInteiroBloqueado ? "border-accent bg-accent-soft text-accent-dark" : "border-border-strong hover:bg-surface"
             }`}
           >
-            {diaInteiroBloqueado ? "✓ Dia inteiro marcado — clique pra desmarcar" : "Marcar dia inteiro como indisponível"}
+            {diaInteiroBloqueado?.vaga
+              ? "Dia inteiro reservado para a vaga"
+              : diaInteiroBloqueado
+                ? "✓ Dia inteiro marcado — clique pra desmarcar"
+                : "Marcar dia inteiro como indisponível"}
           </button>
 
           {!diaInteiroBloqueado && (
@@ -544,7 +561,8 @@ function AgendaRow({
   observacao: string | null;
   vaga?: { nome: string; empresa: string } | null;
   salvando: boolean;
-  onRemover: () => void;
+  /** ausente = sem botão de remover (horário de vaga) */
+  onRemover?: () => void;
   onSalvarHorario?: (horaInicio: string, horaFim: string, observacao: string) => void;
   onSalvarObservacao?: (observacao: string) => void;
 }) {
@@ -643,9 +661,11 @@ function AgendaRow({
           <button type="button" aria-label="Editar bloqueio" onClick={abrirEdicao} className="p-1.5 text-muted-2 hover:text-accent-dark sm:p-0">
             <Icon name="pencil" />
           </button>
-          <button type="button" aria-label="Remover bloqueio" onClick={onRemover} className="p-1.5 text-muted-2 hover:text-accent-dark sm:p-0">
-            ✕
-          </button>
+          {onRemover && (
+            <button type="button" aria-label="Remover bloqueio" onClick={onRemover} className="p-1.5 text-muted-2 hover:text-accent-dark sm:p-0">
+              ✕
+            </button>
+          )}
         </div>
       </div>
     </div>

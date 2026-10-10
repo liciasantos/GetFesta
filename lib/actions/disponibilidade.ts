@@ -25,9 +25,10 @@ function normalizarObservacao(observacao: string | null | undefined): string | n
 export type ToggleDiaResult = { error?: string; indisponivel?: boolean; id?: string };
 
 /** Alterna o dia INTEIRO entre disponível/indisponível (data no formato
- * YYYY-MM-DD). Sem registro = disponível. Marcar o dia inteiro limpa
- * qualquer horário específico já cadastrado nesse dia, já que passa a estar
- * coberto pelo bloqueio do dia todo. */
+ * YYYY-MM-DD). Sem registro = disponível. Marcar o dia inteiro limpa os
+ * horários específicos que o próprio profissional cadastrou nesse dia (ficam
+ * cobertos pelo bloqueio do dia todo) - mas NUNCA os horários de vaga em que
+ * ele foi escolhido (vaga_id preenchido): esses continuam na agenda. */
 export async function alternarDiaIndisponivel(data: string): Promise<ToggleDiaResult> {
   const session = await getSession();
   if (!session || session.tipo !== "profissional") return { error: "Sessão inválida." };
@@ -36,7 +37,8 @@ export async function alternarDiaIndisponivel(data: string): Promise<ToggleDiaRe
   if (erro) return { error: erro };
 
   const existente = await queryOne<{ id: string }>(
-    `SELECT id FROM profissional_dias_indisponiveis WHERE profissional_id = $1 AND data = $2 AND hora_inicio IS NULL`,
+    `SELECT id FROM profissional_dias_indisponiveis
+      WHERE profissional_id = $1 AND data = $2 AND hora_inicio IS NULL AND vaga_id IS NULL`,
     [session.usuarioId, data]
   );
 
@@ -46,11 +48,20 @@ export async function alternarDiaIndisponivel(data: string): Promise<ToggleDiaRe
     return { indisponivel: false };
   }
 
+  // vaga que passa da meia-noite já ocupa o dia inteiro (bloqueio com vaga_id)
+  const diaDaVaga = await queryOne<{ id: string }>(
+    `SELECT id FROM profissional_dias_indisponiveis
+      WHERE profissional_id = $1 AND data = $2 AND hora_inicio IS NULL AND vaga_id IS NOT NULL`,
+    [session.usuarioId, data]
+  );
+  if (diaDaVaga) return { error: "Esse dia já está reservado inteiro para uma vaga em que você foi escolhido(a)." };
+
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
     await client.query(
-      `DELETE FROM profissional_dias_indisponiveis WHERE profissional_id = $1 AND data = $2 AND hora_inicio IS NOT NULL`,
+      `DELETE FROM profissional_dias_indisponiveis
+        WHERE profissional_id = $1 AND data = $2 AND hora_inicio IS NOT NULL AND vaga_id IS NULL`,
       [session.usuarioId, data]
     );
     const inserido = await client.query<{ id: string }>(
@@ -87,8 +98,10 @@ export async function definirDiasIndisponiveis(datas: string[], indisponivel: bo
   try {
     await client.query("BEGIN");
     for (const data of datas) {
+      // horários de vaga (vaga_id) ficam - só a escolha/desistência da vaga mexe neles
       await client.query(
-        `DELETE FROM profissional_dias_indisponiveis WHERE profissional_id = $1 AND data = $2 AND hora_inicio IS NOT NULL`,
+        `DELETE FROM profissional_dias_indisponiveis
+          WHERE profissional_id = $1 AND data = $2 AND hora_inicio IS NOT NULL AND vaga_id IS NULL`,
         [session.usuarioId, data]
       );
       if (indisponivel) {
@@ -99,7 +112,8 @@ export async function definirDiasIndisponiveis(datas: string[], indisponivel: bo
         );
       } else {
         await client.query(
-          `DELETE FROM profissional_dias_indisponiveis WHERE profissional_id = $1 AND data = $2 AND hora_inicio IS NULL`,
+          `DELETE FROM profissional_dias_indisponiveis
+            WHERE profissional_id = $1 AND data = $2 AND hora_inicio IS NULL AND vaga_id IS NULL`,
           [session.usuarioId, data]
         );
       }
@@ -175,7 +189,7 @@ export async function editarBloqueioHorario(
     const atualizado = await queryOne<{ id: string }>(
       `UPDATE profissional_dias_indisponiveis
        SET hora_inicio = $1, hora_fim = $2, observacao = $3
-       WHERE id = $4 AND profissional_id = $5 AND hora_inicio IS NOT NULL
+       WHERE id = $4 AND profissional_id = $5 AND hora_inicio IS NOT NULL AND vaga_id IS NULL
        RETURNING id`,
       [horaInicio, horaFim, normalizarObservacao(observacao), id, session.usuarioId]
     );
@@ -211,10 +225,13 @@ export async function removerBloqueioHorario(id: string): Promise<BloqueioHorari
   if (!session || session.tipo !== "profissional") return { error: "Sessão inválida." };
   if (!RE_UUID.test(id)) return { error: "Bloqueio inválido." };
 
-  await query(`DELETE FROM profissional_dias_indisponiveis WHERE id = $1 AND profissional_id = $2`, [
-    id,
-    session.usuarioId,
-  ]);
+  const removido = await queryOne<{ id: string }>(
+    `DELETE FROM profissional_dias_indisponiveis WHERE id = $1 AND profissional_id = $2 AND vaga_id IS NULL RETURNING id`,
+    [id, session.usuarioId]
+  );
+  if (!removido) {
+    return { error: "Esse horário é de uma vaga em que você foi escolhido(a). Para liberar, desista da vaga na aba Vagas." };
+  }
   revalidatePath("/perfil-profissional");
   return { ok: true };
 }
