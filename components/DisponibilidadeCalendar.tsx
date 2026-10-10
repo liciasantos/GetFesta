@@ -288,24 +288,24 @@ export default function DisponibilidadeCalendar({
           onClick={() => mudarMes(-1)}
           disabled={!podeVoltarMes}
           aria-label="Mês anterior"
-          className="flex h-7 w-7 items-center justify-center rounded-md border border-border-strong text-muted hover:bg-surface-alt disabled:opacity-30"
+          className="flex h-9 w-9 sm:h-7 sm:w-7 items-center justify-center rounded-md border border-border-strong text-muted hover:bg-surface-alt disabled:opacity-30"
         >
           ←
         </button>
-        <span className="text-[13px] font-bold">
+        <span className="text-[15px] font-bold sm:text-[13px]">
           {MESES[mesVisivel.getMonth()]} {mesVisivel.getFullYear()}
         </span>
         <button
           type="button"
           onClick={() => mudarMes(1)}
           aria-label="Próximo mês"
-          className="flex h-7 w-7 items-center justify-center rounded-md border border-border-strong text-muted hover:bg-surface-alt"
+          className="flex h-9 w-9 sm:h-7 sm:w-7 items-center justify-center rounded-md border border-border-strong text-muted hover:bg-surface-alt"
         >
           →
         </button>
       </div>
 
-      <div className="mt-3 grid grid-cols-7 gap-1 text-center text-[10px] font-bold uppercase text-muted-2">
+      <div className="mt-3 grid grid-cols-7 gap-1 text-center text-[11px] font-bold uppercase text-muted-2 sm:text-[10px]">
         {DIAS_SEMANA.map((d, i) => (
           <div key={i}>{d}</div>
         ))}
@@ -332,7 +332,7 @@ export default function DisponibilidadeCalendar({
               data-disabled={c.passado ? "true" : "false"}
               disabled={c.passado}
               onPointerDown={(e) => handleCellPointerDown(e, c.iso, c.passado)}
-              className={`relative aspect-square rounded-md text-[11.5px] font-semibold transition-colors disabled:cursor-default ${
+              className={`relative aspect-square rounded-md text-[15px] font-semibold sm:text-[11.5px] transition-colors disabled:cursor-default ${
                 c.passado
                   ? "text-muted-2 opacity-40"
                   : diaInteiro
@@ -351,7 +351,7 @@ export default function DisponibilidadeCalendar({
         })}
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted">
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-muted sm:text-[11px]">
         <span className="flex items-center gap-1.5">
           <span className="h-3 w-3 rounded bg-accent" /> Dia inteiro indisponível
         </span>
@@ -362,7 +362,7 @@ export default function DisponibilidadeCalendar({
           Só um horário indisponível
         </span>
       </div>
-      <p className="mt-2 text-[11px] text-muted">
+      <p className="mt-2 text-[12px] text-muted sm:text-[11px]">
         Toque num dia (ou arraste pra selecionar vários). No computador: shift+clique seleciona um intervalo,
         ctrl/cmd+clique soma dias avulsos.
       </p>
@@ -370,11 +370,11 @@ export default function DisponibilidadeCalendar({
       {diaUnico && (
         <div className="mt-3 rounded-lg border border-border bg-surface-alt p-3">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-[12.5px] font-bold capitalize">
+            <p className="text-[14px] font-bold capitalize sm:text-[12.5px]">
               {diaUnico === hojeIso && "Hoje. "}
               <span className="font-normal">{formatDiaSelecionado(diaUnico)}</span>
             </p>
-            <button type="button" onClick={() => setSelecionados([])} className="text-[11px] font-bold text-muted hover:text-text">
+            <button type="button" onClick={() => setSelecionados([])} className="py-1 text-[12.5px] font-bold text-muted hover:text-text sm:py-0 sm:text-[11px]">
               Fechar
             </button>
           </div>
@@ -384,6 +384,7 @@ export default function DisponibilidadeCalendar({
               <AgendaRow
                 label="Dia todo"
                 observacao={diaInteiroBloqueado.observacao}
+                vaga={diaInteiroBloqueado.vaga}
                 salvando={isPending}
                 onRemover={toggleDiaInteiro}
                 onSalvarObservacao={(obs) => salvarObservacao(diaInteiroBloqueado.id, obs)}
@@ -396,13 +397,14 @@ export default function DisponibilidadeCalendar({
                 horaInicio={b.horaInicio!}
                 horaFim={b.horaFim!}
                 observacao={b.observacao}
+                vaga={b.vaga}
                 salvando={isPending}
                 onRemover={() => removerHorario(b.id)}
                 onSalvarHorario={(horaInicio, horaFim, obs) => salvarEdicaoHorario(b.id, horaInicio, horaFim, obs)}
               />
             ))}
             {!diaInteiroBloqueado && horariosDoDia.length === 0 && (
-              <p className="text-[11.5px] text-muted">Nenhum bloqueio nesse dia — você está disponível.</p>
+              <p className="text-[12.5px] text-muted sm:text-[11.5px]">Nenhum bloqueio nesse dia — você está disponível.</p>
             )}
           </div>
 
@@ -410,7 +412,7 @@ export default function DisponibilidadeCalendar({
             type="button"
             disabled={isPending}
             onClick={toggleDiaInteiro}
-            className={`mt-3 w-full rounded-md border px-3 py-1.5 text-[12px] font-bold disabled:opacity-50 ${
+            className={`mt-3 w-full rounded-md border px-3 py-2.5 text-[13.5px] font-bold sm:py-1.5 sm:text-[12px] disabled:opacity-50 ${
               diaInteiroBloqueado ? "border-accent bg-accent-soft text-accent-dark" : "border-border-strong hover:bg-surface"
             }`}
           >
@@ -420,22 +422,22 @@ export default function DisponibilidadeCalendar({
           {!diaInteiroBloqueado && (
             <div className="mt-3 flex flex-col gap-2">
               <div className="flex flex-wrap items-end gap-2">
-                <label className="flex flex-col gap-0.5 text-[10.5px] font-bold uppercase text-muted-2">
+                <label className="flex flex-col gap-0.5 text-[11px] font-bold uppercase text-muted-2 sm:text-[10.5px]">
                   Início
                   <input
                     type="time"
                     value={novoInicio}
                     onChange={(e) => setNovoInicio(e.target.value)}
-                    className="rounded-md border border-border px-2 py-1 text-[12.5px]"
+                    className="rounded-md border border-border px-2 py-1.5 text-base sm:py-1 sm:text-[12.5px]"
                   />
                 </label>
-                <label className="flex flex-col gap-0.5 text-[10.5px] font-bold uppercase text-muted-2">
+                <label className="flex flex-col gap-0.5 text-[11px] font-bold uppercase text-muted-2 sm:text-[10.5px]">
                   Fim
                   <input
                     type="time"
                     value={novoFim}
                     onChange={(e) => setNovoFim(e.target.value)}
-                    className="rounded-md border border-border px-2 py-1 text-[12.5px]"
+                    className="rounded-md border border-border px-2 py-1.5 text-base sm:py-1 sm:text-[12.5px]"
                   />
                 </label>
                 <button type="button" disabled={isPending} onClick={adicionarHorario} className={buttonClass("secondary", "sm")}>
@@ -447,7 +449,7 @@ export default function DisponibilidadeCalendar({
                 onChange={(e) => setNovaObservacao(e.target.value)}
                 maxLength={200}
                 placeholder="Nota opcional (ex: consulta médica)"
-                className="rounded-md border border-border px-2.5 py-1.5 text-[12px]"
+                className="rounded-md border border-border px-2.5 py-2 text-base sm:py-1.5 sm:text-[12px]"
               />
             </div>
           )}
@@ -464,7 +466,7 @@ export default function DisponibilidadeCalendar({
                 setSelecionados([]);
                 setAnchor(null);
               }}
-              className="text-[11px] font-bold text-muted hover:text-text"
+              className="py-1 text-[12.5px] font-bold text-muted hover:text-text sm:py-0 sm:text-[11px]"
             >
               Limpar seleção
             </button>
@@ -479,11 +481,11 @@ export default function DisponibilidadeCalendar({
                 return (
                   <div key={iso} className="flex items-stretch gap-3 rounded-md border border-border bg-surface p-2">
                     <span className={`w-1 shrink-0 rounded-full ${bloqueado ? "bg-accent" : "bg-border-strong"}`} />
-                    <div className="flex w-9 shrink-0 flex-col items-center justify-center text-[11px] font-bold leading-tight text-muted-2">
-                      <span className="text-[13px] text-text">{dia}</span>
+                    <div className="flex w-10 shrink-0 flex-col items-center justify-center text-[12px] font-bold leading-tight text-muted-2 sm:w-9 sm:text-[11px]">
+                      <span className="text-[15px] text-text sm:text-[13px]">{dia}</span>
                       <span>{mes}</span>
                     </div>
-                    <div className="flex flex-1 items-center justify-between gap-2 border-l border-border pl-2.5 text-[12px]">
+                    <div className="flex flex-1 items-center justify-between gap-2 border-l border-border pl-2.5 text-[13px] sm:text-[12px]">
                       <span className="font-semibold capitalize">{formatDiaSelecionado(iso).split(",")[0]}</span>
                       <span className={bloqueado ? "font-bold text-accent-dark" : "text-muted"}>
                         {bloqueado ? "Indisponível" : "Disponível"}
@@ -530,6 +532,7 @@ function AgendaRow({
   horaInicio,
   horaFim,
   observacao,
+  vaga,
   salvando,
   onRemover,
   onSalvarHorario,
@@ -539,6 +542,7 @@ function AgendaRow({
   horaInicio?: string;
   horaFim?: string;
   observacao: string | null;
+  vaga?: { nome: string; empresa: string } | null;
   salvando: boolean;
   onRemover: () => void;
   onSalvarHorario?: (horaInicio: string, horaFim: string, observacao: string) => void;
@@ -549,12 +553,12 @@ function AgendaRow({
   const [editando, setEditando] = useState(false);
   const [formInicio, setFormInicio] = useState(horaInicio ?? "");
   const [formFim, setFormFim] = useState(horaFim ?? "");
-  const [formObs, setFormObs] = useState(observacao ?? "");
+  const [formObs, setFormObs] = useState(observacao ?? vaga?.nome ?? "");
 
   function abrirEdicao() {
     setFormInicio(horaInicio ?? "");
     setFormFim(horaFim ?? "");
-    setFormObs(observacao ?? "");
+    setFormObs(observacao ?? vaga?.nome ?? "");
     setEditando(true);
   }
 
@@ -569,22 +573,22 @@ function AgendaRow({
       <div className="flex flex-col gap-2 rounded-md border border-accent-soft-2 bg-surface p-2.5">
         {editavelPorHorario && (
           <div className="flex flex-wrap items-end gap-2">
-            <label className="flex flex-col gap-0.5 text-[10px] font-bold uppercase text-muted-2">
+            <label className="flex flex-col gap-0.5 text-[11px] font-bold uppercase text-muted-2 sm:text-[10px]">
               Início
               <input
                 type="time"
                 value={formInicio}
                 onChange={(e) => setFormInicio(e.target.value)}
-                className="rounded-md border border-border px-2 py-1 text-[12px]"
+                className="rounded-md border border-border px-2 py-1.5 text-base sm:py-1 sm:text-[12px]"
               />
             </label>
-            <label className="flex flex-col gap-0.5 text-[10px] font-bold uppercase text-muted-2">
+            <label className="flex flex-col gap-0.5 text-[11px] font-bold uppercase text-muted-2 sm:text-[10px]">
               Fim
               <input
                 type="time"
                 value={formFim}
                 onChange={(e) => setFormFim(e.target.value)}
-                className="rounded-md border border-border px-2 py-1 text-[12px]"
+                className="rounded-md border border-border px-2 py-1.5 text-base sm:py-1 sm:text-[12px]"
               />
             </label>
           </div>
@@ -593,8 +597,8 @@ function AgendaRow({
           value={formObs}
           onChange={(e) => setFormObs(e.target.value)}
           maxLength={200}
-          placeholder="Nota opcional (ex: consulta médica)"
-          className="rounded-md border border-border px-2.5 py-1.5 text-[12px]"
+          placeholder={vaga ? vaga.nome : "Nota opcional (ex: consulta médica)"}
+          className="rounded-md border border-border px-2.5 py-2 text-base sm:py-1.5 sm:text-[12px]"
         />
         <div className="flex gap-2">
           <button
@@ -616,20 +620,30 @@ function AgendaRow({
   return (
     <div className="flex items-stretch gap-3 rounded-md border border-border bg-surface p-2.5">
       <span className="w-1 shrink-0 rounded-full bg-accent" />
-      <div className="flex w-12 shrink-0 flex-col justify-center text-[11px] font-bold leading-tight text-muted-2">
+      <div className="flex w-12 shrink-0 flex-col justify-center gap-0.5 text-[13.5px] font-bold leading-tight text-muted-2 tabular-nums sm:w-12 sm:gap-0 sm:text-[11px]">
         <span>{linha1}</span>
         {linha2 && <span>{linha2}</span>}
       </div>
-      <div className="flex flex-1 items-center justify-between gap-2 border-l border-border pl-2.5">
+      <div className="flex min-w-0 flex-1 items-center justify-between gap-2 border-l border-border pl-2.5">
         <div className="min-w-0">
-          <span className="text-[12.5px] font-bold">Indisponível</span>
-          {observacao && <p className="truncate text-[11px] text-muted">{observacao}</p>}
+          {vaga ? (
+            <>
+              {/* escolhido numa vaga: mostra o nome da vaga (ou o que ele escreveu por cima) */}
+              <span className="block break-words text-[14px] font-bold leading-snug sm:truncate sm:text-[12.5px]">{observacao || vaga.nome}</span>
+              <p className="break-words text-[12px] leading-snug text-muted sm:truncate sm:text-[11px]">{vaga.empresa ? `Vaga · ${vaga.empresa}` : "Vaga"}</p>
+            </>
+          ) : (
+            <>
+              <span className="text-[14px] font-bold sm:text-[12.5px]">Indisponível</span>
+              {observacao && <p className="break-words text-[12px] leading-snug text-muted sm:truncate sm:text-[11px]">{observacao}</p>}
+            </>
+          )}
         </div>
-        <div className="flex shrink-0 items-center gap-2.5">
-          <button type="button" aria-label="Editar bloqueio" onClick={abrirEdicao} className="text-muted-2 hover:text-accent-dark">
+        <div className="flex shrink-0 items-center gap-0.5 sm:gap-2.5">
+          <button type="button" aria-label="Editar bloqueio" onClick={abrirEdicao} className="p-1.5 text-muted-2 hover:text-accent-dark sm:p-0">
             <Icon name="pencil" />
           </button>
-          <button type="button" aria-label="Remover bloqueio" onClick={onRemover} className="text-muted-2 hover:text-accent-dark">
+          <button type="button" aria-label="Remover bloqueio" onClick={onRemover} className="p-1.5 text-muted-2 hover:text-accent-dark sm:p-0">
             ✕
           </button>
         </div>
