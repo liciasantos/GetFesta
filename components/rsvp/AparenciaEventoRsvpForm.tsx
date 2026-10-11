@@ -19,10 +19,9 @@ export default function AparenciaEventoRsvpForm({
   const [state, formAction, pending] = useActionState<RsvpActionState, FormData>(atualizarAparenciaEventoRsvp, undefined);
 
   return (
-    <form action={formAction} className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4">
+    <form action={formAction} className="flex flex-col gap-3">
       <div>
-        <p className="text-[12.5px] font-bold">Personalizar página de confirmação</p>
-        <p className="mt-0.5 text-[11.5px] text-muted">
+        <p className="text-[13px] text-muted">
           Escolha uma cor de fundo e/ou uma foto da festa pra deixar o link que você compartilha com a sua cara.
         </p>
       </div>

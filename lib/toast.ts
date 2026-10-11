@@ -14,7 +14,7 @@ function conteiner(): HTMLElement {
   el.id = "toasts";
   el.setAttribute("role", "status");
   el.setAttribute("aria-live", "polite");
-  const temBarra = !!document.querySelector("[data-barra-inferior]") && window.innerWidth < 640;
+  const temBarra = !!document.querySelector("[data-barra-inferior]") && window.innerWidth < 1024;
   el.style.cssText = `position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + ${
     temBarra ? 84 : 20
   }px);z-index:70;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;width:max-content;max-width:calc(100vw - 32px)`;

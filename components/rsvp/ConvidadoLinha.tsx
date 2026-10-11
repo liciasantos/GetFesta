@@ -4,23 +4,33 @@ import { useRouter } from "next/navigation";
 import { Icon } from "@/components/Icon";
 import { useState, useTransition } from "react";
 import { atualizarConfirmacaoConvidado, removerConvidado } from "@/lib/actions/rsvp";
-import { Badge } from "@/components/ui";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 import { SITE_URL } from "@/lib/site-url";
 import type { Convidado } from "@/lib/data/rsvp";
+import { formatarNumero } from "@/lib/whatsapp/regras";
 
-const STATUS: Record<string, { label: string; tone: "ok" | "danger" | "muted" }> = {
-  confirmado: { label: "✓ Confirmado", tone: "ok" },
-  recusado: { label: "Não vai", tone: "danger" },
-  pendente: { label: "Aguardando", tone: "muted" },
-};
+export type StatusConvidado = "confirmado" | "pendente" | "recusado";
 
-function statusDe(confirmado: boolean | null): keyof typeof STATUS {
+export function statusDe(confirmado: boolean | null): StatusConvidado {
   if (confirmado === true) return "confirmado";
   if (confirmado === false) return "recusado";
   return "pendente";
 }
 
+const OPCOES: Array<{ valor: boolean | null; status: StatusConvidado; label: string; icon: "check" | "clock" | "x"; ativo: string }> = [
+  { valor: true, status: "confirmado", label: "Vai", icon: "check", ativo: "bg-ok text-white" },
+  { valor: null, status: "pendente", label: "Aguardando", icon: "clock", ativo: "bg-text text-white" },
+  { valor: false, status: "recusado", label: "Não vai", icon: "x", ativo: "bg-danger-dark text-white" },
+];
+
+const AVATAR: Record<StatusConvidado, string> = {
+  confirmado: "bg-ok-soft text-ok",
+  pendente: "bg-surface-alt text-muted",
+  recusado: "bg-danger-soft text-danger-dark",
+};
+
+/** Uma linha da lista do anfitrião: quem é, status em 3 botões (vai /
+ * aguardando / não vai), convite individual no WhatsApp e remover. */
 export default function ConvidadoLinha({ convidado, eventoSlug }: { convidado: Convidado; eventoSlug: string }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -28,6 +38,7 @@ export default function ConvidadoLinha({ convidado, eventoSlug }: { convidado: C
   const status = statusDe(convidado.confirmado);
 
   function marcar(confirmado: boolean | null) {
+    if (statusDe(confirmado) === status) return;
     startTransition(async () => {
       await atualizarConfirmacaoConvidado(convidado.id, confirmado);
       router.refresh();
@@ -41,93 +52,92 @@ export default function ConvidadoLinha({ convidado, eventoSlug }: { convidado: C
     });
   }
 
+  const meta = [
+    convidado.tipo_convidado === "crianca"
+      ? `Criança${convidado.idade_anos !== null ? ` · ${convidado.idade_anos} anos` : ""}`
+      : "Adulto",
+    convidado.telefone && formatarNumero(convidado.telefone),
+  ].filter(Boolean);
+
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border p-3">
-      <div>
-        <div className="flex items-center gap-2 text-[13px] font-bold">
-          {convidado.nome}
-          <span className="rounded-full bg-surface-alt px-2 py-0.5 text-[10.5px] font-semibold text-muted">
-            {convidado.tipo_convidado === "crianca"
-              ? `Criança${convidado.idade_anos !== null ? ` · ${convidado.idade_anos} anos` : ""}`
-              : "Adulto"}
-          </span>
-        </div>
-        {convidado.telefone && <div className="text-[11.5px] text-muted">{convidado.telefone}</div>}
+    <div className={`flex flex-wrap items-center gap-x-3 gap-y-2.5 rounded-xl border border-border bg-surface p-3 ${isPending ? "opacity-60" : ""}`}>
+      <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-display text-[15px] font-extrabold ${AVATAR[status]}`}>
+        {convidado.nome[0]?.toUpperCase()}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[14px] font-bold">{convidado.nome}</p>
+        <p className="truncate text-[12px] text-muted">{meta.join(" · ")}</p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <Badge tone={STATUS[status].tone}>{STATUS[status].label}</Badge>
+      <div className="flex w-full items-center gap-2 sm:w-auto">
+        <div className="flex flex-1 rounded-lg border border-border bg-surface-alt/50 p-0.5 sm:flex-none" role="group" aria-label={`Presença de ${convidado.nome}`}>
+          {OPCOES.map((o) => {
+            const ativo = status === o.status;
+            return (
+              <button
+                key={o.status}
+                type="button"
+                disabled={isPending}
+                onClick={() => marcar(o.valor)}
+                aria-pressed={ativo}
+                title={o.label}
+                className={`flex flex-1 items-center justify-center gap-1 rounded-md px-2.5 py-1.5 text-[12px] font-bold transition-colors sm:flex-none ${
+                  ativo ? o.ativo : "text-muted hover:text-text"
+                }`}
+              >
+                <Icon name={o.icon} className="h-3.5 w-3.5" />
+                <span className={ativo ? "" : "sr-only sm:not-sr-only"}>{o.label}</span>
+              </button>
+            );
+          })}
+        </div>
 
         {convidado.telefone && (
           <a
             href={buildWhatsAppLink(
               convidado.telefone,
-              `Oi ${convidado.nome}! Você tá convidado(a) 🎉 Confirma sua presença aqui: ${SITE_URL}/rsvp/${eventoSlug}`
+              `Oi ${convidado.nome}! Você está convidado(a) 🎉 Confirma sua presença aqui: ${SITE_URL}/rsvp/${eventoSlug}`
             )}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-md border border-border-strong px-2.5 py-1 text-[11.5px] font-bold hover:bg-surface-alt"
+            title="Enviar convite no WhatsApp"
+            aria-label={`Enviar convite para ${convidado.nome} no WhatsApp`}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border text-ok hover:bg-ok-soft"
           >
-            <Icon name="chat" className="h-3.5 w-3.5" /> Convite
+            <Icon name="chat" className="h-4 w-4" />
           </a>
         )}
 
-        {status !== "confirmado" && (
-          <button
-            type="button"
-            disabled={isPending}
-            onClick={() => marcar(true)}
-            className="rounded-md border border-border-strong px-2.5 py-1 text-[11.5px] font-bold hover:bg-surface-alt disabled:opacity-50"
-          >
-            Confirmar
-          </button>
-        )}
-        {status !== "recusado" && (
-          <button
-            type="button"
-            disabled={isPending}
-            onClick={() => marcar(false)}
-            className="rounded-md border border-border-strong px-2.5 py-1 text-[11.5px] font-bold hover:bg-surface-alt disabled:opacity-50"
-          >
-            Não vai
-          </button>
-        )}
-        {status !== "pendente" && (
-          <button
-            type="button"
-            disabled={isPending}
-            onClick={() => marcar(null)}
-            className="text-[11.5px] font-bold text-muted underline disabled:opacity-50"
-          >
-            Desfazer
-          </button>
-        )}
-
         {confirmandoRemocao ? (
-          <span className="flex items-center gap-1.5">
+          <span className="flex shrink-0 items-center gap-1">
             <button
               type="button"
               disabled={isPending}
               onClick={remover}
-              className="rounded-md bg-danger-dark px-2.5 py-1 text-[11.5px] font-bold text-white hover:bg-danger-dark/90 disabled:opacity-50"
+              className="rounded-lg bg-danger-dark px-2.5 py-2 text-[12px] font-bold text-white hover:bg-danger-dark/90"
             >
-              Confirmar exclusão
+              Remover
             </button>
             <button
               type="button"
               onClick={() => setConfirmandoRemocao(false)}
-              className="text-[11.5px] font-bold text-muted underline"
+              aria-label="Cancelar remoção"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted hover:bg-surface-alt"
             >
-              Cancelar
+              <Icon name="x" className="h-4 w-4" />
             </button>
           </span>
         ) : (
           <button
             type="button"
             onClick={() => setConfirmandoRemocao(true)}
-            className="text-[11.5px] font-bold text-accent-dark underline"
+            title="Remover da lista"
+            aria-label={`Remover ${convidado.nome} da lista`}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-2 hover:bg-danger-soft hover:text-danger-dark"
           >
-            Remover
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden>
+              <path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3" />
+            </svg>
           </button>
         )}
       </div>

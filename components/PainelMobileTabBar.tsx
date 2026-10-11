@@ -47,10 +47,10 @@ export default function PainelMobileTabBar({ vagasBadge = 0 }: { vagasBadge?: nu
   return (
     <nav
       data-barra-inferior
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_rgba(31,41,51,0.08)] sm:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_rgba(31,41,51,0.08)] lg:hidden"
       aria-label="Navegação do painel"
     >
-      <div className="grid grid-cols-5">
+      <div className="mx-auto grid max-w-2xl grid-cols-5">
         {TABS.map((t) => {
           const active = t.match(pathname);
           return (

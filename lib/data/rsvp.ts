@@ -13,6 +13,9 @@ export type EventoRsvpResumo = {
   total_recusados: number;
   total_adultos: number;
   total_criancas: number;
+  /** quem ainda pode ir (confirmou ou não respondeu) - base da calculadora */
+  adultos_previstos: number;
+  criancas_previstas: number;
 };
 
 const EVENTO_RSVP_RESUMO_SELECT = `
@@ -22,7 +25,9 @@ const EVENTO_RSVP_RESUMO_SELECT = `
     count(c.id) FILTER (WHERE c.confirmado = true)::int AS total_confirmados,
     count(c.id) FILTER (WHERE c.confirmado = false)::int AS total_recusados,
     count(c.id) FILTER (WHERE c.tipo_convidado = 'adulto')::int AS total_adultos,
-    count(c.id) FILTER (WHERE c.tipo_convidado = 'crianca')::int AS total_criancas
+    count(c.id) FILTER (WHERE c.tipo_convidado = 'crianca')::int AS total_criancas,
+    count(c.id) FILTER (WHERE c.tipo_convidado = 'adulto' AND c.confirmado IS DISTINCT FROM false)::int AS adultos_previstos,
+    count(c.id) FILTER (WHERE c.tipo_convidado = 'crianca' AND c.confirmado IS DISTINCT FROM false)::int AS criancas_previstas
   FROM eventos_rsvp e
   LEFT JOIN rsvp_convidados c ON c.evento_rsvp_id = e.id
 `;

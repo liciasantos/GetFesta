@@ -56,14 +56,15 @@ export default function CookieConsent() {
 
   if (!visivel) return null;
 
+  // a barra de ícones fica visível até o lg (onde entra o menu lateral)
   const posicaoMobile = temBarraInferior
-    ? "bottom-[calc(env(safe-area-inset-bottom)+80px)]"
-    : "bottom-[calc(env(safe-area-inset-bottom)+12px)]";
+    ? "bottom-[calc(env(safe-area-inset-bottom)+80px)] lg:bottom-5"
+    : "bottom-[calc(env(safe-area-inset-bottom)+12px)] sm:bottom-5";
 
   return (
     <section
       aria-label="Preferências de cookies"
-      className={`fixed inset-x-3 z-[60] rounded-2xl border border-border bg-surface p-4 shadow-[var(--shadow-card-hover)] motion-safe:animate-[subir_220ms_ease-out] sm:inset-x-auto sm:bottom-5 sm:left-5 sm:w-[380px] ${posicaoMobile}`}
+      className={`fixed inset-x-3 z-[60] rounded-2xl border border-border bg-surface p-4 shadow-[var(--shadow-card-hover)] motion-safe:animate-[subir_220ms_ease-out] sm:inset-x-auto sm:left-5 sm:w-[380px] ${posicaoMobile}`}
     >
       <p className="text-[13.5px] font-bold">Usamos cookies</p>
       <p className="mt-1 text-[12.5px] leading-relaxed text-muted">

@@ -46,7 +46,7 @@ export function ProfissionalTabsProvider({
   const badge = vistas ? Math.max(0, vagasBadge - vagasNaoVistas) : vagasBadge;
   return (
     <TabContext.Provider value={{ tab, setTab, vagasBadge: badge }}>
-      <div className="pb-20 sm:pb-0">{children}</div>
+      <div className="pb-20 lg:pb-0">{children}</div>
       <MobileTabBar />
     </TabContext.Provider>
   );
@@ -96,10 +96,10 @@ function MobileTabBar() {
   return (
     <nav
       data-barra-inferior
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_rgba(31,41,51,0.08)] sm:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_rgba(31,41,51,0.08)] lg:hidden"
       aria-label="Navegação do catálogo profissional"
     >
-      <div className="grid grid-cols-4">
+      <div className="mx-auto grid max-w-2xl grid-cols-4">
         {TABS.map((t) => {
           const isActive = tab === t.id;
           return (

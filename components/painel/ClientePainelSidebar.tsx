@@ -6,15 +6,15 @@ import { usePathname } from "next/navigation";
 const ITENS: Array<{ href: string; label: string; icon: string; match: (p: string) => boolean }> = [
   {
     href: "/meus-pedidos",
-    label: "Painel inicial",
+    label: "Início",
     match: (p) => p === "/meus-pedidos",
     icon: `<path d="M4 11 12 4l8 7"/><path d="M6 10v9h12v-9"/><path d="M10 19v-5h4v5"/>`,
   },
   {
-    href: "/meu-perfil",
-    label: "Meu perfil",
-    match: (p) => p.startsWith("/meu-perfil"),
-    icon: `<circle cx="12" cy="8.2" r="3.4"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/>`,
+    href: "/lista-convidados",
+    label: "Lista de convidados",
+    match: (p) => p.startsWith("/lista-convidados"),
+    icon: `<circle cx="8.5" cy="8.5" r="2.8"/><path d="M3.5 19c0-3 2.2-5.3 5-5.3s5 2.3 5 5.3"/><circle cx="17" cy="9" r="2.2"/><path d="M14.8 13.8c2.3.2 4.2 2.3 4.2 5.2"/>`,
   },
   {
     href: "/calculadora-eventos",
@@ -23,17 +23,16 @@ const ITENS: Array<{ href: string; label: string; icon: string; match: (p: strin
     icon: `<path d="M6 3.5h12a1 1 0 0 1 1 1V19a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1Z"/><path d="M8 7.5h8M8.5 11.2h.01M12 11.2h.01M15.5 11.2h.01M8.5 14.8h.01M12 14.8h.01M15.5 14.8h.01"/>`,
   },
   {
-    href: "/lista-convidados",
-    label: "Lista de convidados",
-    match: (p) => p.startsWith("/lista-convidados"),
-    icon: `<circle cx="8.5" cy="8.5" r="2.8"/><path d="M3.5 19c0-3 2.2-5.3 5-5.3s5 2.3 5 5.3"/><circle cx="17" cy="9" r="2.2"/><path d="M14.8 13.8c2.3.2 4.2 2.3 4.2 5.2"/>`,
+    href: "/meu-perfil",
+    label: "Meu perfil",
+    match: (p) => p.startsWith("/meu-perfil"),
+    icon: `<circle cx="12" cy="8.2" r="3.4"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/>`,
   },
 ];
 
 /** Navegação lateral do painel do cliente, só em telas grandes (`lg:`) - mesmo
- * padrão de components/painel/PainelSidebar.tsx (empresa). No mobile o
- * cliente não tem barra fixa nenhuma hoje (ver MobileAccountNav.tsx), então
- * essa sidebar não duplica nem substitui nada, só cobre o desktop. */
+ * padrão de components/painel/PainelSidebar.tsx (empresa). No celular a
+ * navegação é a barra do rodapé (ClienteMobileTabBar), com a mesma ordem. */
 export default function ClientePainelSidebar() {
   const pathname = usePathname();
 

@@ -142,14 +142,45 @@ const GRUPOS: Grupo[] = [
   },
 ];
 
-/** Navegação lateral de todo /admin, só em telas grandes (`lg:`) - mesmo
- * padrão de components/painel/PainelSidebar.tsx, mas agrupada por categoria
- * (14 seções não cabem numa lista só). Em telas menores cada página continua
- * com seu link "← Painel administrativo" de sempre. */
+/** Navegação de todo /admin. Em telas grandes (`lg:`) é a barra lateral
+ * agrupada por categoria (mesmo padrão de components/painel/PainelSidebar.tsx);
+ * abaixo disso vira uma faixa rolável no topo com as mesmas seções. */
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const itens = GRUPOS.flatMap((g) => g.itens);
 
   return (
+    <>
+    <nav
+      className="sticky top-0 z-30 flex gap-1.5 overflow-x-auto border-b border-border bg-bg/95 px-4 py-2.5 backdrop-blur [scrollbar-width:none] lg:hidden"
+      aria-label="Navegação do admin"
+    >
+      {itens.map((item) => {
+        const active = item.match(pathname);
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            aria-current={active ? "page" : undefined}
+            className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12.5px] font-bold ${
+              active ? "border-accent bg-accent-soft text-accent-dark" : "border-border bg-surface text-muted"
+            }`}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.8}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-[15px] w-[15px] shrink-0"
+              dangerouslySetInnerHTML={{ __html: item.icon }}
+            />
+            {item.label}
+          </Link>
+        );
+      })}
+    </nav>
     <nav className="sticky top-6 hidden w-[240px] shrink-0 flex-col gap-4 lg:flex" aria-label="Navegação do admin">
       {GRUPOS.map((grupo, i) => (
         <div key={grupo.titulo ?? i} className="flex flex-col gap-1">
@@ -184,5 +215,6 @@ export default function AdminSidebar() {
         </div>
       ))}
     </nav>
+    </>
   );
 }
