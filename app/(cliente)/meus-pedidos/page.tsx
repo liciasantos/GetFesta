@@ -90,6 +90,17 @@ export default async function PainelClientePage() {
             <ComeceAqui />
           )}
         </div>
+
+        {/* DESTAQUES DA SEMANA - empresas que pagam pelo destaque: fica no
+            começo do painel, logo depois da próxima festa, pra ser visto */}
+        {banners.length > 0 && (
+          <div className="mt-7">
+            <DestaquesKicker />
+            <div className="mt-3">
+              <DestaquesGrid banners={banners} thumbSize="lg" />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* COLUNA DA DIREITA (no celular vem logo depois da próxima festa) */}
@@ -131,15 +142,6 @@ export default async function PainelClientePage() {
             {pedidos.map((p) => (
               <PedidoCard key={p.id} pedido={p} hoje={hoje} />
             ))}
-          </div>
-        )}
-
-        {banners.length > 0 && (
-          <div className="mt-8">
-            <DestaquesKicker />
-            <div className="mt-3">
-              <DestaquesGrid banners={banners} thumbSize="lg" />
-            </div>
           </div>
         )}
       </div>

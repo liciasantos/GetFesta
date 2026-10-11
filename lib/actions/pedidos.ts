@@ -32,12 +32,16 @@ export async function criarPedido(input: PublicarPedidoInput): Promise<CriarPedi
   }
 
   const { min, max } = orcamentoFaixaParaMinMax(data.orcamentoFaixa);
+  // cliente já logado: o pedido entra direto em "Meus pedidos" (sem login, é
+  // vinculado depois, se a pessoa criar a conta na tela de confirmação)
+  const session = await getSession();
+  const clienteId = session?.tipo === "cliente" ? session.usuarioId : null;
 
   const pedido = await queryOne<{ id: string }>(
     `INSERT INTO pedidos (
        nome_temp, telefone_temp, telefone_verificado_temp, tipo_evento, data_evento,
-       cidade_id, bairro_id, descricao, detalhe_outros_servico, orcamento_min, orcamento_max, status
-     ) VALUES ($1,$2,false,$3,$4,$5,$6,$7,$8,$9,$10,'aberto') RETURNING id`,
+       cidade_id, bairro_id, descricao, detalhe_outros_servico, orcamento_min, orcamento_max, status, cliente_id
+     ) VALUES ($1,$2,false,$3,$4,$5,$6,$7,$8,$9,$10,'aberto',$11) RETURNING id`,
     [
       data.nomeTemp,
       data.telefoneTemp,
@@ -49,6 +53,7 @@ export async function criarPedido(input: PublicarPedidoInput): Promise<CriarPedi
       data.detalheOutrosServico ?? null,
       min,
       max,
+      clienteId,
     ]
   );
   if (!pedido) return { error: "Não foi possível publicar o pedido, tente novamente." };
@@ -59,6 +64,7 @@ export async function criarPedido(input: PublicarPedidoInput): Promise<CriarPedi
 
   after(() => avisarPedidoNovo(pedido.id));
   revalidatePath("/");
+  if (clienteId) revalidatePath("/meus-pedidos");
   return { pedidoId: pedido.id };
 }
 

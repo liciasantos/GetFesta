@@ -47,6 +47,10 @@ const PATHS = {
   gelo: `<rect x="4" y="9" width="9" height="9" rx="1.5"/><path d="M10 6.5 13.5 3h6.5v6.5L16.5 13"/><path d="M13 9l7-6"/>`,
   taca: `<path d="M7 3h10l-.6 5a4.4 4.4 0 0 1-8.8 0L7 3Z"/><path d="M12 12.5V20M8.5 20.5h7"/>`,
   guardanapo: `<path d="M5 5h14v14H5z"/><path d="M5 5l14 14"/>`,
+  alianca: `<circle cx="9" cy="14" r="5"/><circle cx="15" cy="14" r="5"/><path d="M10.5 5h3l1 2-2.5 2.2L9.5 7l1-2Z"/>`,
+  capelo: `<path d="M2.5 9 12 4.5 21.5 9 12 13.5 2.5 9Z"/><path d="M6.5 11v4.5c0 1.4 2.5 2.5 5.5 2.5s5.5-1.1 5.5-2.5V11M21.5 9v5"/>`,
+  maleta: `<rect x="3" y="7.5" width="18" height="12" rx="2"/><path d="M8.5 7.5V5.5a1.5 1.5 0 0 1 1.5-1.5h4a1.5 1.5 0 0 1 1.5 1.5v2M3 12.5h18"/>`,
+  coroa: `<path d="M4 17.5 3 8l5 4 4-6.5 4 6.5 5-4-1 9.5H4Z"/><path d="M4 20.5h16"/>`,
 } as const;
 
 export type IconName = keyof typeof PATHS;

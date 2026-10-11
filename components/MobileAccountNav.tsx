@@ -22,6 +22,10 @@ export default function MobileAccountNav({
 }) {
   const pathname = usePathname();
 
+  // modo foco: no formulário de pedido a barra sai (o botão "Continuar" ocupa
+  // o rodapé e um toque sem querer não faz perder o que foi preenchido)
+  if (pathname.startsWith("/publicar-pedido")) return <>{children}</>;
+
   if (tipo === "empresa") {
     return (
       <div className="pb-20 lg:pb-0">
