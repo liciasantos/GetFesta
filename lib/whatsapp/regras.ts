@@ -3,6 +3,8 @@
  * de servidor: pode ser importado por client components. */
 
 export const CONFIG_WHATSAPP = "whatsapp_config";
+/** Cookie que esconde a janela de convite por 30 dias ("Agora não"). */
+export const COOKIE_CONVITE_WHATSAPP = "gf_whatsapp_convite";
 
 export type WhatsAppConfig = {
   /** Liga/desliga tudo: sem isso o card do perfil some e nada é enviado. */

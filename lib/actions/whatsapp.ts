@@ -2,13 +2,30 @@
 
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
+import { cookies } from "next/headers";
 import { query, queryOne } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { enfileirar, getWhatsAppConfig, processarFila } from "@/lib/whatsapp/fila";
-import { CONFIG_WHATSAPP, WHATSAPP_PADRAO, formatarNumero, normalizarNumero, type WhatsAppConfig } from "@/lib/whatsapp/regras";
+import {
+  CONFIG_WHATSAPP,
+  COOKIE_CONVITE_WHATSAPP,
+  WHATSAPP_PADRAO,
+  formatarNumero,
+  normalizarNumero,
+  type WhatsAppConfig,
+} from "@/lib/whatsapp/regras";
 import { enviarTexto, resolverChatId } from "@/lib/whatsapp/waha";
 
 export type WhatsAppActionState = { ok?: boolean; error?: string; mensagem?: string } | undefined;
+
+function textoBoasVindas(tipo: "empresa" | "profissional") {
+  return (
+    "👋 Olá! Você ativou os avisos da *GetFesta* por WhatsApp.\n\n" +
+    (tipo === "empresa"
+      ? "Vamos te avisar por aqui de novos pedidos de orçamento, candidatos nas suas vagas e lembretes de eventos."
+      : "Vamos te avisar por aqui de vagas novas para você, quando uma empresa te escolher e lembretes na véspera dos eventos.")
+  );
+}
 
 function revalidarPerfis() {
   revalidatePath("/painel/perfil");
@@ -45,14 +62,39 @@ export async function salvarAvisosWhatsApp(_prev: WhatsAppActionState, formData:
      WHERE id = $1`,
     [session.usuarioId, numero]
   );
-  const texto =
-    "👋 Olá! Você ativou os avisos da *GetFesta* por WhatsApp.\n\n" +
-    (session.tipo === "empresa"
-      ? "Vamos te avisar por aqui de novos pedidos de orçamento, candidatos nas suas vagas e lembretes de eventos."
-      : "Vamos te avisar por aqui de vagas novas para você, quando uma empresa te escolher e lembretes na véspera dos eventos.");
+  const texto = textoBoasVindas(session.tipo);
   after(() => enfileirar("boas_vindas", [{ usuarioId: session.usuarioId, chave: `boas_vindas:${session.usuarioId}:${Date.now()}`, texto }]));
   revalidarPerfis();
   return { ok: true, mensagem: `Avisos ativados para ${formatarNumero(numero)}. Você vai receber uma mensagem de boas-vindas em instantes.` };
+}
+
+/** "Sim, ativar" da janela de convite (components/WhatsAppConvite): usa o
+ * celular do cadastro. O toque no botão, com o texto de autorização na
+ * própria janela, é o consentimento registrado em whatsapp_optin_em. */
+export async function ativarWhatsAppConvite(): Promise<WhatsAppActionState> {
+  const session = await getSession();
+  if (!session || (session.tipo !== "empresa" && session.tipo !== "profissional")) return { error: "Sessão inválida." };
+  const cfg = await getWhatsAppConfig();
+  if (!cfg.ativo) return { error: "Os avisos por WhatsApp estão temporariamente indisponíveis." };
+  const u = await queryOne<{ telefone: string | null }>(`SELECT telefone FROM usuarios WHERE id = $1`, [session.usuarioId]);
+  const numero = normalizarNumero(u?.telefone);
+  if (!numero) return { error: "Não achamos um celular válido no seu cadastro. Ative pelo seu perfil informando o número." };
+  await query(
+    `UPDATE usuarios SET whatsapp_avisos = TRUE, whatsapp_numero = $2, whatsapp_optin_em = now(), whatsapp_chat_id = NULL, atualizado_em = now()
+      WHERE id = $1`,
+    [session.usuarioId, numero]
+  );
+  const { usuarioId, tipo } = session;
+  after(() => enfileirar("boas_vindas", [{ usuarioId, chave: `boas_vindas:${usuarioId}:${Date.now()}`, texto: textoBoasVindas(tipo) }]));
+  revalidarPerfis();
+  revalidatePath("/painel");
+  return { ok: true, mensagem: `Pronto! Os avisos vão chegar no ${formatarNumero(numero)}.` };
+}
+
+/** "Agora não": esconde a janela de convite por 30 dias neste aparelho. */
+export async function dispensarConviteWhatsApp(): Promise<void> {
+  const store = await cookies();
+  store.set(COOKIE_CONVITE_WHATSAPP, "dispensado", { maxAge: 60 * 60 * 24 * 30, path: "/", sameSite: "lax", httpOnly: true });
 }
 
 // ---------------------------------------------------------------------

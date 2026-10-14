@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import PainelSidebar from "@/components/painel/PainelSidebar";
 import { getSession } from "@/lib/auth";
 import { getVagasBadgeCount } from "@/lib/data/vagas";
+import WhatsAppConvite from "@/components/WhatsAppConvite";
 
 /** Casca do painel da empresa - adiciona a sidebar de navegação, só visível
  * em telas grandes (`lg:`). Sem `mx-auto`/`max-w`/padding aqui de propósito:
@@ -17,6 +18,9 @@ export default async function PainelLayout({ children }: { children: ReactNode }
     <div className="lg:flex lg:items-start lg:gap-6 lg:pl-6 lg:pt-8">
       <PainelSidebar vagasBadge={vagasBadge} />
       <div className="min-w-0 flex-1">{children}</div>
+      {session?.tipo === "empresa" && (
+        <WhatsAppConvite usuarioId={session.usuarioId} tipo="empresa" perfilHref="/painel/perfil#whatsapp" />
+      )}
     </div>
   );
 }

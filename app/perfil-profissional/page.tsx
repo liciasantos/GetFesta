@@ -13,6 +13,7 @@ import AlterarSenhaForm from "@/components/AlterarSenhaForm";
 import ExcluirContaForm from "@/components/ExcluirContaForm";
 import WhatsAppAvisos from "@/components/WhatsAppAvisos";
 import WhatsAppAtalho from "@/components/WhatsAppAtalho";
+import WhatsAppConvite from "@/components/WhatsAppConvite";
 import PortfolioPdfUpload from "@/components/PortfolioPdfUpload";
 import VideoLinkManager from "@/components/VideoLinkManager";
 import {
@@ -363,6 +364,7 @@ export default async function PerfilProfissionalPage({
       </LarguraPorAba>
       </div>
     </div>
+      <WhatsAppConvite usuarioId={session.usuarioId} tipo="profissional" perfilHref="/perfil-profissional?tab=perfil#whatsapp" />
     </ProfissionalTabsProvider>
   );
 }
