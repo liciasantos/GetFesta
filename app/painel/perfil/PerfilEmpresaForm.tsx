@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useTransition } from "react";
 import { atualizarPerfilEmpresa, type PerfilActionState } from "@/lib/actions/perfil";
 import { buttonClass } from "@/components/ui";
 import type { EmpresaPerfil } from "@/lib/data/empresas";
@@ -16,10 +16,20 @@ export default function PerfilEmpresaForm({
   categoriaIdsAtuais: number[];
 }) {
   const [state, formAction, pending] = useActionState<PerfilActionState, FormData>(atualizarPerfilEmpresa, undefined);
+  const [, startTransition] = useTransition();
   const categoriasSelecionadas = new Set(categoriaIdsAtuais);
 
   return (
-    <form action={formAction} className="flex flex-col gap-3">
+    <form
+      // onSubmit (e não action=): com action o React reinicia o formulário ao terminar,
+      // mesmo com erro, e as caixas de seleção voltavam pro valor antigo
+      onSubmit={(e) => {
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
+        startTransition(() => formAction(fd));
+      }}
+      className="flex flex-col gap-3"
+    >
       <Field label="Categorias de serviço">
         <div className="grid grid-cols-2 gap-1.5 rounded-md border border-border p-2.5">
           {categorias.map((c) => (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useTransition } from "react";
 import { atualizarPerfilCliente, type PerfilActionState } from "@/lib/actions/perfil";
 import { buttonClass } from "@/components/ui";
 import type { Cidade } from "@/lib/data/geo";
@@ -9,9 +9,19 @@ import type { PerfilCliente } from "@/lib/data/clientes";
 
 export default function PerfilClienteForm({ perfil, cidades }: { perfil: PerfilCliente; cidades: Cidade[] }) {
   const [state, formAction, pending] = useActionState<PerfilActionState, FormData>(atualizarPerfilCliente, undefined);
+  const [, startTransition] = useTransition();
 
   return (
-    <form action={formAction} className="flex flex-col gap-3">
+    <form
+      // onSubmit (e não action=): com action o React reinicia o formulário ao terminar,
+      // mesmo com erro, e as caixas de seleção voltavam pro valor antigo
+      onSubmit={(e) => {
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
+        startTransition(() => formAction(fd));
+      }}
+      className="flex flex-col gap-3"
+    >
       <Field label="Nome">
         <input name="nome" defaultValue={perfil.nome} required className="rounded-md border border-border px-3 py-2.5 text-sm" />
       </Field>

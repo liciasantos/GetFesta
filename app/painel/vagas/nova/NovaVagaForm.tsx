@@ -61,7 +61,15 @@ export default function NovaVagaForm({
   }
 
   return (
-    <form action={handleSubmit} className="flex flex-col gap-3">
+    <form
+      // onSubmit (e não action=): com action o React reinicia o formulário ao terminar,
+      // mesmo com erro, e as caixas de seleção voltavam pro valor antigo
+      onSubmit={(e) => {
+        e.preventDefault();
+        handleSubmit(new FormData(e.currentTarget));
+      }}
+      className="flex flex-col gap-3"
+    >
       {mode === "editar" && vaga && <input type="hidden" name="id" value={vaga.id} />}
 
       <Field label="Título da vaga (opcional)">

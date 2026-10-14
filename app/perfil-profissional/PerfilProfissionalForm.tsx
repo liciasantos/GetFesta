@@ -73,7 +73,15 @@ export default function PerfilProfissionalForm({
   }
 
   return (
-    <form action={handleSubmit} className="flex flex-col gap-3">
+    <form
+      // onSubmit (e não action=): com action o React reinicia o formulário ao terminar,
+      // mesmo com erro, e as caixas de seleção voltavam pro valor antigo
+      onSubmit={(e) => {
+        e.preventDefault();
+        handleSubmit(new FormData(e.currentTarget));
+      }}
+      className="flex flex-col gap-3"
+    >
       <Field label="Nome">
         <input name="nome" defaultValue={perfil.nome} required className="rounded-md border border-border px-3 py-2.5 text-sm" />
       </Field>
